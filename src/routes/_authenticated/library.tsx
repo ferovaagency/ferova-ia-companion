@@ -237,7 +237,7 @@ function LibraryPage() {
     if (!recommendation?.external) return;
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
-    await supabase.from("books").insert({
+      const { error } = await supabase.from("books").insert({
       user_id: u.user.id,
       title: recommendation.external.title,
       author: recommendation.external.author || "Autor desconocido",
@@ -248,10 +248,11 @@ function LibraryPage() {
       cover_url: recommendation.external.cover_url ?? null,
       status: "TBR",
     });
+      if (error) throw error;
     setView("library");
     setRecommendation(null);
     setUserInput("");
-    refreshBooks();
+    await refreshBooks();
   };
 
   if (loading) {
@@ -269,6 +270,11 @@ function LibraryPage() {
           </Link>
           <div className="flex items-center gap-4 text-xs">
             <span className="hidden sm:inline text-muted-foreground truncate max-w-[200px]">{userEmail}</span>
+            {isAdmin && (
+              <Link to="/admin" className="font-mono-label hover:text-accent transition-colors">
+                Admin
+              </Link>
+            )}
             <button onClick={logout} className="flex items-center gap-1.5 hover:text-accent transition-colors" title="Cerrar sesión">
               <LogOut className="w-3.5 h-3.5" /> <span className="font-mono-label">Salir</span>
             </button>
@@ -297,11 +303,11 @@ function LibraryPage() {
           <StatCard icon={Wind} label="Vel. promedio" value={stats.avgSpeed ? `${stats.avgSpeed} pág/día` : "—"} />
         </section>
 
-        {/* Lumina recommend bar */}
+        {/* Oracle recommend bar */}
         <section className="bg-card border border-border rounded-sm p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-4 h-4 text-accent" />
-            <span className="font-mono-label">Pregúntale a Lumina</span>
+            <span className="font-mono-label">Pregúntale al Oráculo</span>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
@@ -371,7 +377,7 @@ function LibraryPage() {
           <div className="border border-dashed border-border rounded-sm p-12 text-center">
             <BookMarked className="w-8 h-8 mx-auto text-muted-foreground mb-3" />
             <h3 className="font-serif text-xl font-bold">Tu estantería está vacía</h3>
-            <p className="text-sm text-muted-foreground mt-2">Añade tu primer libro para que Lumina empiece a conocer tu gusto.</p>
+            <p className="text-sm text-muted-foreground mt-2">Añade tu primer libro para que el Oráculo empiece a conocer tu gusto.</p>
             <button onClick={() => setIsAdding(true)} className="mt-5 inline-flex items-center gap-2 bg-foreground text-background px-5 py-2.5 rounded-sm font-mono-label">
               <Plus className="w-3.5 h-3.5" /> Añadir libro
             </button>
