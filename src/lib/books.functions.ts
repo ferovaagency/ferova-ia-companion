@@ -3,10 +3,63 @@ import { z } from "zod";
 import type { EnrichedBook, RecommendationResult } from "@/types";
 
 /* ---------- cover fetching helpers (no AI key needed) ---------- */
+type CatalogMetadata = Partial<EnrichedBook>;
+
+function parseJsonObject(text: string): any {
+  const cleaned = text.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/i, "").trim();
+  const match = cleaned.match(/\{[\s\S]*\}/);
+  if (!match) throw new Error("La IA no devolvió JSON válido");
+  return JSON.parse(match[0]);
+}
+
+async function fetchCatalogMetadata(title: string, author?: string): Promise<CatalogMetadata> {
+  const googleQuery = [`intitle:${title}`, author ? `inauthor:${author}` : ""].filter(Boolean).join(" ");
+  try {
+    const params = new URLSearchParams({ q: googleQuery, maxResults: "3", printType: "books" });
+    const r = await fetch(`https://www.googleapis.com/books/v1/volumes?${params.toString()}`);
+    if (r.ok) {
+      const d: any = await r.json();
+      const item = d.items?.find((entry: any) => entry.volumeInfo?.title) ?? d.items?.[0];
+      const info = item?.volumeInfo;
+      if (info) {
+        return {
+          title: info.title || title,
+          author: info.authors?.[0] || author || "Autor desconocido",
+          genre: info.categories?.[0]?.split(" /")?.[0] || "Literatura",
+          pages: Number(info.pageCount) || 0,
+          description: info.description ? String(info.description).replace(/<[^>]+>/g, "").slice(0, 700) : "",
+          cover_url: (info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail || null)?.replace(/^http:/, "https:"),
+        };
+      }
+    }
+  } catch {}
+
+  try {
+    const params = new URLSearchParams({ title, limit: "1" });
+    if (author) params.set("author", author);
+    const r = await fetch(`https://openlibrary.org/search.json?${params.toString()}`);
+    if (r.ok) {
+      const d: any = await r.json();
+      const doc = d.docs?.[0];
+      if (doc) {
+        return {
+          title: doc.title || title,
+          author: doc.author_name?.[0] || author || "Autor desconocido",
+          genre: doc.subject?.[0] || "Literatura",
+          pages: Number(doc.number_of_pages_median) || 0,
+          cover_url: doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg` : null,
+        };
+      }
+    }
+  } catch {}
+
+  return {};
+}
+
 async function fetchOriginalCover(title: string, author?: string): Promise<string | null> {
   try {
-    const q = [`intitle:${title}`, author ? `inauthor:${author}` : ""].filter(Boolean).join("+");
-    const r = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=1`);
+    const q = [`intitle:${title}`, author ? `inauthor:${author}` : ""].filter(Boolean).join(" ");
+    const r = await fetch(`https://www.googleapis.com/books/v1/volumes?${new URLSearchParams({ q, maxResults: "1" }).toString()}`);
     if (r.ok) {
       const d: any = await r.json();
       const img =
@@ -34,50 +87,43 @@ export const enrichBook = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => EnrichInput.parse(input))
   .handler(async ({ data }): Promise<EnrichedBook> => {
     const key = process.env.LOVABLE_API_KEY;
+    const catalog = await fetchCatalogMetadata(data.title, data.author);
     let enriched: Partial<EnrichedBook> = {
-      title: data.title,
-      author: data.author || "Autor desconocido",
-      genre: "General",
-      pages: 0,
+      title: catalog.title || data.title,
+      author: catalog.author || data.author || "Autor desconocido",
+      genre: catalog.genre || "Literatura",
+      pages: catalog.pages || 0,
       moods: [],
-      description: "",
+      description: catalog.description || "",
+      cover_url: catalog.cover_url || null,
     };
 
     if (key) {
       try {
         const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
-        const { generateText, Output } = await import("ai");
+        const { generateText } = await import("ai");
         const gateway = createLovableAiGatewayProvider(key);
-        const { experimental_output } = await generateText({
+        const { text } = await generateText({
           model: gateway("google/gemini-3-flash-preview"),
-          experimental_output: Output.object({
-            schema: z.object({
-              title: z.string(),
-              author: z.string(),
-              genre: z.string(),
-              pages: z.number().int().nonnegative(),
-              moods: z.array(z.string()).max(6),
-              series_name: z.string().nullable().optional(),
-              series_index: z.number().int().nullable().optional(),
-              description: z.string(),
-            }),
-          }),
-          prompt: `Eres un catalogador bibliotecario experto. Devuelve metadatos precisos en ESPAÑOL para el libro "${data.title}"${data.author ? ` de ${data.author}` : ""}.
+          prompt: `Eres un catalogador bibliotecario experto. Devuelve metadatos precisos en ESPAÑOL para el libro "${enriched.title}"${enriched.author && enriched.author !== "Autor desconocido" ? ` de ${enriched.author}` : ""}.
 - title: título oficial (en español si existe traducción común, si no original)
 - author: nombre del autor
 - genre: un solo género corto (ej. "Fantasía", "Novela negra", "Ensayo")
 - pages: páginas aproximadas de una edición típica
 - moods: 2-5 adjetivos en minúscula sobre la atmósfera ("oscuro", "esperanzador", "ágil"...)
 - series_name / series_index: si es parte de una saga, su nombre y número; si no, null
-- description: 1-2 frases breves sin spoilers.`,
+- description: 1-2 frases breves sin spoilers.
+Si ya conoces el dato por fuentes literarias, corrige título y autor; no inventes si no estás seguro.
+Devuelve SOLO JSON válido, sin markdown, con esta forma exacta:
+{"title": string, "author": string, "genre": string, "pages": number, "moods": string[], "series_name": string|null, "series_index": number|null, "description": string}`,
         });
-        enriched = { ...enriched, ...(experimental_output as any) };
+        enriched = { ...enriched, ...parseJsonObject(text) };
       } catch (e) {
         console.error("[enrichBook] AI failed:", e);
       }
     }
 
-    const cover = await fetchOriginalCover(enriched.title!, enriched.author);
+    const cover = enriched.cover_url || (await fetchOriginalCover(enriched.title!, enriched.author));
     return {
       title: enriched.title!,
       author: enriched.author!,
@@ -115,36 +161,22 @@ export const recommendBook = createServerFn({ method: "POST" })
     const key = process.env.LOVABLE_API_KEY;
     if (!key) {
       return {
-        reasoning: "El oráculo de Lumina no está disponible (falta configuración de IA).",
+        reasoning: "El Oráculo no está disponible porque falta la configuración de IA.",
         errorType: "GENERIC",
       };
     }
 
     try {
       const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
-      const { generateText, Output } = await import("ai");
+      const { generateText } = await import("ai");
       const gateway = createLovableAiGatewayProvider(key);
 
       const available = data.books.filter((b) => b.status !== "READ");
       const read = data.books.filter((b) => b.status === "READ").map((b) => `${b.title} (${b.series_name ?? ""} #${b.series_index ?? ""})`);
 
-      const { experimental_output } = await generateText({
+      const { text } = await generateText({
         model: gateway("google/gemini-3-flash-preview"),
-        experimental_output: Output.object({
-          schema: z.object({
-            bookId: z.string().nullable(),
-            external: z
-              .object({
-                title: z.string(),
-                author: z.string(),
-                genre: z.string().optional(),
-                description: z.string().optional(),
-              })
-              .nullable(),
-            reasoning: z.string(),
-          }),
-        }),
-        prompt: `Eres Lumina, una bibliotecaria con intuición literaria excepcional.
+        prompt: `Eres EL ORÁCULO de Librero IA: una inteligencia lectora cálida, precisa y obsesiva con el orden narrativo.
 
 EL USUARIO DICE: "${data.userRequest}"
 
@@ -155,15 +187,18 @@ LIBROS YA LEÍDOS: ${read.join(", ") || "ninguno"}
 
 REGLAS:
 1. Si un libro de su lista encaja con su vibe actual, devuelve su bookId (UUID exacto del campo "id").
-2. REGLA DE SAGAS: si el libro está en una saga (series_name), solo recomiéndalo si el anterior (series_index - 1) ya fue leído. Si no, busca el siguiente libro de la saga que sí le corresponda.
+2. REGLA DE SAGAS ABSOLUTA: si el libro está en una saga (series_name), solo recomiéndalo si series_index es 1 o si el libro anterior de la misma saga ya aparece en LIBROS YA LEÍDOS. Nunca saltes volúmenes. Si el usuario tiene una entrega posterior pendiente, pero falta la anterior, sugiere la anterior como externa o busca otra opción.
 3. Si menciona BLOQUEO LECTOR, prioriza algo ágil, corto, inmersivo.
 4. Si NADA de su lista encaja, sugiere un libro EXTERNO en "external".
-5. "reasoning" en español, 2-3 frases cálidas explicando por qué este libro sanará su momento.
+5. Para sugerencias externas incluye title, author, genre, pages aproximadas, moods y description breve.
+6. "reasoning" en español, 2-3 frases cálidas explicando por qué este libro sanará su momento.
 
+Devuelve SOLO JSON válido, sin markdown, con esta forma exacta:
+{"bookId": string|null, "external": {"title": string, "author": string, "genre": string, "pages": number, "moods": string[], "description": string}|null, "reasoning": string}
 Devuelve bookId o external, no ambos.`,
       });
 
-      const out = experimental_output as any;
+      const out = parseJsonObject(text);
       let external = out.external;
       if (external?.title) {
         const cover = await fetchOriginalCover(external.title, external.author);
