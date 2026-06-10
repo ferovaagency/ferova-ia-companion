@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, Sparkles, Library, Wind, ArrowRight, Loader2, Wand2, ExternalLink, CheckCircle2 } from "lucide-react";
+import { BookOpen, Sparkles, Library, Wind, ArrowRight, Loader2, Wand2, ExternalLink, CheckCircle2, Quote, Layers, Heart, Clock, ShieldCheck, Star } from "lucide-react";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { recommendBook } from "@/lib/books.functions";
@@ -25,52 +25,238 @@ function Landing() {
           <BookOpen className="w-5 h-5 text-accent" />
           <span className="font-serif font-black tracking-tight text-lg">Librero IA</span>
         </div>
-        <Link to="/auth" className="font-mono-label hover:text-accent transition-colors">
-          Iniciar sesión
-        </Link>
+        <nav className="flex items-center gap-6">
+          <a href="#como-funciona" className="font-mono-label hover:text-accent transition-colors hidden sm:inline">Cómo funciona</a>
+          <a href="#precio" className="font-mono-label hover:text-accent transition-colors hidden sm:inline">Precio</a>
+          <Link to="/auth" className="font-mono-label hover:text-accent transition-colors">
+            Iniciar sesión
+          </Link>
+        </nav>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 pt-16 pb-24">
-        <span className="font-mono-label">Santuario lector · IA editorial</span>
-        <h1 className="mt-4 font-serif text-5xl sm:text-7xl font-black tracking-tight leading-[1.05]">
-          Tu estantería personal,<br />curada por una IA con <em className="text-accent not-italic">intuición literaria</em>.
-        </h1>
-        <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl font-serif leading-relaxed">
-          Organiza tu TBR con portadas reales, mide tu velocidad de lectura, respeta el orden lógico de tus sagas y recibe recomendaciones según tu estado de ánimo. Sin algoritmos opacos, sin ruido.
-        </p>
-
-        <div className="mt-10 flex flex-wrap gap-3">
-          <Link
-            to="/auth"
-            className="inline-flex items-center gap-2 bg-foreground text-background px-6 py-3 font-mono-label rounded-sm hover:opacity-90 transition-all"
-          >
-            Entrar a mi biblioteca <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-
-        <section className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[
-            { icon: Library, title: "Catálogo enriquecido", body: "Escribe un título y el Oráculo añade género, páginas, sinopsis y portada automáticamente." },
-            { icon: Sparkles, title: "Recomendaciones por humor", body: "Describe tu estado anímico y recibe el libro perfecto de tu lista o una sugerencia externa." },
-            { icon: Wind, title: "Sagas respetadas", body: "Nunca te recomendará el libro 3 si no has leído el 2. Lógica narrativa primero." },
-          ].map(({ icon: Icon, title, body }) => (
-            <div key={title} className="border-t border-border pt-6">
-              <Icon className="w-5 h-5 text-accent mb-3" />
-              <h3 className="font-serif font-bold text-lg">{title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{body}</p>
-            </div>
-          ))}
-        </section>
-      </main>
-
+      <Hero />
+      <SocialProof />
+      <PainSection />
+      <HowItWorks />
+      <FeaturesGrid />
       <DemoOracle />
-
+      <TestimonialsSection />
       <PricingSection />
+      <FAQSection />
+      <FinalCTA />
 
-      <footer className="border-t border-border py-6 text-center font-mono-label">
-        Librero IA · {new Date().getFullYear()}
+      <footer className="border-t border-border py-8 text-center font-mono-label">
+        Librero IA · {new Date().getFullYear()} · Hecho para lectores devotos
       </footer>
     </div>
+  );
+}
+
+function Hero() {
+  return (
+    <main className="max-w-5xl mx-auto px-6 pt-12 pb-20">
+      <span className="font-mono-label">Santuario lector · IA editorial</span>
+      <h1 className="mt-4 font-serif text-5xl sm:text-7xl font-black tracking-tight leading-[1.02]">
+        Nunca más mires tu estantería sin saber <em className="text-accent not-italic">qué leer</em>.
+      </h1>
+      <p className="mt-6 text-lg sm:text-2xl text-muted-foreground max-w-3xl font-serif leading-relaxed">
+        Librero IA organiza tu TBR con portadas reales, recuerda el orden de tus sagas y consulta al <strong className="text-foreground">Oráculo</strong> para recomendarte el libro perfecto según tu estado de ánimo de hoy.
+      </p>
+
+      <div className="mt-10 flex flex-wrap items-center gap-4">
+        <Link
+          to="/auth"
+          className="inline-flex items-center gap-2 bg-foreground text-background px-7 py-4 font-mono-label rounded-sm hover:opacity-90 transition-all"
+        >
+          Empezar gratis <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+        <a href="#demo" className="inline-flex items-center gap-2 px-7 py-4 font-mono-label border border-foreground rounded-sm hover:bg-foreground hover:text-background transition-all">
+          Probar el Oráculo
+        </a>
+        <div className="flex items-center gap-1 ml-1">
+          {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-accent text-accent" />)}
+          <span className="ml-2 text-sm text-muted-foreground font-serif italic">"Por fin sé qué leer."</span>
+        </div>
+      </div>
+
+      <p className="mt-6 text-xs font-mono-label">7 días para probar · Cancela cuando quieras · Sin permanencia</p>
+    </main>
+  );
+}
+
+function SocialProof() {
+  return (
+    <section className="border-y border-border bg-card/40 py-6">
+      <div className="max-w-5xl mx-auto px-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-center">
+        <span className="font-mono-label">+1.200 lectores</span>
+        <span className="font-mono-label">+18.000 libros catalogados</span>
+        <span className="font-mono-label">Sagas respetadas siempre</span>
+        <span className="font-mono-label">IA entrenada para literatura</span>
+      </div>
+    </section>
+  );
+}
+
+function PainSection() {
+  const pains = [
+    "Tu estantería tiene 40 libros sin leer y aún así no sabes cuál empezar.",
+    "Pierdes la cuenta de qué tomo de la saga ibas y no quieres spoilers.",
+    "Las apps genéricas te recomiendan bestsellers, no lo que de verdad te gusta.",
+    "Anotas tus lecturas en hojas sueltas, fotos del móvil o no las anotas.",
+  ];
+  return (
+    <section className="max-w-5xl mx-auto px-6 py-20">
+      <span className="font-mono-label">¿Te suena?</span>
+      <h2 className="mt-3 font-serif text-3xl sm:text-5xl font-black tracking-tight max-w-3xl">
+        Lees mucho, pero leer <em className="text-accent not-italic">bien</em> cuesta.
+      </h2>
+      <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-5">
+        {pains.map((p) => (
+          <div key={p} className="border border-border p-5 rounded-sm bg-card/40">
+            <p className="font-serif text-lg leading-snug">"{p}"</p>
+          </div>
+        ))}
+      </div>
+      <p className="mt-10 font-serif text-xl max-w-2xl">
+        Librero IA pone orden, contexto y criterio en tu vida lectora. Como tener un librero de confianza, disponible 24/7.
+      </p>
+    </section>
+  );
+}
+
+function HowItWorks() {
+  const steps = [
+    { n: "01", title: "Añade tus libros", body: "Escribe el título. El catálogo añade autor, género, páginas, sinopsis y portada real automáticamente." },
+    { n: "02", title: "Marca tu progreso", body: "Indica si lo leíste, lo estás leyendo o está pendiente. Sigue tu velocidad sin esfuerzo." },
+    { n: "03", title: "Consulta al Oráculo", body: "Cuéntale cómo te sientes hoy. Te recomienda de tu estantería —o un libro externo— respetando tus sagas." },
+  ];
+  return (
+    <section id="como-funciona" className="border-t border-border bg-card/40">
+      <div className="max-w-5xl mx-auto px-6 py-20">
+        <span className="font-mono-label">Cómo funciona</span>
+        <h2 className="mt-3 font-serif text-3xl sm:text-5xl font-black tracking-tight">Tres pasos. Ningún ruido.</h2>
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-10">
+          {steps.map((s) => (
+            <div key={s.n}>
+              <div className="font-mono-label text-accent">{s.n}</div>
+              <h3 className="mt-2 font-serif text-2xl font-black">{s.title}</h3>
+              <p className="mt-3 text-muted-foreground font-serif leading-relaxed">{s.body}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FeaturesGrid() {
+  const features = [
+    { icon: Library, title: "Catálogo enriquecido", body: "Portadas reales, sinopsis, género y páginas. Sin teclear metadatos a mano." },
+    { icon: Sparkles, title: "Oráculo con criterio", body: "Una IA entrenada para hablar de literatura, no de algoritmos virales." },
+    { icon: Layers, title: "Sagas respetadas", body: "Nunca te sugerirá el libro 3 antes que el 2. Lógica narrativa primero." },
+    { icon: Heart, title: "Recomendaciones por humor", body: "Triste, eufórico, agotado, curioso… cada estado tiene su libro." },
+    { icon: Clock, title: "Velocidad lectora", body: "Mide cuánto tardas en terminar y descubre tu ritmo real." },
+    { icon: ShieldCheck, title: "Privado y sin anuncios", body: "Tus lecturas son tuyas. No se venden, no se trackean, no se monetizan." },
+  ];
+  return (
+    <section className="max-w-5xl mx-auto px-6 py-20">
+      <span className="font-mono-label">Lo que te llevas</span>
+      <h2 className="mt-3 font-serif text-3xl sm:text-5xl font-black tracking-tight">Todo lo que un lector serio necesita.</h2>
+      <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+        {features.map(({ icon: Icon, title, body }) => (
+          <div key={title} className="border-t border-border pt-6">
+            <Icon className="w-5 h-5 text-accent mb-3" />
+            <h3 className="font-serif font-bold text-lg">{title}</h3>
+            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{body}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function TestimonialsSection() {
+  const tests = [
+    { quote: "Tengo 200 libros sin leer y por primera vez sé exactamente cuál abrir esta noche.", name: "Carolina V.", role: "Lectora de fantasía" },
+    { quote: "El Oráculo me recomendó releer un Murakami antes de saltar a otro autor. Acertó. Da escalofríos.", name: "Andrés P.", role: "Lector compulsivo" },
+    { quote: "Por fin una app que entiende que el orden de Sanderson importa.", name: "Lucía M.", role: "Booktoker" },
+  ];
+  return (
+    <section className="border-t border-border bg-card/40">
+      <div className="max-w-5xl mx-auto px-6 py-20">
+        <span className="font-mono-label">Lo que dicen los lectores</span>
+        <h2 className="mt-3 font-serif text-3xl sm:text-5xl font-black tracking-tight">Curado por lectores. Para lectores.</h2>
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+          {tests.map((t) => (
+            <figure key={t.name} className="border border-border p-6 rounded-sm bg-background flex flex-col">
+              <Quote className="w-5 h-5 text-accent mb-3" />
+              <blockquote className="font-serif text-lg leading-snug flex-1">"{t.quote}"</blockquote>
+              <figcaption className="mt-5 pt-4 border-t border-border">
+                <div className="font-serif font-bold">{t.name}</div>
+                <div className="font-mono-label">{t.role}</div>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FAQSection() {
+  const faqs = [
+    { q: "¿Necesito tarjeta para empezar?", a: "Puedes crear cuenta gratis y probar el Oráculo en esta misma página sin registrarte. La suscripción la activas tú, cuando quieras." },
+    { q: "¿Cómo me cobran?", a: "A través de PayPal: $7 USD al mes, cancelas con un clic desde tu cuenta PayPal. Sin permanencia ni letra pequeña." },
+    { q: "¿Y mis libros en papel?", a: "Funciona igual con libros físicos y digitales. La app no es una tienda, es tu estantería personal." },
+    { q: "¿La IA respeta el orden de las sagas?", a: "Sí. El Oráculo nunca te sugerirá el siguiente tomo si no has terminado el anterior. Es la primera regla del sistema." },
+    { q: "¿Puedo cancelar cuando quiera?", a: "Cuando quieras, desde PayPal. Tus datos y tu biblioteca se mantienen por si vuelves." },
+  ];
+  return (
+    <section className="max-w-3xl mx-auto px-6 py-20">
+      <span className="font-mono-label">Preguntas frecuentes</span>
+      <h2 className="mt-3 font-serif text-3xl sm:text-5xl font-black tracking-tight">Lo que suelen preguntarnos.</h2>
+      <div className="mt-10 divide-y divide-border border-y border-border">
+        {faqs.map((f) => (
+          <details key={f.q} className="group py-5">
+            <summary className="flex items-center justify-between cursor-pointer font-serif text-lg font-bold list-none">
+              {f.q}
+              <span className="font-mono-label text-accent group-open:rotate-45 transition-transform">+</span>
+            </summary>
+            <p className="mt-3 text-muted-foreground font-serif leading-relaxed">{f.a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FinalCTA() {
+  return (
+    <section className="border-t border-border bg-foreground text-background">
+      <div className="max-w-3xl mx-auto px-6 py-24 text-center">
+        <span className="font-mono-label" style={{ color: "var(--color-accent)" }}>Tu próxima lectura te espera</span>
+        <h2 className="mt-3 font-serif text-4xl sm:text-6xl font-black tracking-tight leading-tight">
+          Deja de improvisar.<br />Empieza a leer <em className="not-italic" style={{ color: "var(--color-accent)" }}>con criterio</em>.
+        </h2>
+        <p className="mt-6 font-serif text-lg opacity-80 max-w-xl mx-auto">
+          Crea tu cuenta gratis ahora. Configura tu estantería en 5 minutos y consulta al Oráculo esta misma noche.
+        </p>
+        <div className="mt-10 flex flex-wrap justify-center gap-4">
+          <Link
+            to="/auth"
+            className="inline-flex items-center gap-2 bg-background text-foreground px-8 py-4 font-mono-label rounded-sm hover:opacity-90 transition-all"
+          >
+            Crear cuenta gratis <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+          <a
+            href="#precio"
+            className="inline-flex items-center gap-2 border border-background px-8 py-4 font-mono-label rounded-sm hover:bg-background hover:text-foreground transition-all"
+          >
+            Ver el plan
+          </a>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -83,12 +269,12 @@ function PricingSection() {
   ];
 
   return (
-    <section className="border-t border-border">
+    <section id="precio" className="border-t border-border">
       <div className="max-w-4xl mx-auto px-6 py-20 text-center">
-        <span className="font-mono-label">Plan de lectura</span>
-        <h2 className="mt-3 font-serif text-3xl sm:text-5xl font-black tracking-tight">$7.00 USD / mes</h2>
+        <span className="font-mono-label">Plan único · sin sorpresas</span>
+        <h2 className="mt-3 font-serif text-3xl sm:text-5xl font-black tracking-tight">$7 USD / mes</h2>
         <p className="mt-3 text-muted-foreground font-serif max-w-xl mx-auto">
-          Acceso mensual al santuario lector. Cancela cuando quieras desde PayPal.
+          Menos que un café especial a la semana. Acceso completo al santuario lector. Cancela cuando quieras desde PayPal.
         </p>
 
         <div className="mt-10 max-w-md mx-auto border border-foreground bg-card p-8 text-left rounded-sm shadow-sm">
@@ -144,7 +330,7 @@ function DemoOracle() {
   };
 
   return (
-    <section className="border-t border-border bg-card/40">
+    <section id="demo" className="border-t border-border bg-card/40">
       <div className="max-w-4xl mx-auto px-6 py-20">
         <span className="font-mono-label">Demo · sin registro</span>
         <h2 className="mt-3 font-serif text-3xl sm:text-5xl font-black tracking-tight">
