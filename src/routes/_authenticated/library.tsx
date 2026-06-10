@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
@@ -10,6 +11,7 @@ import { BookCover } from "@/components/BookCover";
 import { EditBookModal } from "@/components/EditBookModal";
 import type { Book, BookStatus, RecommendationResult } from "@/types";
 import { enrichBook, recommendBook } from "@/lib/books.functions";
+import { ensureMembership } from "@/lib/membership.functions";
 
 export const Route = createFileRoute("/_authenticated/library")({
   component: LibraryPage,
@@ -20,9 +22,14 @@ const STATUS_ORDER: BookStatus[] = ["READING", "TBR", "READ"];
 
 function LibraryPage() {
   const navigate = useNavigate();
+  const enrich = useServerFn(enrichBook);
+  const recommend = useServerFn(recommendBook);
+  const ensureMembershipFn = useServerFn(ensureMembership);
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [readingGoal, setReadingGoal] = useState(12);
 
   const [search, setSearch] = useState("");
@@ -49,6 +56,8 @@ function LibraryPage() {
       const { data: u } = await supabase.auth.getUser();
       setUserEmail(u.user?.email ?? null);
       if (!u.user) return;
+      const membership = await ensureMembershipFn();
+      setIsAdmin(Boolean(membership.isAdmin));
 
       const { data: prof } = await supabase.from("profiles").select("reading_goal").eq("id", u.user.id).maybeSingle();
       if (prof) {
@@ -107,16 +116,18 @@ function LibraryPage() {
   // ----- Actions -----
   const handleQuickAdd = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const fd = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const fd = new FormData(form);
     const title = String(fd.get("title") || "").trim();
     const author = String(fd.get("author") || "").trim();
     if (!title) return;
     setEnriching(true);
+    setActionError(null);
     try {
-      const enriched = await enrichBook({ data: { title, author: author || undefined } });
+      const enriched = await enrich({ data: { title, author: author || undefined } });
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      await supabase.from("books").insert({
+      const { error } = await supabase.from("books").insert({
         user_id: u.user.id,
         title: enriched.title,
         author: enriched.author,
@@ -129,8 +140,12 @@ function LibraryPage() {
         cover_url: enriched.cover_url ?? null,
         status: "TBR",
       });
-      e.currentTarget.reset();
+      if (error) throw error;
+      form.reset();
       setIsAdding(false);
+      await refreshBooks();
+    } catch (err: any) {
+      setActionError(err?.message || "No pude guardar el libro. Inténtalo de nuevo.");
     } finally {
       setEnriching(false);
     }
@@ -203,7 +218,7 @@ function LibraryPage() {
     setView("recommendation");
     setRecommendation(null);
     try {
-      const r = await recommendBook({
+      const r = await recommend({
         data: {
           userRequest: userInput,
           books: books.map((b) => ({
