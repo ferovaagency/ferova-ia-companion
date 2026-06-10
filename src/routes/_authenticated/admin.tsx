@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Gift, Loader2, Mail, Search, ShieldCheck, Trash2, Users } from "lucide-react";
 import {
   addCourtesyAccount,
+  ensureMembership,
   listAdminPortal,
   removeCourtesyAccount,
   setMembershipPaid,
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 type AdminData = Awaited<ReturnType<typeof listAdminPortal>>;
 
 function AdminPage() {
+  const ensureMembershipFn = useServerFn(ensureMembership);
   const listPortal = useServerFn(listAdminPortal);
   const togglePaid = useServerFn(setMembershipPaid);
   const addCourtesy = useServerFn(addCourtesyAccount);
@@ -35,6 +37,7 @@ function AdminPage() {
 
   const refresh = async () => {
     setError(null);
+    await ensureMembershipFn();
     const next = await listPortal();
     setData(next);
   };
