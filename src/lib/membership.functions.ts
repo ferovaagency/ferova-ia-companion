@@ -58,9 +58,16 @@ export const ensureMembership = createServerFn({ method: "POST" })
       .eq("active", true)
       .maybeSingle();
 
+    const { data: existingMembership } = await supabaseAdmin
+      .from("memberships")
+      .select("is_paid,payment_source,paid_at")
+      .eq("user_id", context.userId)
+      .maybeSingle();
+
     const isAdmin = email === ADMIN_EMAIL;
-    const shouldBePaid = isAdmin || Boolean(courtesy);
-    const paymentSource = isAdmin ? "admin" : courtesy ? "courtesy" : "none";
+    const hasManualAccess = Boolean(existingMembership?.is_paid && existingMembership.payment_source !== "none");
+    const shouldBePaid = isAdmin || Boolean(courtesy) || hasManualAccess;
+    const paymentSource = isAdmin ? "admin" : courtesy ? "courtesy" : existingMembership?.payment_source ?? "none";
 
     await supabaseAdmin.from("memberships").upsert(
       {
@@ -69,7 +76,7 @@ export const ensureMembership = createServerFn({ method: "POST" })
         display_name: displayName,
         is_paid: shouldBePaid,
         payment_source: paymentSource,
-        paid_at: shouldBePaid ? new Date().toISOString() : null,
+        paid_at: shouldBePaid ? existingMembership?.paid_at ?? new Date().toISOString() : null,
       },
       { onConflict: "user_id" },
     );
