@@ -406,6 +406,7 @@ function LibraryPage() {
                   {enriching ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Enriqueciendo</> : <><Sparkles className="w-3.5 h-3.5" /> Añadir</>}
                 </button>
               </div>
+              {actionError && <p className="text-xs text-destructive">{actionError}</p>}
             </form>
           </Modal>
         )}
@@ -417,7 +418,7 @@ function LibraryPage() {
           <Modal onClose={() => { setView("library"); setRecommendation(null); }}>
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-4 h-4 text-accent" />
-              <span className="font-mono-label">Lumina sugiere</span>
+              <span className="font-mono-label">El Oráculo sugiere</span>
             </div>
             {recLoading ? (
               <div className="py-12 flex flex-col items-center gap-3">
