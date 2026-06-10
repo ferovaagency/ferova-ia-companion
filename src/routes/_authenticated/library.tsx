@@ -212,7 +212,7 @@ function LibraryPage() {
     setEditingGoal(false);
   };
 
-  const askLumina = async () => {
+  const askOracle = async () => {
     if (!userInput.trim()) return;
     setRecLoading(true);
     setView("recommendation");
@@ -317,7 +317,7 @@ function LibraryPage() {
               className="flex-1 bg-background border border-border px-3 py-3 rounded-sm focus:outline-none focus:border-foreground text-sm font-serif italic"
             />
             <button
-              onClick={askLumina}
+              onClick={askOracle}
               disabled={!userInput.trim() || recLoading}
               className="bg-foreground text-background px-6 py-3 font-mono-label rounded-sm hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
             >
