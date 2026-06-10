@@ -398,7 +398,7 @@ function DemoOracle() {
             <div className="mt-5 pt-5 border-t border-border flex items-center justify-between gap-3">
               <p className="text-xs text-muted-foreground">¿Quieres que el Oráculo recuerde tu estantería y respete tus sagas?</p>
               <Link to="/auth" className="text-xs font-mono-label hover:text-accent transition-colors flex items-center gap-1">
-                Crear cuenta gratis <ArrowRight className="w-3 h-3" />
+                Suscribirme <ArrowRight className="w-3 h-3" />
               </Link>
             </div>
           </div>
