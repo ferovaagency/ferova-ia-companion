@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, Sparkles, Library, Wind, ArrowRight, Loader2, Wand2 } from "lucide-react";
+import { BookOpen, Sparkles, Library, Wind, ArrowRight, Loader2, Wand2, ExternalLink, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { recommendBook } from "@/lib/books.functions";
@@ -50,7 +50,7 @@ function Landing() {
 
         <section className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8">
           {[
-            { icon: Library, title: "Catálogo enriquecido", body: "Escribe un título y Lumina añade género, páginas, sinopsis y portada automáticamente." },
+            { icon: Library, title: "Catálogo enriquecido", body: "Escribe un título y el Oráculo añade género, páginas, sinopsis y portada automáticamente." },
             { icon: Sparkles, title: "Recomendaciones por humor", body: "Describe tu estado anímico y recibe el libro perfecto de tu lista o una sugerencia externa." },
             { icon: Wind, title: "Sagas respetadas", body: "Nunca te recomendará el libro 3 si no has leído el 2. Lógica narrativa primero." },
           ].map(({ icon: Icon, title, body }) => (
@@ -65,10 +65,52 @@ function Landing() {
 
       <DemoOracle />
 
+      <PricingSection />
+
       <footer className="border-t border-border py-6 text-center font-mono-label">
         Librero IA · {new Date().getFullYear()}
       </footer>
     </div>
+  );
+}
+
+function PricingSection() {
+  const features = [
+    "Colección TBR física y digital sin límites.",
+    "Consultas al Oráculo lector con IA.",
+    "Catálogo enriquecido con portadas reales.",
+    "Respeto del hilo lógico de sagas y universos.",
+  ];
+
+  return (
+    <section className="border-t border-border">
+      <div className="max-w-4xl mx-auto px-6 py-20 text-center">
+        <span className="font-mono-label">Plan de lectura</span>
+        <h2 className="mt-3 font-serif text-3xl sm:text-5xl font-black tracking-tight">$7.00 USD / mes</h2>
+        <p className="mt-3 text-muted-foreground font-serif max-w-xl mx-auto">
+          Acceso mensual al santuario lector. Cancela cuando quieras desde PayPal.
+        </p>
+
+        <div className="mt-10 max-w-md mx-auto border border-foreground bg-card p-8 text-left rounded-sm shadow-sm">
+          <ul className="space-y-4">
+            {features.map((feature) => (
+              <li key={feature} className="flex items-start gap-3 text-sm">
+                <CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                <span>{feature}</span>
+              </li>
+            ))}
+          </ul>
+          <a
+            href="https://www.paypal.com/webapps/billing/plans/subscribe?plan_id=P-97L52146RW343720LNIULWWQ"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-8 w-full inline-flex items-center justify-center gap-2 bg-foreground text-background px-6 py-4 font-mono-label rounded-sm hover:opacity-90 transition-all"
+          >
+            Suscribirse con PayPal <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
+      </div>
+    </section>
   );
 }
 
