@@ -390,7 +390,7 @@ function LibraryPage() {
         {isAdding && (
           <Modal onClose={() => !enriching && setIsAdding(false)}>
             <h2 className="font-serif text-2xl font-black tracking-tight mb-1">Añadir un libro</h2>
-            <p className="text-xs text-muted-foreground italic mb-5">Lumina enriquecerá automáticamente con género, sinopsis y portada.</p>
+            <p className="text-xs text-muted-foreground italic mb-5">El Oráculo enriquecerá automáticamente con género, sinopsis y portada.</p>
             <form onSubmit={handleQuickAdd} className="space-y-3">
               <div>
                 <label className="font-mono-label block mb-1">Título</label>
