@@ -80,11 +80,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Librero IA — Organizador Inteligente de Lectura y Sagas" },
       { name: "description", content: "Estantería digital con IA: organiza tu TBR, sigue tu velocidad de lectura, respeta el orden de tus sagas y recibe recomendaciones según tu estado de ánimo." },
       { name: "author", content: "Librero IA" },
-      { property: "og:title", content: "Librero IA — Organizador Inteligente de Lectura" },
-      { property: "og:description", content: "Tu santuario lector con IA. TBR, progreso, sagas y recomendaciones personalizadas." },
+      { property: "og:title", content: "Librero IA — Organizador Inteligente de Lectura y Sagas" },
+      { property: "og:description", content: "Estantería digital con IA: organiza tu TBR, sigue tu velocidad de lectura, respeta el orden de tus sagas y recibe recomendaciones según tu estado de ánimo." },
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "es_ES" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Librero IA — Organizador Inteligente de Lectura y Sagas" },
+      { name: "twitter:description", content: "Estantería digital con IA: organiza tu TBR, sigue tu velocidad de lectura, respeta el orden de tus sagas y recibe recomendaciones según tu estado de ánimo." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b64cbbe9-ab77-47e1-afa0-ac7b6eec9008/id-preview-e402db19--1cab2c8c-222e-4717-8c65-0dfa0737db89.lovable.app-1781111749985.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b64cbbe9-ab77-47e1-afa0-ac7b6eec9008/id-preview-e402db19--1cab2c8c-222e-4717-8c65-0dfa0737db89.lovable.app-1781111749985.png" },
     ],
     links: [
       {
