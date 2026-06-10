@@ -269,12 +269,12 @@ function PricingSection() {
   ];
 
   return (
-    <section className="border-t border-border">
+    <section id="precio" className="border-t border-border">
       <div className="max-w-4xl mx-auto px-6 py-20 text-center">
-        <span className="font-mono-label">Plan de lectura</span>
-        <h2 className="mt-3 font-serif text-3xl sm:text-5xl font-black tracking-tight">$7.00 USD / mes</h2>
+        <span className="font-mono-label">Plan único · sin sorpresas</span>
+        <h2 className="mt-3 font-serif text-3xl sm:text-5xl font-black tracking-tight">$7 USD / mes</h2>
         <p className="mt-3 text-muted-foreground font-serif max-w-xl mx-auto">
-          Acceso mensual al santuario lector. Cancela cuando quieras desde PayPal.
+          Menos que un café especial a la semana. Acceso completo al santuario lector. Cancela cuando quieras desde PayPal.
         </p>
 
         <div className="mt-10 max-w-md mx-auto border border-foreground bg-card p-8 text-left rounded-sm shadow-sm">
@@ -330,7 +330,7 @@ function DemoOracle() {
   };
 
   return (
-    <section className="border-t border-border bg-card/40">
+    <section id="demo" className="border-t border-border bg-card/40">
       <div className="max-w-4xl mx-auto px-6 py-20">
         <span className="font-mono-label">Demo · sin registro</span>
         <h2 className="mt-3 font-serif text-3xl sm:text-5xl font-black tracking-tight">
