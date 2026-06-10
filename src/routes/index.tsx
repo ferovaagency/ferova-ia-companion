@@ -148,7 +148,7 @@ function DemoOracle() {
       <div className="max-w-4xl mx-auto px-6 py-20">
         <span className="font-mono-label">Demo · sin registro</span>
         <h2 className="mt-3 font-serif text-3xl sm:text-5xl font-black tracking-tight">
-          Pregúntale a <em className="text-accent not-italic">Lumina</em>
+          Prueba el <em className="text-accent not-italic">Oráculo</em>
         </h2>
         <p className="mt-3 text-muted-foreground font-serif max-w-xl">
           Describe tu vibe lector ahora mismo y el oráculo te sugerirá un libro. Sin login, sin registro.
@@ -180,7 +180,7 @@ function DemoOracle() {
             className="self-start inline-flex items-center gap-2 bg-foreground text-background px-6 py-3 font-mono-label rounded-sm hover:opacity-90 transition-all disabled:opacity-50"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-            Consultar a Lumina
+            Consultar al Oráculo
           </button>
         </div>
 
@@ -210,7 +210,7 @@ function DemoOracle() {
               <p className="font-serif italic text-foreground/90 leading-relaxed">"{result.reasoning}"</p>
             )}
             <div className="mt-5 pt-5 border-t border-border flex items-center justify-between gap-3">
-              <p className="text-xs text-muted-foreground">¿Quieres que Lumina recuerde tu estantería y respete tus sagas?</p>
+              <p className="text-xs text-muted-foreground">¿Quieres que el Oráculo recuerde tu estantería y respete tus sagas?</p>
               <Link to="/auth" className="text-xs font-mono-label hover:text-accent transition-colors flex items-center gap-1">
                 Crear cuenta gratis <ArrowRight className="w-3 h-3" />
               </Link>
