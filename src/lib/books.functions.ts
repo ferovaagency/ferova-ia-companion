@@ -101,22 +101,10 @@ export const enrichBook = createServerFn({ method: "POST" })
     if (key) {
       try {
         const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
-        const { generateText, Output } = await import("ai");
+        const { generateText } = await import("ai");
         const gateway = createLovableAiGatewayProvider(key);
-        const { output } = await generateText({
+        const { text } = await generateText({
           model: gateway("google/gemini-3-flash-preview"),
-          output: Output.object({
-            schema: z.object({
-              title: z.string(),
-              author: z.string(),
-              genre: z.string(),
-              pages: z.number().int().nonnegative(),
-              moods: z.array(z.string()).max(6),
-              series_name: z.string().nullable().optional(),
-              series_index: z.number().int().nullable().optional(),
-              description: z.string(),
-            }),
-          }),
           prompt: `Eres un catalogador bibliotecario experto. Devuelve metadatos precisos en ESPAÑOL para el libro "${enriched.title}"${enriched.author && enriched.author !== "Autor desconocido" ? ` de ${enriched.author}` : ""}.
 - title: título oficial (en español si existe traducción común, si no original)
 - author: nombre del autor
@@ -125,9 +113,11 @@ export const enrichBook = createServerFn({ method: "POST" })
 - moods: 2-5 adjetivos en minúscula sobre la atmósfera ("oscuro", "esperanzador", "ágil"...)
 - series_name / series_index: si es parte de una saga, su nombre y número; si no, null
 - description: 1-2 frases breves sin spoilers.
-Si ya conoces el dato por fuentes literarias, corrige título y autor; no inventes si no estás seguro.`,
+Si ya conoces el dato por fuentes literarias, corrige título y autor; no inventes si no estás seguro.
+Devuelve SOLO JSON válido, sin markdown, con esta forma exacta:
+{"title": string, "author": string, "genre": string, "pages": number, "moods": string[], "series_name": string|null, "series_index": number|null, "description": string}`,
         });
-        enriched = { ...enriched, ...(output as any) };
+        enriched = { ...enriched, ...parseJsonObject(text) };
       } catch (e) {
         console.error("[enrichBook] AI failed:", e);
       }
