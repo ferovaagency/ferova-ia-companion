@@ -20,7 +20,19 @@ export const Route = createFileRoute("/_authenticated/admin")({
   component: AdminPage,
 });
 
-type AdminData = Awaited<ReturnType<typeof listAdminPortal>>;
+type AdminData = {
+  users: Array<{
+    uid: string;
+    email: string;
+    displayName: string | null;
+    isPaid: boolean;
+    paymentSource: string;
+    paidAt: string | null;
+    createdAt: string | null;
+    isAdmin: boolean;
+  }>;
+  courtesy: Array<{ email: string; active: boolean; granted_at: string; granted_by: string | null; revoked_at: string | null; created_at: string; updated_at: string }>;
+};
 
 function AdminPage() {
   const ensureMembershipFn = useServerFn(ensureMembership);
