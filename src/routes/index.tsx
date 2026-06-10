@@ -68,7 +68,7 @@ function Hero() {
           to="/auth"
           className="inline-flex items-center gap-2 bg-foreground text-background px-7 py-4 font-mono-label rounded-sm hover:opacity-90 transition-all"
         >
-          Empezar gratis <ArrowRight className="w-3.5 h-3.5" />
+          Suscribirme · $7/mes <ArrowRight className="w-3.5 h-3.5" />
         </Link>
         <a href="#demo" className="inline-flex items-center gap-2 px-7 py-4 font-mono-label border border-foreground rounded-sm hover:bg-foreground hover:text-background transition-all">
           Probar el Oráculo
@@ -79,7 +79,7 @@ function Hero() {
         </div>
       </div>
 
-      <p className="mt-6 text-xs font-mono-label">7 días para probar · Cancela cuando quieras · Sin permanencia</p>
+      <p className="mt-6 text-xs font-mono-label">Prueba el Oráculo sin registro · Cancela cuando quieras · Sin permanencia</p>
     </main>
   );
 }
@@ -205,7 +205,7 @@ function TestimonialsSection() {
 
 function FAQSection() {
   const faqs = [
-    { q: "¿Necesito tarjeta para empezar?", a: "Puedes crear cuenta gratis y probar el Oráculo en esta misma página sin registrarte. La suscripción la activas tú, cuando quieras." },
+    { q: "¿Puedo probar antes de pagar?", a: "Sí. Puedes consultar al Oráculo aquí mismo, sin registro, cuantas veces quieras. Para guardar tu estantería y desbloquear todo, necesitas la suscripción." },
     { q: "¿Cómo me cobran?", a: "A través de PayPal: $7 USD al mes, cancelas con un clic desde tu cuenta PayPal. Sin permanencia ni letra pequeña." },
     { q: "¿Y mis libros en papel?", a: "Funciona igual con libros físicos y digitales. La app no es una tienda, es tu estantería personal." },
     { q: "¿La IA respeta el orden de las sagas?", a: "Sí. El Oráculo nunca te sugerirá el siguiente tomo si no has terminado el anterior. Es la primera regla del sistema." },
@@ -239,14 +239,14 @@ function FinalCTA() {
           Deja de improvisar.<br />Empieza a leer <em className="not-italic" style={{ color: "var(--color-accent)" }}>con criterio</em>.
         </h2>
         <p className="mt-6 font-serif text-lg opacity-80 max-w-xl mx-auto">
-          Crea tu cuenta gratis ahora. Configura tu estantería en 5 minutos y consulta al Oráculo esta misma noche.
+          Suscríbete por $7 al mes, configura tu estantería en 5 minutos y consulta al Oráculo esta misma noche.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-4">
           <Link
             to="/auth"
             className="inline-flex items-center gap-2 bg-background text-foreground px-8 py-4 font-mono-label rounded-sm hover:opacity-90 transition-all"
           >
-            Crear cuenta gratis <ArrowRight className="w-3.5 h-3.5" />
+            Suscribirme ahora <ArrowRight className="w-3.5 h-3.5" />
           </Link>
           <a
             href="#precio"
