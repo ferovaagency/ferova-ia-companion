@@ -77,14 +77,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Librero IA — Organizador Inteligente de Lectura y Sagas" },
+      { name: "description", content: "Estantería digital con IA: organiza tu TBR, sigue tu velocidad de lectura, respeta el orden de tus sagas y recibe recomendaciones según tu estado de ánimo." },
+      { name: "author", content: "Librero IA" },
+      { property: "og:title", content: "Librero IA — Organizador Inteligente de Lectura" },
+      { property: "og:description", content: "Tu santuario lector con IA. TBR, progreso, sagas y recomendaciones personalizadas." },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { property: "og:locale", content: "es_ES" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       {
