@@ -1,5 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, Sparkles, Library, Wind, ArrowRight } from "lucide-react";
+import { BookOpen, Sparkles, Library, Wind, ArrowRight, Loader2, Wand2 } from "lucide-react";
+import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { recommendBook } from "@/lib/books.functions";
+import type { RecommendationResult } from "@/types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -59,9 +63,119 @@ function Landing() {
         </section>
       </main>
 
+      <DemoOracle />
+
       <footer className="border-t border-border py-6 text-center font-mono-label">
         Librero IA · {new Date().getFullYear()}
       </footer>
     </div>
+  );
+}
+
+function DemoOracle() {
+  const recommend = useServerFn(recommendBook);
+  const [vibe, setVibe] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<RecommendationResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const examples = [
+    "Necesito algo corto y luminoso, vengo de un bloqueo lector",
+    "Quiero fantasía oscura con prosa cuidada",
+    "Una novela negra escandinava, atmosférica",
+  ];
+
+  const ask = async (q?: string) => {
+    const userRequest = (q ?? vibe).trim();
+    if (!userRequest) return;
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    try {
+      const r = await recommend({ data: { userRequest, books: [] } });
+      setResult(r);
+    } catch (e: any) {
+      setError(e?.message || "El oráculo no respondió");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <section className="border-t border-border bg-card/40">
+      <div className="max-w-4xl mx-auto px-6 py-20">
+        <span className="font-mono-label">Demo · sin registro</span>
+        <h2 className="mt-3 font-serif text-3xl sm:text-5xl font-black tracking-tight">
+          Pregúntale a <em className="text-accent not-italic">Lumina</em>
+        </h2>
+        <p className="mt-3 text-muted-foreground font-serif max-w-xl">
+          Describe tu vibe lector ahora mismo y el oráculo te sugerirá un libro. Sin login, sin registro.
+        </p>
+
+        <div className="mt-8 flex flex-col gap-3">
+          <textarea
+            value={vibe}
+            onChange={(e) => setVibe(e.target.value)}
+            placeholder="Hoy quiero algo melancólico pero esperanzador, breve, sin violencia gratuita…"
+            rows={3}
+            className="w-full bg-background border border-border px-4 py-3 rounded-sm font-serif text-base focus:outline-none focus:border-foreground resize-none"
+          />
+          <div className="flex flex-wrap gap-2">
+            {examples.map((ex) => (
+              <button
+                key={ex}
+                type="button"
+                onClick={() => { setVibe(ex); ask(ex); }}
+                className="text-xs px-3 py-1.5 border border-border rounded-full hover:border-foreground transition-colors font-mono-label"
+              >
+                {ex}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => ask()}
+            disabled={loading || !vibe.trim()}
+            className="self-start inline-flex items-center gap-2 bg-foreground text-background px-6 py-3 font-mono-label rounded-sm hover:opacity-90 transition-all disabled:opacity-50"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+            Consultar a Lumina
+          </button>
+        </div>
+
+        {error && <p className="mt-6 text-sm text-destructive">{error}</p>}
+
+        {result && (
+          <div className="mt-8 border border-border bg-background p-6 rounded-sm">
+            {result.external ? (
+              <div className="flex gap-5">
+                {result.external.cover_url && (
+                  <img src={result.external.cover_url} alt={result.external.title} className="w-24 h-auto shadow-md" />
+                )}
+                <div>
+                  <span className="font-mono-label text-accent">Sugerencia externa</span>
+                  <h3 className="mt-1 font-serif text-2xl font-black">{result.external.title}</h3>
+                  <p className="text-sm text-muted-foreground">{result.external.author}</p>
+                  {result.external.genre && (
+                    <p className="mt-1 text-xs font-mono-label">{result.external.genre}</p>
+                  )}
+                  <p className="mt-3 font-serif italic text-foreground/90 leading-relaxed">"{result.reasoning}"</p>
+                  {result.external.description && (
+                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{result.external.description}</p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="font-serif italic text-foreground/90 leading-relaxed">"{result.reasoning}"</p>
+            )}
+            <div className="mt-5 pt-5 border-t border-border flex items-center justify-between gap-3">
+              <p className="text-xs text-muted-foreground">¿Quieres que Lumina recuerde tu estantería y respete tus sagas?</p>
+              <Link to="/auth" className="text-xs font-mono-label hover:text-accent transition-colors flex items-center gap-1">
+                Crear cuenta gratis <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
