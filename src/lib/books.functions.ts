@@ -212,6 +212,8 @@ const RecommendInput = z.object({
       series_name: z.string().nullable().optional(),
       series_index: z.number().nullable().optional(),
       status: z.enum(["TBR", "READING", "READ"]),
+      user_rating: z.number().nullable().optional(),
+      user_review: z.string().nullable().optional(),
     }),
   ),
 });
@@ -233,7 +235,15 @@ export const recommendBook = createServerFn({ method: "POST" })
       const gateway = createLovableAiGatewayProvider(key);
 
       const available = data.books.filter((b) => b.status !== "READ");
-      const read = data.books.filter((b) => b.status === "READ").map((b) => `${b.title} (${b.series_name ?? ""} #${b.series_index ?? ""})`);
+      const read = data.books
+        .filter((b) => b.status === "READ")
+        .map((b) => {
+          const stars = b.user_rating ? ` ★${b.user_rating}/5` : "";
+          const note = b.user_review ? ` — "${String(b.user_review).slice(0, 280)}"` : "";
+          return `${b.title} de ${b.author}${stars}${note}`;
+        });
+      const loved = data.books.filter((b) => (b.user_rating ?? 0) >= 4);
+      const disliked = data.books.filter((b) => b.user_rating != null && b.user_rating <= 2);
 
       const { text } = await generateText({
         model: gateway("google/gemini-3-flash-preview"),
@@ -244,7 +254,11 @@ EL USUARIO DICE: "${data.userRequest}"
 SU ESTANTERÍA PENDIENTE (TBR/READING):
 ${JSON.stringify(available, null, 2)}
 
-LIBROS YA LEÍDOS: ${read.join(", ") || "ninguno"}
+LIBROS YA LEÍDOS (con su valoración y reseña personal):
+${read.length ? read.join("\n") : "ninguno"}
+
+LO QUE AMA (★4-5): ${loved.map((b) => `${b.title}${b.user_review ? ` ("${String(b.user_review).slice(0, 160)}")` : ""}`).join(" | ") || "—"}
+LO QUE NO LE FUNCIONÓ (★1-2): ${disliked.map((b) => `${b.title}${b.user_review ? ` ("${String(b.user_review).slice(0, 160)}")` : ""}`).join(" | ") || "—"}
 
 REGLAS:
 1. Si un libro de su lista encaja con su vibe actual, devuelve su bookId (UUID exacto del campo "id").
@@ -253,7 +267,8 @@ REGLAS:
 4. Si NADA de su lista encaja, o si el usuario pide explícitamente algo nuevo / una saga / un autor que no tiene, sugiere un libro o SAGA EXTERNA en "external".
 5. Para sugerencias externas incluye title (el libro EXACTO por el que debería empezar: si es saga, el tomo #1), author, genre, pages aproximadas, moods, description breve y opcionalmente series_name si es saga.
 6. Conserva el IDIOMA del título tal como sea el original (no traduzcas títulos en inglés).
-7. "reasoning" en español, 2-3 frases cálidas explicando por qué este libro/saga sanará su momento.
+7. APRENDE DE SUS RESEÑAS: usa "LO QUE AMA" y "LO QUE NO LE FUNCIONÓ" para afinar el tono, ritmo, tropos y temas. Evita patrones que rechazó (★1-2) y refuerza los que le encantan (★4-5). Si una reseña personal revela un gusto concreto (prosa lírica, romance lento, finales agridulces, etc.), respétalo.
+8. "reasoning" en español, 2-3 frases cálidas explicando por qué este libro/saga sanará su momento. Si te apoyaste en una reseña suya, menciónalo brevemente ("como te encantó X por Y...").
 
 Devuelve SOLO JSON válido, sin markdown, con esta forma exacta:
 {"bookId": string|null, "external": {"title": string, "author": string, "genre": string, "pages": number, "moods": string[], "description": string, "series_name": string|null}|null, "reasoning": string}

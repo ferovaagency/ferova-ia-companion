@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { X, Save, Edit } from "lucide-react";
+import { X, Save, Edit, Star } from "lucide-react";
 import type { Book } from "@/types";
 
 interface EditBookModalProps {
@@ -19,6 +19,8 @@ export function EditBookModal({ book, onClose, onSave }: EditBookModalProps) {
   const [seriesIndex, setSeriesIndex] = useState<number | "">(book.series_index ?? "");
   const [coverUrl, setCoverUrl] = useState(book.cover_url || "");
   const [moodsInput, setMoodsInput] = useState(book.moods?.join(", ") ?? "");
+  const [userRating, setUserRating] = useState<number | null>(book.user_rating ?? null);
+  const [userReview, setUserReview] = useState(book.user_review ?? "");
   const [isSaving, setIsSaving] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
@@ -37,6 +39,8 @@ export function EditBookModal({ book, onClose, onSave }: EditBookModalProps) {
         series_index: seriesIndex !== "" ? Number(seriesIndex) : null,
         cover_url: coverUrl.trim() || null,
         moods,
+        user_rating: userRating,
+        user_review: userReview.trim() || null,
       });
       onClose();
     } finally {
@@ -109,6 +113,46 @@ export function EditBookModal({ book, onClose, onSave }: EditBookModalProps) {
           <div>
             <label className={labelCls}>Sinopsis</label>
             <textarea value={description} onChange={(e) => setDescription(e.target.value)} className={`${inputCls} italic min-h-[100px]`} placeholder="Breve descripción..." />
+          </div>
+          <div className="border-t border-border pt-5 space-y-4">
+            <div className="flex items-center gap-2">
+              <Star className="w-4 h-4 text-accent" />
+              <span className="font-mono-label uppercase tracking-wider text-xs">Tu opinión (alimenta al Oráculo)</span>
+            </div>
+            <div>
+              <label className={labelCls}>Tu puntuación</label>
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setUserRating(userRating === n ? null : n)}
+                    className="p-1 transition-transform hover:scale-110"
+                    aria-label={`${n} estrellas`}
+                  >
+                    <Star
+                      className={`w-6 h-6 ${userRating && n <= userRating ? "fill-accent text-accent" : "text-muted-foreground"}`}
+                    />
+                  </button>
+                ))}
+                {userRating && (
+                  <button type="button" onClick={() => setUserRating(null)} className="text-xs text-muted-foreground hover:text-foreground ml-2">
+                    limpiar
+                  </button>
+                )}
+              </div>
+            </div>
+            <div>
+              <label className={labelCls}>Tu reseña personal</label>
+              <textarea
+                value={userReview}
+                onChange={(e) => setUserReview(e.target.value)}
+                className={`${inputCls} italic min-h-[90px]`}
+                placeholder="¿Qué te hizo sentir? ¿Qué destacarías? El Oráculo usa esto para afinar tus próximas recomendaciones."
+                maxLength={2000}
+              />
+              <p className="text-xs text-muted-foreground mt-1">{userReview.length}/2000</p>
+            </div>
           </div>
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose} disabled={isSaving} className="flex-1 bg-background border border-border py-3 font-mono-label hover:bg-muted transition-all rounded-sm">
