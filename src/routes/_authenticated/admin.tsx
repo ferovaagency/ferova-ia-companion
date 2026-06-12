@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Gift, Loader2, Mail, Search, ShieldCheck, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Gift, Loader2, Mail, MessageSquare, Search, ShieldCheck, Trash2, Users } from "lucide-react";
 import {
   addCourtesyAccount,
   ensureMembership,
@@ -9,6 +9,7 @@ import {
   removeCourtesyAccount,
   setMembershipPaid,
 } from "@/lib/membership.functions";
+import { listFeedback, updateFeedbackStatus } from "@/lib/feedback.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -34,13 +35,26 @@ type AdminData = {
   courtesy: Array<{ email: string; active: boolean; granted_at: string; granted_by: string | null; revoked_at: string | null; created_at: string; updated_at: string }>;
 };
 
+type FeedbackItem = {
+  id: string;
+  user_id: string | null;
+  email: string | null;
+  type: string;
+  message: string;
+  status: string;
+  created_at: string;
+};
+
 function AdminPage() {
   const ensureMembershipFn = useServerFn(ensureMembership);
   const listPortal = useServerFn(listAdminPortal);
   const togglePaid = useServerFn(setMembershipPaid);
   const addCourtesy = useServerFn(addCourtesyAccount);
   const removeCourtesy = useServerFn(removeCourtesyAccount);
+  const listFeedbackFn = useServerFn(listFeedback);
+  const updateFeedbackFn = useServerFn(updateFeedbackStatus);
   const [data, setData] = useState<AdminData | null>(null);
+  const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
   const [search, setSearch] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(true);
@@ -50,8 +64,9 @@ function AdminPage() {
   const refresh = async () => {
     setError(null);
     await ensureMembershipFn();
-    const next = await listPortal();
+    const [next, fb] = await Promise.all([listPortal(), listFeedbackFn().catch(() => [])]);
     setData(next);
+    setFeedback(fb as FeedbackItem[]);
   };
 
   useEffect(() => {
@@ -105,6 +120,18 @@ function AdminPage() {
     }
   };
 
+  const setFeedbackStatus = async (id: string, status: string) => {
+    setSaving(true);
+    try {
+      await updateFeedbackFn({ data: { id, status: status as any } });
+      await refresh();
+    } catch (err: any) {
+      setError(err?.message || "No pude actualizar el feedback");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-accent" /></div>;
   }
@@ -143,7 +170,7 @@ function AdminPage() {
           <div className="grid grid-cols-3 gap-3 text-center">
             <MiniStat label="Registrados" value={String(data?.users.length ?? 0)} />
             <MiniStat label="Activos" value={String(data?.users.filter((u) => u.isPaid).length ?? 0)} />
-            <MiniStat label="Cortesías" value={String(data?.courtesy.length ?? 0)} />
+            <MiniStat label="Feedback" value={String(feedback.filter((f) => f.status === "new").length)} />
           </div>
         </section>
 
@@ -209,6 +236,36 @@ function AdminPage() {
               ))}
               {!data?.courtesy.length && <p className="text-center text-xs text-muted-foreground py-6 font-serif italic">Sin cortesías activas.</p>}
             </div>
+          </div>
+        </section>
+
+        <section className="bg-card border border-border p-6 rounded-sm">
+          <div className="flex items-center justify-between gap-3 mb-5">
+            <h2 className="font-serif text-xl font-black flex items-center gap-2"><MessageSquare className="w-5 h-5 text-accent" /> Sugerencias y errores</h2>
+            <span className="font-mono-label">{feedback.length} totales</span>
+          </div>
+          <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
+            {feedback.map((item) => (
+              <div key={item.id} className="border border-border bg-background p-4 rounded-sm">
+                <div className="flex items-start justify-between gap-3 mb-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`font-mono-label px-2 py-0.5 rounded-sm ${item.type === "bug" ? "bg-destructive/10 text-destructive" : "bg-accent/10 text-accent"}`}>
+                      {item.type === "bug" ? "Error" : item.type === "suggestion" ? "Sugerencia" : "Otro"}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{new Date(item.created_at).toLocaleString()}</span>
+                    {item.email && <span className="text-xs text-muted-foreground">· {item.email}</span>}
+                  </div>
+                  <select value={item.status} disabled={saving} onChange={(e) => setFeedbackStatus(item.id, e.target.value)} className="bg-background border border-border px-2 py-1 text-xs rounded-sm">
+                    <option value="new">Nuevo</option>
+                    <option value="in_progress">En proceso</option>
+                    <option value="done">Resuelto</option>
+                    <option value="wontfix">Descartado</option>
+                  </select>
+                </div>
+                <p className="font-serif text-sm whitespace-pre-wrap leading-relaxed">{item.message}</p>
+              </div>
+            ))}
+            {!feedback.length && <p className="text-center text-sm text-muted-foreground font-serif italic py-8">Aún no hay sugerencias.</p>}
           </div>
         </section>
       </main>
