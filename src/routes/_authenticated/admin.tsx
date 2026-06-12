@@ -16,6 +16,13 @@ export const Route = createFileRoute("/_authenticated/admin")({
     meta: [
       { title: "Admin — Librero IA" },
       { name: "description", content: "Portal administrativo de lectores, pagos y cortesías." },
+      { property: "og:title", content: "Panel de Administración — Librero IA" },
+      { property: "og:description", content: "Gestión interna de usuarios, pagos, cortesías y feedback." },
+      { property: "og:url", content: "https://ferova-ia-companion.lovable.app/admin" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://ferova-ia-companion.lovable.app/admin" },
     ],
   }),
   component: AdminPage,
