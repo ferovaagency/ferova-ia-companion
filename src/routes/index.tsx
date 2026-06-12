@@ -11,9 +11,44 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Librero IA — Tu estantería inteligente con IA" },
-      { name: "description", content: "Organiza tus libros pendientes, sigue tu velocidad de lectura y recibe recomendaciones personalizadas según tu estado de ánimo, respetando el orden de tus sagas." },
+      { name: "description", content: "Organiza tu TBR, sigue tu velocidad de lectura y recibe recomendaciones con IA según tu ánimo, respetando el orden de tus sagas." },
       { property: "og:title", content: "Librero IA — Tu estantería inteligente" },
       { property: "og:description", content: "TBR, progreso, sagas y recomendaciones con IA en un único santuario lector." },
+      { property: "og:url", content: "https://ferova-ia-companion.lovable.app/" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://ferova-ia-companion.lovable.app/" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@graph": [
+            {
+              "@type": "Organization",
+              name: "Librero IA",
+              url: "https://ferova-ia-companion.lovable.app/",
+            },
+            {
+              "@type": "WebSite",
+              name: "Librero IA",
+              url: "https://ferova-ia-companion.lovable.app/",
+            },
+            {
+              "@type": "FAQPage",
+              mainEntity: [
+                { "@type": "Question", name: "¿Puedo probar antes de pagar?", acceptedAnswer: { "@type": "Answer", text: "Sí. Puedes consultar al Oráculo aquí mismo, sin registro, cuantas veces quieras. Para guardar tu estantería y desbloquear todo, necesitas la suscripción." } },
+                { "@type": "Question", name: "¿Cómo me cobran?", acceptedAnswer: { "@type": "Answer", text: "A través de PayPal: $7 USD al mes, cancelas con un clic desde tu cuenta PayPal. Sin permanencia ni letra pequeña." } },
+                { "@type": "Question", name: "¿Y mis libros en papel?", acceptedAnswer: { "@type": "Answer", text: "Funciona igual con libros físicos y digitales. La app no es una tienda, es tu estantería personal." } },
+                { "@type": "Question", name: "¿La IA respeta el orden de las sagas?", acceptedAnswer: { "@type": "Answer", text: "Sí. El Oráculo nunca te sugerirá el siguiente tomo si no has terminado el anterior. Es la primera regla del sistema." } },
+                { "@type": "Question", name: "¿Puedo cancelar cuando quiera?", acceptedAnswer: { "@type": "Answer", text: "Cuando quieras, desde PayPal. Tus datos y tu biblioteca se mantienen por si vuelves." } },
+              ],
+            },
+          ],
+        }),
+      },
     ],
   }),
   component: Landing,
