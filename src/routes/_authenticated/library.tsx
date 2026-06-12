@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import {
   BookOpen, Plus, Sparkles, Library, Search, Trash2, Loader2, LogOut, Edit,
-  ChevronRight, Wind, AlertCircle, Filter, X, Target, BookMarked, CheckCircle2,
+  ChevronRight, Wind, AlertCircle, Filter, X, Target, BookMarked, CheckCircle2, MessageSquare, ShoppingCart,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { BookCover } from "@/components/BookCover";
@@ -12,6 +12,8 @@ import { EditBookModal } from "@/components/EditBookModal";
 import type { Book, BookStatus, RecommendationResult } from "@/types";
 import { enrichBook, recommendBook } from "@/lib/books.functions";
 import { ensureMembership } from "@/lib/membership.functions";
+import { submitFeedback } from "@/lib/feedback.functions";
+import { amazonWishlistUrl } from "@/lib/amazon";
 
 export const Route = createFileRoute("/_authenticated/library")({
   component: LibraryPage,
@@ -49,6 +51,9 @@ function LibraryPage() {
   // Goal editor
   const [editingGoal, setEditingGoal] = useState(false);
   const [goalDraft, setGoalDraft] = useState(12);
+
+  // Feedback
+  const [showFeedback, setShowFeedback] = useState(false);
 
   // Load user, profile, books
   useEffect(() => {
@@ -176,16 +181,23 @@ function LibraryPage() {
   const saveProgress = async (book: Book, page: number) => {
     const isDone = book.pages > 0 && page >= book.pages;
     const patch: Partial<Book> = { current_page: page };
+    const startedAt = book.started_reading_at ?? (book.status === "READING" ? new Date().toISOString() : null);
+    if (startedAt && !book.started_reading_at) patch.started_reading_at = startedAt;
+
+    // Live reading-speed update on every progress edit (pages per day)
+    if (startedAt && page > 0) {
+      const days = Math.max(1, Math.round((Date.now() - new Date(startedAt).getTime()) / 86400000));
+      patch.reading_speed_days = Math.round(page / days);
+    }
+
     if (isDone) {
       patch.status = "READ";
       patch.finished_reading_at = new Date().toISOString();
       patch.current_page = book.pages;
-      if (book.started_reading_at) {
-        const days = Math.max(1, Math.round((Date.now() - new Date(book.started_reading_at).getTime()) / 86400000));
+      if (startedAt) {
+        const days = Math.max(1, Math.round((Date.now() - new Date(startedAt).getTime()) / 86400000));
         patch.reading_speed_days = Math.round(book.pages / days);
       }
-    } else if (book.status === "READING" && !book.started_reading_at) {
-      patch.started_reading_at = new Date().toISOString();
     }
     await supabase.from("books").update(patch).eq("id", book.id);
     setUpdatingProgressId(null);
@@ -275,6 +287,9 @@ function LibraryPage() {
                 Admin
               </Link>
             )}
+            <button onClick={() => setShowFeedback(true)} className="flex items-center gap-1.5 hover:text-accent transition-colors" title="Sugerencias o reportar errores">
+              <MessageSquare className="w-3.5 h-3.5" /> <span className="font-mono-label hidden sm:inline">Feedback</span>
+            </button>
             <button onClick={logout} className="flex items-center gap-1.5 hover:text-accent transition-colors" title="Cerrar sesión">
               <LogOut className="w-3.5 h-3.5" /> <span className="font-mono-label">Salir</span>
             </button>
@@ -439,6 +454,11 @@ function LibraryPage() {
 
       {/* Edit modal */}
       {editingBook && <EditBookModal book={editingBook} onClose={() => setEditingBook(null)} onSave={saveEdit} />}
+
+      {/* Feedback modal */}
+      <AnimatePresence>
+        {showFeedback && <FeedbackModal email={userEmail} onClose={() => setShowFeedback(false)} />}
+      </AnimatePresence>
     </div>
   );
 }
@@ -559,6 +579,7 @@ function RecommendationView({ rec, books, onAccept, onClose }: { rec: Recommenda
     : ext
       ? { title: ext.title, author: ext.author, cover_url: ext.cover_url ?? null }
       : null;
+  const amazonUrl = display ? amazonWishlistUrl(display.title, display.author) : null;
 
   return (
     <div>
@@ -571,12 +592,18 @@ function RecommendationView({ rec, books, onAccept, onClose }: { rec: Recommenda
           <div>
             <h4 className="font-serif font-bold text-lg">{display.title}</h4>
             <p className="text-sm text-muted-foreground">{display.author}</p>
+            {ext?.series_name && <p className="text-[10px] text-accent font-mono uppercase tracking-wider mt-1">Saga · {ext.series_name}</p>}
           </div>
         </div>
       )}
       <p className="font-serif italic leading-relaxed text-sm border-l-2 border-accent pl-4">{rec.reasoning}</p>
-      <div className="flex gap-3 mt-6">
+      <div className="flex flex-col sm:flex-row gap-3 mt-6">
         <button onClick={onClose} className="flex-1 border border-border py-3 font-mono-label rounded-sm hover:bg-muted">Cerrar</button>
+        {amazonUrl && (
+          <a href={amazonUrl} target="_blank" rel="noopener noreferrer" className="flex-1 bg-accent text-accent-foreground py-3 font-mono-label rounded-sm hover:opacity-90 flex items-center justify-center gap-2">
+            <ShoppingCart className="w-3.5 h-3.5" /> Lista de deseos Amazon
+          </a>
+        )}
         {ext && !internal && (
           <button onClick={onAccept} className="flex-1 bg-foreground text-background py-3 font-mono-label rounded-sm hover:opacity-90 flex items-center justify-center gap-2">
             <Plus className="w-3.5 h-3.5" /> Añadir a mi TBR
@@ -584,5 +611,76 @@ function RecommendationView({ rec, books, onAccept, onClose }: { rec: Recommenda
         )}
       </div>
     </div>
+  );
+}
+
+function FeedbackModal({ email, onClose }: { email: string | null; onClose: () => void }) {
+  const submit = useServerFn(submitFeedback);
+  const [type, setType] = useState<"suggestion" | "bug" | "other">("suggestion");
+  const [message, setMessage] = useState("");
+  const [contactEmail, setContactEmail] = useState(email ?? "");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const send = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (message.trim().length < 5) return;
+    setSending(true);
+    setErr(null);
+    try {
+      await submit({ data: { type, message, email: contactEmail || undefined } });
+      setSent(true);
+    } catch (e: any) {
+      setErr(e?.message || "No pude enviar tu mensaje");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <Modal onClose={onClose}>
+      <div className="flex items-center gap-2 mb-2">
+        <MessageSquare className="w-4 h-4 text-accent" />
+        <span className="font-mono-label">Sugerencias y errores</span>
+      </div>
+      <h2 className="font-serif text-2xl font-black tracking-tight mb-2">Cuéntame qué mejorar</h2>
+      <p className="text-xs text-muted-foreground italic mb-5">Lo recibo directamente en mi portal de admin. Lo leo todo.</p>
+      {sent ? (
+        <div className="py-8 text-center space-y-3">
+          <CheckCircle2 className="w-8 h-8 text-accent mx-auto" />
+          <p className="font-serif">¡Gracias! Tu mensaje llegó al estudio.</p>
+          <button onClick={onClose} className="mt-3 bg-foreground text-background px-5 py-2.5 font-mono-label rounded-sm">Cerrar</button>
+        </div>
+      ) : (
+        <form onSubmit={send} className="space-y-3">
+          <div>
+            <label className="font-mono-label block mb-1">Tipo</label>
+            <div className="flex gap-2">
+              {(["suggestion", "bug", "other"] as const).map((t) => (
+                <button key={t} type="button" onClick={() => setType(t)} className={`text-xs font-mono-label px-3 py-2 rounded-sm border ${type === t ? "bg-foreground text-background border-foreground" : "border-border hover:bg-muted"}`}>
+                  {t === "suggestion" ? "Sugerencia" : t === "bug" ? "Error" : "Otro"}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="font-mono-label block mb-1">Mensaje</label>
+            <textarea required minLength={5} value={message} onChange={(e) => setMessage(e.target.value)} rows={5} className="w-full bg-background border border-border px-3 py-2 rounded-sm text-sm focus:outline-none focus:border-foreground font-serif" />
+          </div>
+          <div>
+            <label className="font-mono-label block mb-1">Email de contacto (opcional)</label>
+            <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className="w-full bg-background border border-border px-3 py-2 rounded-sm text-sm focus:outline-none focus:border-foreground" />
+          </div>
+          {err && <p className="text-xs text-destructive">{err}</p>}
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} disabled={sending} className="flex-1 border border-border py-3 font-mono-label rounded-sm hover:bg-muted">Cancelar</button>
+            <button type="submit" disabled={sending || message.trim().length < 5} className="flex-1 bg-foreground text-background py-3 font-mono-label rounded-sm hover:opacity-90 flex items-center justify-center gap-2">
+              {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageSquare className="w-3.5 h-3.5" />} Enviar
+            </button>
+          </div>
+        </form>
+      )}
+    </Modal>
   );
 }

@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BookOpen, Sparkles, Library, Wind, ArrowRight, Loader2, Wand2, ExternalLink, CheckCircle2, Quote, Layers, Heart, Clock, ShieldCheck, Star } from "lucide-react";
+import { BookOpen, Sparkles, Library, Wind, ArrowRight, Loader2, Wand2, ExternalLink, CheckCircle2, Quote, Layers, Heart, Clock, ShieldCheck, Star, ShoppingCart, MessageSquare } from "lucide-react";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { recommendBook } from "@/lib/books.functions";
+import { submitFeedback } from "@/lib/feedback.functions";
+import { amazonWishlistUrl } from "@/lib/amazon";
 import type { RecommendationResult } from "@/types";
 
 export const Route = createFileRoute("/")({
@@ -43,6 +45,7 @@ function Landing() {
       <TestimonialsSection />
       <PricingSection />
       <FAQSection />
+      <FeedbackSection />
       <FinalCTA />
 
       <footer className="border-t border-border py-8 text-center font-mono-label">
@@ -54,12 +57,12 @@ function Landing() {
 
 function Hero() {
   return (
-    <main className="max-w-5xl mx-auto px-6 pt-12 pb-20">
+    <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-10 sm:pt-12 pb-16 sm:pb-20">
       <span className="font-mono-label">Santuario lector · IA editorial</span>
-      <h1 className="mt-4 font-serif text-5xl sm:text-7xl font-black tracking-tight leading-[1.02]">
+      <h1 className="mt-4 font-serif text-4xl sm:text-7xl font-black tracking-tight leading-[1.05] sm:leading-[1.02]">
         Nunca más mires tu estantería sin saber <em className="text-accent not-italic">qué leer</em>.
       </h1>
-      <p className="mt-6 text-lg sm:text-2xl text-muted-foreground max-w-3xl font-serif leading-relaxed">
+      <p className="mt-5 sm:mt-6 text-base sm:text-2xl text-muted-foreground max-w-3xl font-serif leading-relaxed">
         Librero IA organiza tu TBR con portadas reales, recuerda el orden de tus sagas y consulta al <strong className="text-foreground">Oráculo</strong> para recomendarte el libro perfecto según tu estado de ánimo de hoy.
       </p>
 
@@ -375,9 +378,9 @@ function DemoOracle() {
         {result && (
           <div className="mt-8 border border-border bg-background p-6 rounded-sm">
             {result.external ? (
-              <div className="flex gap-5">
+              <div className="flex flex-col sm:flex-row gap-5">
                 {result.external.cover_url && (
-                  <img src={result.external.cover_url} alt={result.external.title} className="w-24 h-auto shadow-md" />
+                  <img src={result.external.cover_url} alt={result.external.title} className="w-24 h-auto shadow-md self-start" />
                 )}
                 <div>
                   <span className="font-mono-label text-accent">Sugerencia externa</span>
@@ -390,6 +393,14 @@ function DemoOracle() {
                   {result.external.description && (
                     <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{result.external.description}</p>
                   )}
+                  <a
+                    href={amazonWishlistUrl(result.external.title, result.external.author)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex items-center gap-2 bg-accent text-accent-foreground px-4 py-2.5 font-mono-label rounded-sm hover:opacity-90"
+                  >
+                    <ShoppingCart className="w-3.5 h-3.5" /> Comprar / añadir a Amazon
+                  </a>
                 </div>
               </div>
             ) : (
@@ -402,6 +413,68 @@ function DemoOracle() {
               </Link>
             </div>
           </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function FeedbackSection() {
+  const submit = useServerFn(submitFeedback);
+  const [type, setType] = useState<"suggestion" | "bug" | "other">("suggestion");
+  const [message, setMessage] = useState("");
+  const [email, setEmail] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const send = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (message.trim().length < 5) return;
+    setSending(true);
+    setError(null);
+    try {
+      await submit({ data: { type, message, email: email || undefined } });
+      setSent(true);
+      setMessage("");
+    } catch (e: any) {
+      setError(e?.message || "No pude enviar tu mensaje");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <section id="feedback" className="border-t border-border bg-card/40">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-20">
+        <span className="font-mono-label">Sugerencias y errores</span>
+        <h2 className="mt-3 font-serif text-3xl sm:text-5xl font-black tracking-tight">
+          ¿Algo que mejorar? <em className="text-accent not-italic">Escríbeme.</em>
+        </h2>
+        <p className="mt-3 text-muted-foreground font-serif">
+          Léo cada mensaje. Reporta errores, pide funciones o cuéntame qué libro tendría que reconocer mejor el Oráculo.
+        </p>
+        {sent ? (
+          <div className="mt-8 border border-accent bg-background p-6 rounded-sm flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-accent" />
+            <p className="font-serif">¡Recibido! Gracias por ayudarme a mejorar Librero IA.</p>
+          </div>
+        ) : (
+          <form onSubmit={send} className="mt-8 space-y-3">
+            <div className="flex gap-2 flex-wrap">
+              {(["suggestion", "bug", "other"] as const).map((t) => (
+                <button key={t} type="button" onClick={() => setType(t)} className={`text-xs font-mono-label px-3 py-2 rounded-sm border ${type === t ? "bg-foreground text-background border-foreground" : "border-border hover:bg-background"}`}>
+                  {t === "suggestion" ? "Sugerencia" : t === "bug" ? "Error" : "Otro"}
+                </button>
+              ))}
+            </div>
+            <textarea required minLength={5} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="¿Qué te gustaría cambiar?" rows={5} className="w-full bg-background border border-border px-4 py-3 rounded-sm font-serif text-base focus:outline-none focus:border-foreground resize-none" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email (opcional, por si quiero responderte)" className="w-full bg-background border border-border px-4 py-3 rounded-sm font-serif text-sm focus:outline-none focus:border-foreground" />
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <button type="submit" disabled={sending || message.trim().length < 5} className="inline-flex items-center gap-2 bg-foreground text-background px-6 py-3 font-mono-label rounded-sm hover:opacity-90 transition-all disabled:opacity-50">
+              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />} Enviar mensaje
+            </button>
+          </form>
         )}
       </div>
     </section>
