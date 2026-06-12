@@ -43,6 +43,7 @@ export interface RecommendationResult {
     moods?: string[];
     cover_url?: string | null;
     description?: string;
+    series_name?: string | null;
   } | null;
   reasoning: string;
   errorType?: "PERMISSION_DENIED" | "QUOTA_EXHAUSTED" | "GENERIC";
