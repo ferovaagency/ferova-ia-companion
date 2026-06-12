@@ -16,6 +16,19 @@ import { submitFeedback } from "@/lib/feedback.functions";
 import { amazonWishlistUrl } from "@/lib/amazon";
 
 export const Route = createFileRoute("/_authenticated/library")({
+  head: () => ({
+    meta: [
+      { title: "Mi Biblioteca — Librero IA" },
+      { name: "description", content: "Tu estantería personal: organiza libros, sigue tu progreso de lectura y consulta al Oráculo." },
+      { property: "og:title", content: "Mi Biblioteca — Librero IA" },
+      { property: "og:description", content: "Tu santuario lector privado: TBR, progreso y recomendaciones del Oráculo." },
+      { property: "og:url", content: "https://ferova-ia-companion.lovable.app/library" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://ferova-ia-companion.lovable.app/library" },
+    ],
+  }),
   component: LibraryPage,
 });
 
