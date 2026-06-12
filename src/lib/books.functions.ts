@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { EnrichedBook, RecommendationResult } from "@/types";
 
 /* ---------- cover fetching helpers (no AI key needed) ---------- */
-type CatalogMetadata = Partial<EnrichedBook>;
+type CatalogMetadata = Partial<EnrichedBook> & { language?: string | null };
 
 function parseJsonObject(text: string): any {
   const cleaned = text.trim().replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```$/i, "").trim();
@@ -12,35 +12,81 @@ function parseJsonObject(text: string): any {
   return JSON.parse(match[0]);
 }
 
+function norm(s: string) {
+  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function similarity(a: string, b: string) {
+  const A = new Set(norm(a).split(" "));
+  const B = new Set(norm(b).split(" "));
+  if (!A.size || !B.size) return 0;
+  let inter = 0;
+  A.forEach((w) => B.has(w) && inter++);
+  return inter / Math.max(A.size, B.size);
+}
+
+function scoreGoogleVolume(info: any, title: string, author?: string) {
+  const titleScore = similarity(info.title || "", title);
+  const authorScore = author ? Math.max(...(info.authors || [""]).map((a: string) => similarity(a, author))) : 0;
+  const hasPages = info.pageCount ? 0.15 : 0;
+  const hasCover = info.imageLinks ? 0.1 : 0;
+  return titleScore * 1.5 + authorScore + hasPages + hasCover;
+}
+
 async function fetchCatalogMetadata(title: string, author?: string): Promise<CatalogMetadata> {
-  const googleQuery = [`intitle:${title}`, author ? `inauthor:${author}` : ""].filter(Boolean).join(" ");
+  // Google Books — pull a wider candidate set and pick best match
   try {
-    const params = new URLSearchParams({ q: googleQuery, maxResults: "3", printType: "books" });
+    const q = [`intitle:${title}`, author ? `inauthor:${author}` : ""].filter(Boolean).join(" ");
+    const params = new URLSearchParams({ q, maxResults: "10", printType: "books" });
     const r = await fetch(`https://www.googleapis.com/books/v1/volumes?${params.toString()}`);
     if (r.ok) {
       const d: any = await r.json();
-      const item = d.items?.find((entry: any) => entry.volumeInfo?.title) ?? d.items?.[0];
-      const info = item?.volumeInfo;
+      const items: any[] = d.items || [];
+      const scored = items
+        .map((it) => ({ it, info: it.volumeInfo, score: scoreGoogleVolume(it.volumeInfo || {}, title, author) }))
+        .filter((x) => x.info)
+        .sort((a, b) => b.score - a.score);
+
+      // Prefer best-scoring item that also has pageCount; fallback to top scorer
+      const best = scored.find((x) => x.info.pageCount > 0) || scored[0];
+      const info = best?.info;
       if (info) {
+        let pages = Number(info.pageCount) || 0;
+        let cover = info.imageLinks?.extraLarge || info.imageLinks?.large || info.imageLinks?.medium || info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail || null;
+
+        // If no pages, try fetching another edition with pages
+        if (!pages || !cover) {
+          for (const cand of scored) {
+            if (!pages && cand.info.pageCount > 0) pages = Number(cand.info.pageCount);
+            if (!cover && cand.info.imageLinks) cover = cand.info.imageLinks.thumbnail || cand.info.imageLinks.smallThumbnail;
+            if (pages && cover) break;
+          }
+        }
+
         return {
           title: info.title || title,
           author: info.authors?.[0] || author || "Autor desconocido",
           genre: info.categories?.[0]?.split(" /")?.[0] || "Literatura",
-          pages: Number(info.pageCount) || 0,
+          pages,
           description: info.description ? String(info.description).replace(/<[^>]+>/g, "").slice(0, 700) : "",
-          cover_url: (info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail || null)?.replace(/^http:/, "https:"),
+          cover_url: cover ? String(cover).replace(/^http:/, "https:") : null,
+          language: info.language || null,
         };
       }
     }
   } catch {}
 
   try {
-    const params = new URLSearchParams({ title, limit: "1" });
+    const params = new URLSearchParams({ title, limit: "5" });
     if (author) params.set("author", author);
     const r = await fetch(`https://openlibrary.org/search.json?${params.toString()}`);
     if (r.ok) {
       const d: any = await r.json();
-      const doc = d.docs?.[0];
+      const docs: any[] = d.docs || [];
+      const sorted = docs
+        .map((doc) => ({ doc, score: similarity(doc.title || "", title) + (author ? similarity((doc.author_name || [""])[0], author) : 0) }))
+        .sort((a, b) => b.score - a.score);
+      const doc = (sorted.find((x) => x.doc.cover_i && x.doc.number_of_pages_median) || sorted[0])?.doc;
       if (doc) {
         return {
           title: doc.title || title,
@@ -48,6 +94,7 @@ async function fetchCatalogMetadata(title: string, author?: string): Promise<Cat
           genre: doc.subject?.[0] || "Literatura",
           pages: Number(doc.number_of_pages_median) || 0,
           cover_url: doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg` : null,
+          language: doc.language?.[0] || null,
         };
       }
     }
@@ -88,6 +135,8 @@ export const enrichBook = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<EnrichedBook> => {
     const key = process.env.LOVABLE_API_KEY;
     const catalog = await fetchCatalogMetadata(data.title, data.author);
+    const isSpanish = (catalog.language || "").toLowerCase().startsWith("es") || /[áéíóúñ¿¡]/i.test(data.title);
+    const responseLang = isSpanish ? "ESPAÑOL" : "EL IDIOMA ORIGINAL DEL LIBRO (no traduzcas el título ni el autor)";
     let enriched: Partial<EnrichedBook> = {
       title: catalog.title || data.title,
       author: catalog.author || data.author || "Autor desconocido",
@@ -105,19 +154,31 @@ export const enrichBook = createServerFn({ method: "POST" })
         const gateway = createLovableAiGatewayProvider(key);
         const { text } = await generateText({
           model: gateway("google/gemini-3-flash-preview"),
-          prompt: `Eres un catalogador bibliotecario experto. Devuelve metadatos precisos en ESPAÑOL para el libro "${enriched.title}"${enriched.author && enriched.author !== "Autor desconocido" ? ` de ${enriched.author}` : ""}.
-- title: título oficial (en español si existe traducción común, si no original)
-- author: nombre del autor
-- genre: un solo género corto (ej. "Fantasía", "Novela negra", "Ensayo")
-- pages: páginas aproximadas de una edición típica
-- moods: 2-5 adjetivos en minúscula sobre la atmósfera ("oscuro", "esperanzador", "ágil"...)
-- series_name / series_index: si es parte de una saga, su nombre y número; si no, null
-- description: 1-2 frases breves sin spoilers.
-Si ya conoces el dato por fuentes literarias, corrige título y autor; no inventes si no estás seguro.
+          prompt: `Eres un catalogador bibliotecario experto y meticuloso. Devuelve metadatos precisos en ${responseLang} para el libro:
+TÍTULO INTRODUCIDO POR EL USUARIO: "${data.title}"
+${data.author ? `AUTOR INTRODUCIDO: "${data.author}"` : ""}
+METADATOS CATALOGADOS (Google Books / Open Library): ${JSON.stringify({ title: enriched.title, author: enriched.author, pages: enriched.pages, language: catalog.language })}
+
+REGLAS CRÍTICAS:
+1. IDIOMA: respeta SIEMPRE el idioma original del título introducido por el usuario. Si lo escribió en inglés, devuélvelo en inglés. NO traduzcas el título ni el nombre del autor.
+2. EXACTITUD: usa el título y autor más reconocidos del libro real. Si dudas entre varias ediciones, elige la edición original más conocida.
+3. PÁGINAS: usa un número realista de una edición de bolsillo típica. Si los metadatos catalogados dan 0, estima en base a tu conocimiento del libro. Nunca devuelvas 0 a menos que sea un libro muy corto real.
+4. SAGAS: si pertenece a una saga literaria, completa series_name (nombre exacto de la saga) y series_index (número entero). Si no, ambos null.
+5. GÉNERO: un solo género corto y específico (ej. "Fantasía épica", "Novela negra", "Ensayo filosófico").
+6. MOODS: 3-5 adjetivos en minúscula sobre atmósfera/tono ("oscuro", "esperanzador", "ágil", "melancólico"...).
+7. DESCRIPTION: 1-2 frases breves sin spoilers, en ${responseLang}.
+8. Si NO conoces con certeza el libro, devuelve title/author tal como llegaron y pages basadas en los metadatos catalogados.
+
 Devuelve SOLO JSON válido, sin markdown, con esta forma exacta:
 {"title": string, "author": string, "genre": string, "pages": number, "moods": string[], "series_name": string|null, "series_index": number|null, "description": string}`,
         });
-        enriched = { ...enriched, ...parseJsonObject(text) };
+        const ai = parseJsonObject(text);
+        // Trust AI for title/author/series/genre/moods/description; keep catalog pages if AI returns 0
+        enriched = {
+          ...enriched,
+          ...ai,
+          pages: Number(ai.pages) > 0 ? Number(ai.pages) : enriched.pages,
+        };
       } catch (e) {
         console.error("[enrichBook] AI failed:", e);
       }
@@ -189,12 +250,13 @@ REGLAS:
 1. Si un libro de su lista encaja con su vibe actual, devuelve su bookId (UUID exacto del campo "id").
 2. REGLA DE SAGAS ABSOLUTA: si el libro está en una saga (series_name), solo recomiéndalo si series_index es 1 o si el libro anterior de la misma saga ya aparece en LIBROS YA LEÍDOS. Nunca saltes volúmenes. Si el usuario tiene una entrega posterior pendiente, pero falta la anterior, sugiere la anterior como externa o busca otra opción.
 3. Si menciona BLOQUEO LECTOR, prioriza algo ágil, corto, inmersivo.
-4. Si NADA de su lista encaja, sugiere un libro EXTERNO en "external".
-5. Para sugerencias externas incluye title, author, genre, pages aproximadas, moods y description breve.
-6. "reasoning" en español, 2-3 frases cálidas explicando por qué este libro sanará su momento.
+4. Si NADA de su lista encaja, o si el usuario pide explícitamente algo nuevo / una saga / un autor que no tiene, sugiere un libro o SAGA EXTERNA en "external".
+5. Para sugerencias externas incluye title (el libro EXACTO por el que debería empezar: si es saga, el tomo #1), author, genre, pages aproximadas, moods, description breve y opcionalmente series_name si es saga.
+6. Conserva el IDIOMA del título tal como sea el original (no traduzcas títulos en inglés).
+7. "reasoning" en español, 2-3 frases cálidas explicando por qué este libro/saga sanará su momento.
 
 Devuelve SOLO JSON válido, sin markdown, con esta forma exacta:
-{"bookId": string|null, "external": {"title": string, "author": string, "genre": string, "pages": number, "moods": string[], "description": string}|null, "reasoning": string}
+{"bookId": string|null, "external": {"title": string, "author": string, "genre": string, "pages": number, "moods": string[], "description": string, "series_name": string|null}|null, "reasoning": string}
 Devuelve bookId o external, no ambos.`,
       });
 
