@@ -249,6 +249,7 @@ function LibraryPage() {
           books: books.map((b) => ({
             id: b.id, title: b.title, author: b.author, genre: b.genre, pages: b.pages,
             moods: b.moods, series_name: b.series_name, series_index: b.series_index, status: b.status,
+            user_rating: b.user_rating, user_review: b.user_review,
           })),
         },
       });
