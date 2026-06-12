@@ -102,4 +102,3 @@ Disallow: /library
 Disallow: /auth
 
 Sitemap: https://ferova-ia-companion.lovable.app/sitemap.xml
-Sitemap: https://ferova-ia-companion.lovable.app/sitemap.xml
