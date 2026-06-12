@@ -212,6 +212,8 @@ const RecommendInput = z.object({
       series_name: z.string().nullable().optional(),
       series_index: z.number().nullable().optional(),
       status: z.enum(["TBR", "READING", "READ"]),
+      user_rating: z.number().nullable().optional(),
+      user_review: z.string().nullable().optional(),
     }),
   ),
 });
