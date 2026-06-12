@@ -17,6 +17,8 @@ export interface Book {
   started_reading_at: string | null;
   finished_reading_at: string | null;
   reading_speed_days: number | null;
+  user_rating: number | null;
+  user_review: string | null;
   created_at: string;
   updated_at: string;
 }
