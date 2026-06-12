@@ -13,6 +13,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BlogMejoresRecomendadoresLibrosIaRouteImport } from './routes/blog.mejores-recomendadores-libros-ia'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
@@ -35,6 +36,12 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogMejoresRecomendadoresLibrosIaRoute =
+  BlogMejoresRecomendadoresLibrosIaRouteImport.update({
+    id: '/blog/mejores-recomendadores-libros-ia',
+    path: '/blog/mejores-recomendadores-libros-ia',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
   id: '/library',
   path: '/library',
@@ -52,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/library': typeof AuthenticatedLibraryRoute
+  '/blog/mejores-recomendadores-libros-ia': typeof BlogMejoresRecomendadoresLibrosIaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -59,6 +67,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/library': typeof AuthenticatedLibraryRoute
+  '/blog/mejores-recomendadores-libros-ia': typeof BlogMejoresRecomendadoresLibrosIaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -68,12 +77,25 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
+  '/blog/mejores-recomendadores-libros-ia': typeof BlogMejoresRecomendadoresLibrosIaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/sitemap.xml' | '/admin' | '/library'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/sitemap.xml'
+    | '/admin'
+    | '/library'
+    | '/blog/mejores-recomendadores-libros-ia'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/sitemap.xml' | '/admin' | '/library'
+  to:
+    | '/'
+    | '/auth'
+    | '/sitemap.xml'
+    | '/admin'
+    | '/library'
+    | '/blog/mejores-recomendadores-libros-ia'
   id:
     | '__root__'
     | '/'
@@ -82,6 +104,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_authenticated/admin'
     | '/_authenticated/library'
+    | '/blog/mejores-recomendadores-libros-ia'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -89,6 +112,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  BlogMejoresRecomendadoresLibrosIaRoute: typeof BlogMejoresRecomendadoresLibrosIaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -119,6 +143,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/mejores-recomendadores-libros-ia': {
+      id: '/blog/mejores-recomendadores-libros-ia'
+      path: '/blog/mejores-recomendadores-libros-ia'
+      fullPath: '/blog/mejores-recomendadores-libros-ia'
+      preLoaderRoute: typeof BlogMejoresRecomendadoresLibrosIaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/library': {
@@ -156,6 +187,8 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  BlogMejoresRecomendadoresLibrosIaRoute:
+    BlogMejoresRecomendadoresLibrosIaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
