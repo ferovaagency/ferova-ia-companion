@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /library
+Disallow: /auth
+
+Sitemap: https://ferova-ia-companion.lovable.app/sitemap.xml

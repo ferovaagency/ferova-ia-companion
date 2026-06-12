@@ -16,6 +16,19 @@ import { submitFeedback } from "@/lib/feedback.functions";
 import { amazonWishlistUrl } from "@/lib/amazon";
 
 export const Route = createFileRoute("/_authenticated/library")({
+  head: () => ({
+    meta: [
+      { title: "Mi Biblioteca — Librero IA" },
+      { name: "description", content: "Tu estantería personal: organiza libros, sigue tu progreso de lectura y consulta al Oráculo." },
+      { property: "og:title", content: "Mi Biblioteca — Librero IA" },
+      { property: "og:description", content: "Tu santuario lector privado: TBR, progreso y recomendaciones del Oráculo." },
+      { property: "og:url", content: "https://ferova-ia-companion.lovable.app/library" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://ferova-ia-companion.lovable.app/library" },
+    ],
+  }),
   component: LibraryPage,
 });
 
@@ -298,6 +311,7 @@ function LibraryPage() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+        <h1 className="font-serif text-3xl sm:text-4xl font-black tracking-tight">Mi Biblioteca</h1>
         {/* Stats strip */}
         <section className="grid grid-cols-3 gap-3 sm:gap-6">
           <StatCard icon={Library} label="En tu estantería" value={String(books.length)} />

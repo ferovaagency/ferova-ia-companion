@@ -8,7 +8,13 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Entrar — Librero IA" },
-      { name: "description", content: "Accede a tu estantería personal de Librero IA." },
+      { name: "description", content: "Inicia sesión o crea tu cuenta en Librero IA para acceder a tu estantería personal con IA." },
+      { property: "og:title", content: "Entrar a Librero IA" },
+      { property: "og:description", content: "Accede a tu santuario lector: organiza tu TBR y consulta al Oráculo." },
+      { property: "og:url", content: "https://ferova-ia-companion.lovable.app/auth" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://ferova-ia-companion.lovable.app/auth" },
     ],
   }),
   component: AuthPage,
