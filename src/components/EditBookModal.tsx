@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { X, Save, Edit } from "lucide-react";
+import { X, Save, Edit, Star } from "lucide-react";
 import type { Book } from "@/types";
 
 interface EditBookModalProps {
@@ -19,6 +19,8 @@ export function EditBookModal({ book, onClose, onSave }: EditBookModalProps) {
   const [seriesIndex, setSeriesIndex] = useState<number | "">(book.series_index ?? "");
   const [coverUrl, setCoverUrl] = useState(book.cover_url || "");
   const [moodsInput, setMoodsInput] = useState(book.moods?.join(", ") ?? "");
+  const [userRating, setUserRating] = useState<number | null>(book.user_rating ?? null);
+  const [userReview, setUserReview] = useState(book.user_review ?? "");
   const [isSaving, setIsSaving] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
@@ -37,6 +39,8 @@ export function EditBookModal({ book, onClose, onSave }: EditBookModalProps) {
         series_index: seriesIndex !== "" ? Number(seriesIndex) : null,
         cover_url: coverUrl.trim() || null,
         moods,
+        user_rating: userRating,
+        user_review: userReview.trim() || null,
       });
       onClose();
     } finally {
