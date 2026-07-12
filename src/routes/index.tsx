@@ -78,6 +78,7 @@ function Landing() {
       <FeaturesGrid />
       <DemoOracle />
       <TestimonialsSection />
+      <FounderSection />
       <PricingSection />
       <FAQSection />
       <FeedbackSection />
@@ -113,7 +114,7 @@ function Hero() {
         </a>
         <div className="flex items-center gap-1 ml-1">
           {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-accent text-accent" />)}
-          <span className="ml-2 text-sm text-muted-foreground font-serif italic">"Por fin sé qué leer."</span>
+          <span className="ml-2 text-sm text-muted-foreground font-serif italic">"Es la solución para el maldito bloqueo lector." — Juanita</span>
         </div>
       </div>
 
@@ -126,10 +127,10 @@ function SocialProof() {
   return (
     <section className="border-y border-border bg-card/40 py-6">
       <div className="max-w-5xl mx-auto px-6 flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-center">
-        <span className="font-mono-label">+1.200 lectores</span>
-        <span className="font-mono-label">+18.000 libros catalogados</span>
-        <span className="font-mono-label">Sagas respetadas siempre</span>
+        <span className="font-mono-label">Recomendaciones según tu ánimo</span>
+        <span className="font-mono-label">Respeta el orden de tus sagas</span>
         <span className="font-mono-label">IA entrenada para literatura</span>
+        <span className="font-mono-label">Privado y sin anuncios</span>
       </div>
     </section>
   );
@@ -215,16 +216,23 @@ function FeaturesGrid() {
 
 function TestimonialsSection() {
   const tests = [
-    { quote: "Tengo 200 libros sin leer y por primera vez sé exactamente cuál abrir esta noche.", name: "Carolina V.", role: "Lectora de fantasía" },
-    { quote: "El Oráculo me recomendó releer un Murakami antes de saltar a otro autor. Acertó. Da escalofríos.", name: "Andrés P.", role: "Lector compulsivo" },
-    { quote: "Por fin una app que entiende que el orden de Sanderson importa.", name: "Lucía M.", role: "Booktoker" },
+    {
+      quote: "Hace unos años era una comelibros. Tras mi separación no me encontraba a mí misma y dejé de leer. Cuando mi hija me recomendó mi librero personal, volvió la comelibros: me recomendó libros que me ayudaron muchísimo como mujer, madre y empresaria.",
+      name: "Ana María",
+      role: "Lectora · Colombia",
+    },
+    {
+      quote: "Es la solución para el maldito bloqueo lector. Ya no me la paso pensando si debí empezar otro libro y no encontrarme — me da el libro perfecto.",
+      name: "Juanita",
+      role: "Lectora · Colombia",
+    },
   ];
   return (
     <section className="border-t border-border bg-card/40">
       <div className="max-w-5xl mx-auto px-6 py-20">
         <span className="font-mono-label">Lo que dicen los lectores</span>
         <h2 className="mt-3 font-serif text-3xl sm:text-5xl font-black tracking-tight">Curado por lectores. Para lectores.</h2>
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
           {tests.map((t) => (
             <figure key={t.name} className="border border-border p-6 rounded-sm bg-background flex flex-col">
               <Quote className="w-5 h-5 text-accent mb-3" />
@@ -235,6 +243,25 @@ function TestimonialsSection() {
               </figcaption>
             </figure>
           ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function FounderSection() {
+  return (
+    <section className="border-t border-border">
+      <div className="max-w-4xl mx-auto px-6 py-20">
+        <span className="font-mono-label">Quién está detrás</span>
+        <h2 className="mt-3 font-serif text-3xl sm:text-5xl font-black tracking-tight">La lectora detrás del Oráculo</h2>
+        <div className="mt-10 flex flex-col sm:flex-row gap-8 items-start">
+          <div className="w-28 h-28 shrink-0 rounded-full border border-border bg-card/40 flex items-center justify-center text-xs font-mono-label text-muted-foreground text-center">
+            Foto de<br />María Fer
+          </div>
+          <p className="font-serif text-lg leading-relaxed text-muted-foreground">
+            Hola, soy María Fer, de Colombia — lectora y desarrolladora de apps. Construyo apps para las cosas que me dan ansiedad, y una era no saber qué leer al terminar un libro: me causaba bloqueo lector. Preguntarle a una IA normal no servía; tocaba darle mi lista de 100 pendientes y mis problemas cada vez. Así nació el Oráculo: un compañero que ya conoce mis libros y mis gustos, lleva mi progreso y mi velocidad de lectura, es empático con lo que estoy viviendo y siempre me da la lectura perfecta. Me conoce mejor que yo misma. Lo hice para mí, y ahora es para cualquier lector del mundo que quiera lo mismo.
+          </p>
         </div>
       </div>
     </section>
