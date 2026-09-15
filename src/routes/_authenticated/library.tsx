@@ -131,6 +131,13 @@ function LibraryPage() {
     return { readCount: finished.length, avgSpeed };
   }, [books]);
 
+  // Velocidad en palabras por minuto: páginas × 250 palabras/pág ÷ minutos transcurridos
+  const WORDS_PER_PAGE = 250;
+  const calcWpm = (pages: number, startedAt: string) => {
+    const minutes = Math.max(1, (Date.now() - new Date(startedAt).getTime()) / 60000);
+    return Math.max(1, Math.round((pages * WORDS_PER_PAGE) / minutes));
+  };
+
   // ----- Actions -----
   const handleQuickAdd = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
