@@ -185,8 +185,7 @@ function LibraryPage() {
       patch.finished_reading_at = now;
       patch.current_page = book.pages || 0;
       if (book.started_reading_at && book.pages) {
-        const days = Math.max(1, Math.round((Date.now() - new Date(book.started_reading_at).getTime()) / 86400000));
-        patch.reading_speed_days = Math.round(book.pages / days);
+        patch.reading_speed_days = calcWpm(book.pages, book.started_reading_at);
       }
     } else {
       patch.started_reading_at = null;
@@ -204,10 +203,9 @@ function LibraryPage() {
     const startedAt = book.started_reading_at ?? (book.status === "READING" ? new Date().toISOString() : null);
     if (startedAt && !book.started_reading_at) patch.started_reading_at = startedAt;
 
-    // Live reading-speed update on every progress edit (pages per day)
+    // Live reading-speed update on every progress edit (words per minute)
     if (startedAt && page > 0) {
-      const days = Math.max(1, Math.round((Date.now() - new Date(startedAt).getTime()) / 86400000));
-      patch.reading_speed_days = Math.round(page / days);
+      patch.reading_speed_days = calcWpm(page, startedAt);
     }
 
     if (isDone) {
