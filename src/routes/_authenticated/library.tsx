@@ -213,8 +213,7 @@ function LibraryPage() {
       patch.finished_reading_at = new Date().toISOString();
       patch.current_page = book.pages;
       if (startedAt) {
-        const days = Math.max(1, Math.round((Date.now() - new Date(startedAt).getTime()) / 86400000));
-        patch.reading_speed_days = Math.round(book.pages / days);
+        patch.reading_speed_days = calcWpm(book.pages, startedAt);
       }
     }
     await supabase.from("books").update(patch).eq("id", book.id);
@@ -335,7 +334,7 @@ function LibraryPage() {
               )
             }
           />
-          <StatCard icon={Wind} label="Vel. promedio" value={stats.avgSpeed ? `${stats.avgSpeed} pág/día` : "—"} />
+          <StatCard icon={Wind} label="Vel. promedio" value={stats.avgSpeed ? `${stats.avgSpeed} palabras/min` : "—"} />
         </section>
 
         {/* Oracle recommend bar */}
