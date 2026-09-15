@@ -131,6 +131,13 @@ function LibraryPage() {
     return { readCount: finished.length, avgSpeed };
   }, [books]);
 
+  // Velocidad en palabras por minuto: páginas × 250 palabras/pág ÷ minutos transcurridos
+  const WORDS_PER_PAGE = 250;
+  const calcWpm = (pages: number, startedAt: string) => {
+    const minutes = Math.max(1, (Date.now() - new Date(startedAt).getTime()) / 60000);
+    return Math.max(1, Math.round((pages * WORDS_PER_PAGE) / minutes));
+  };
+
   // ----- Actions -----
   const handleQuickAdd = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -178,8 +185,7 @@ function LibraryPage() {
       patch.finished_reading_at = now;
       patch.current_page = book.pages || 0;
       if (book.started_reading_at && book.pages) {
-        const days = Math.max(1, Math.round((Date.now() - new Date(book.started_reading_at).getTime()) / 86400000));
-        patch.reading_speed_days = Math.round(book.pages / days);
+        patch.reading_speed_days = calcWpm(book.pages, book.started_reading_at);
       }
     } else {
       patch.started_reading_at = null;
@@ -197,10 +203,9 @@ function LibraryPage() {
     const startedAt = book.started_reading_at ?? (book.status === "READING" ? new Date().toISOString() : null);
     if (startedAt && !book.started_reading_at) patch.started_reading_at = startedAt;
 
-    // Live reading-speed update on every progress edit (pages per day)
+    // Live reading-speed update on every progress edit (words per minute)
     if (startedAt && page > 0) {
-      const days = Math.max(1, Math.round((Date.now() - new Date(startedAt).getTime()) / 86400000));
-      patch.reading_speed_days = Math.round(page / days);
+      patch.reading_speed_days = calcWpm(page, startedAt);
     }
 
     if (isDone) {
@@ -208,8 +213,7 @@ function LibraryPage() {
       patch.finished_reading_at = new Date().toISOString();
       patch.current_page = book.pages;
       if (startedAt) {
-        const days = Math.max(1, Math.round((Date.now() - new Date(startedAt).getTime()) / 86400000));
-        patch.reading_speed_days = Math.round(book.pages / days);
+        patch.reading_speed_days = calcWpm(book.pages, startedAt);
       }
     }
     await supabase.from("books").update(patch).eq("id", book.id);
@@ -330,7 +334,7 @@ function LibraryPage() {
               )
             }
           />
-          <StatCard icon={Wind} label="Vel. promedio" value={stats.avgSpeed ? `${stats.avgSpeed} pág/día` : "—"} />
+          <StatCard icon={Wind} label="Vel. promedio" value={stats.avgSpeed ? `${stats.avgSpeed} palabras/min` : "—"} />
         </section>
 
         {/* Oracle recommend bar */}
