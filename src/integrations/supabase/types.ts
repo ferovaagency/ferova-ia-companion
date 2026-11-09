@@ -16,6 +16,8 @@ export type Database = {
     Tables: {
       books: {
         Row: {
+          isbn: string | null
+          reading_cycle: number
           author: string
           cover_url: string | null
           created_at: string
@@ -38,6 +40,8 @@ export type Database = {
           user_review: string | null
         }
         Insert: {
+          isbn?: string | null
+          reading_cycle?: number
           author?: string
           cover_url?: string | null
           created_at?: string
@@ -60,6 +64,8 @@ export type Database = {
           user_review?: string | null
         }
         Update: {
+          isbn?: string | null
+          reading_cycle?: number
           author?: string
           cover_url?: string | null
           created_at?: string
@@ -81,6 +87,18 @@ export type Database = {
           user_rating?: number | null
           user_review?: string | null
         }
+        Relationships: []
+      }
+      reading_sessions: {
+        Row: { id: string; book_id: string; cycle: number; day: string; from_page: number; to_page: number; minutes: number | null; note: string; created_at: string }
+        Insert: never
+        Update: never
+        Relationships: []
+      }
+      completed_readings: {
+        Row: { book_id: string; cycle: number; started_at: string | null; finished_at: string | null }
+        Insert: never
+        Update: never
         Relationships: []
       }
       courtesy_accounts: {
@@ -253,6 +271,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      record_reading: { Args: { p_book: string; p_cycle: number; p_from: number; p_to: number; p_day: string; p_zone: string; p_minutes: number | null; p_note: string }; Returns: undefined }
+      revise_session: { Args: { p_id: string; p_day: string; p_zone: string; p_minutes: number | null; p_note: string; p_remove: boolean }; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

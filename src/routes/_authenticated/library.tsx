@@ -7,6 +7,8 @@ import {
   ChevronRight, Wind, AlertCircle, Filter, X, Target, BookMarked, CheckCircle2, MessageSquare, ShoppingCart,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { ReadingJournal, SessionForm, type Completion, type Session } from "@/components/ReadingJournal";
+import { IsbnEntry } from "@/components/IsbnEntry";
 import { BookCover } from "@/components/BookCover";
 import { EditBookModal } from "@/components/EditBookModal";
 import type { Book, BookStatus, RecommendationResult } from "@/types";
@@ -47,6 +49,10 @@ function LibraryPage() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [readingGoal, setReadingGoal] = useState(12);
 
+  const [sessions,setSessions]=useState<Session[]>([]);
+  const [completed,setCompleted]=useState<Completion[]>([]);
+  const [journalError,setJournalError]=useState("");
+  const [editingSession,setEditingSession]=useState<Session>();
   const [search, setSearch] = useState("");
   const [filterGenre, setFilterGenre] = useState("Todos");
   const [isAdding, setIsAdding] = useState(false);
@@ -82,7 +88,7 @@ function LibraryPage() {
         setReadingGoal(prof.reading_goal);
         setGoalDraft(prof.reading_goal);
       }
-      await refreshBooks();
+      await refreshAll();
       setLoading(false);
     })();
 
@@ -97,6 +103,27 @@ function LibraryPage() {
   async function refreshBooks() {
     const { data, error } = await supabase.from("books").select("*").order("created_at", { ascending: false });
     if (!error && data) setBooks(data as Book[]);
+  }
+
+  async function refreshAll() {
+    await refreshBooks();
+    try {
+      const allSessions:Session[]=[];
+      const allCompleted:Completion[]=[];
+      for(let offset=0;;offset+=500){
+        const {data,error}=await supabase.from("reading_sessions").select("*").order("day",{ascending:false}).order("id").range(offset,offset+499);
+        if(error) throw error;
+        allSessions.push(...data);
+        if(data.length<500) break;
+      }
+      for(let offset=0;;offset+=500){
+        const {data,error}=await supabase.from("completed_readings").select("*").order("finished_at",{ascending:false}).order("book_id").order("cycle").range(offset,offset+499);
+        if(error) throw error;
+        allCompleted.push(...data);
+        if(data.length<500) break;
+      }
+      setSessions(allSessions);setCompleted(allCompleted);setJournalError("");
+    }catch{setJournalError("No se pudo cargar el historial.");}
   }
 
   const logout = async () => {
@@ -126,17 +153,11 @@ function LibraryPage() {
 
   const stats = useMemo(() => {
     const finished = books.filter((b) => b.status === "READ");
-    const speeds = finished.map((b) => b.reading_speed_days).filter((x): x is number => !!x);
-    const avgSpeed = speeds.length ? Math.round(speeds.reduce((a, b) => a + b, 0) / speeds.length) : null;
-    return { readCount: finished.length, avgSpeed };
-  }, [books]);
-
-  // Velocidad en palabras por minuto: páginas × 250 palabras/pág ÷ minutos transcurridos
-  const WORDS_PER_PAGE = 250;
-  const calcWpm = (pages: number, startedAt: string) => {
-    const minutes = Math.max(1, (Date.now() - new Date(startedAt).getTime()) / 60000);
-    return Math.max(1, Math.round((pages * WORDS_PER_PAGE) / minutes));
-  };
+    const timed=sessions.filter(s=>s.minutes);
+    const minutes=timed.reduce((n,s)=>n+(s.minutes??0),0);
+    const pages=timed.reduce((n,s)=>n+s.to_page-s.from_page,0);
+    return { readCount: finished.length, avgSpeed: minutes?Math.round(pages*250/minutes):null };
+  }, [books,sessions]);
 
   // ----- Actions -----
   const handleQuickAdd = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -184,41 +205,15 @@ function LibraryPage() {
     } else if (status === "READ") {
       patch.finished_reading_at = now;
       patch.current_page = book.pages || 0;
-      if (book.started_reading_at && book.pages) {
-        patch.reading_speed_days = calcWpm(book.pages, book.started_reading_at);
-      }
     } else {
       patch.started_reading_at = null;
       patch.finished_reading_at = null;
       patch.reading_speed_days = null;
       patch.current_page = 0;
     }
-    await supabase.from("books").update(patch).eq("id", book.id);
-    refreshBooks();
-  };
-
-  const saveProgress = async (book: Book, page: number) => {
-    const isDone = book.pages > 0 && page >= book.pages;
-    const patch: Partial<Book> = { current_page: page };
-    const startedAt = book.started_reading_at ?? (book.status === "READING" ? new Date().toISOString() : null);
-    if (startedAt && !book.started_reading_at) patch.started_reading_at = startedAt;
-
-    // Live reading-speed update on every progress edit (words per minute)
-    if (startedAt && page > 0) {
-      patch.reading_speed_days = calcWpm(page, startedAt);
-    }
-
-    if (isDone) {
-      patch.status = "READ";
-      patch.finished_reading_at = new Date().toISOString();
-      patch.current_page = book.pages;
-      if (startedAt) {
-        patch.reading_speed_days = calcWpm(book.pages, startedAt);
-      }
-    }
-    await supabase.from("books").update(patch).eq("id", book.id);
-    setUpdatingProgressId(null);
-    refreshBooks();
+    const {error}=await supabase.from("books").update(patch).eq("id",book.id).eq("status",book.status);
+    if(error) {setJournalError("No se pudo cambiar el estado.");return;}
+    await refreshAll();
   };
 
   const saveEdit = async (fields: Partial<Book>) => {
@@ -230,7 +225,7 @@ function LibraryPage() {
   const removeBook = async (id: string) => {
     if (!confirm("¿Eliminar este libro de tu estantería?")) return;
     await supabase.from("books").delete().eq("id", id);
-    refreshBooks();
+    await refreshAll();
   };
 
   const saveGoal = async () => {
@@ -334,9 +329,10 @@ function LibraryPage() {
               )
             }
           />
-          <StatCard icon={Wind} label="Vel. promedio" value={stats.avgSpeed ? `${stats.avgSpeed} palabras/min` : "—"} />
+          <StatCard icon={Wind} label="Ritmo estimado" value={stats.avgSpeed ? `${stats.avgSpeed} palabras/min` : "—"} />
         </section>
 
+        {journalError ? <p role="alert">{journalError} <button onClick={refreshAll}>Reintentar</button></p> : <ReadingJournal books={books} sessions={sessions} completed={completed} edit={s=>{setEditingSession(s);setUpdatingProgressId(s.book_id);}}/>}
         {/* Oracle recommend bar */}
         <section className="bg-card border border-border rounded-sm p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-3">
@@ -393,10 +389,7 @@ function LibraryPage() {
                   <BookRow
                     key={b.id}
                     book={b}
-                    updating={updatingProgressId === b.id}
-                    onStartProgress={() => setUpdatingProgressId(b.id)}
-                    onSaveProgress={(p) => saveProgress(b, p)}
-                    onCancelProgress={() => setUpdatingProgressId(null)}
+                    onStartProgress={() => {setEditingSession(undefined);setUpdatingProgressId(b.id);}}
                     onStatus={(s) => updateStatus(b, s)}
                     onEdit={() => setEditingBook(b)}
                     onDelete={() => removeBook(b.id)}
@@ -425,6 +418,7 @@ function LibraryPage() {
           <Modal onClose={() => !enriching && setIsAdding(false)}>
             <h2 className="font-serif text-2xl font-black tracking-tight mb-1">Añadir un libro</h2>
             <p className="text-xs text-muted-foreground italic mb-5">El Oráculo enriquecerá automáticamente con género, sinopsis y portada.</p>
+            <IsbnEntry books={books} saved={refreshBooks}/>
             <form onSubmit={handleQuickAdd} className="space-y-3">
               <div>
                 <label className="font-mono-label block mb-1">Título</label>
@@ -471,8 +465,9 @@ function LibraryPage() {
         )}
       </AnimatePresence>
 
+      {books.filter(b=>b.id===updatingProgressId).map(b=><Modal key={b.id} onClose={()=>setUpdatingProgressId(null)}><SessionForm book={b} entry={editingSession} onSaved={refreshAll} onClose={()=>setUpdatingProgressId(null)}/></Modal>)}
       {/* Edit modal */}
-      {editingBook && <EditBookModal book={editingBook} onClose={() => setEditingBook(null)} onSave={saveEdit} />}
+      {editingBook && <EditBookModal books={books} refresh={refreshBooks} book={editingBook} onClose={() => setEditingBook(null)} onSave={saveEdit} />}
 
       {/* Feedback modal */}
       <AnimatePresence>
@@ -515,14 +510,12 @@ function Modal({ children, onClose }: { children: React.ReactNode; onClose: () =
 }
 
 function BookRow({
-  book, updating, onStartProgress, onSaveProgress, onCancelProgress, onStatus, onEdit, onDelete,
+  book, onStartProgress, onStatus, onEdit, onDelete,
 }: {
-  book: Book; updating: boolean;
-  onStartProgress: () => void; onSaveProgress: (page: number) => void; onCancelProgress: () => void;
+  book: Book;
+  onStartProgress: () => void;
   onStatus: (s: BookStatus) => void; onEdit: () => void; onDelete: () => void;
 }) {
-  const [page, setPage] = useState(book.current_page);
-  useEffect(() => { setPage(book.current_page); }, [book.current_page]);
   const pct = book.pages > 0 ? Math.min(100, Math.round((book.current_page / book.pages) * 100)) : 0;
 
   return (
@@ -551,37 +544,15 @@ function BookRow({
           {book.moods?.slice(0, 2).map((m) => <span key={m} className="text-[10px] bg-accent/10 text-accent px-2 py-0.5 rounded-sm">#{m}</span>)}
         </div>
 
-        {book.status === "READING" && book.pages > 0 && (
-          <div className="mt-3">
-            <div className="flex items-center justify-between text-[10px] font-mono-label mb-1">
-              <span>Progreso · {pct}%</span>
-              {!updating && (
-                <button onClick={onStartProgress} className="text-accent hover:underline">
-                  {book.current_page}/{book.pages}
-                </button>
-              )}
-            </div>
-            <div className="h-1 bg-muted rounded-full overflow-hidden">
-              <div className="h-full bg-accent transition-all" style={{ width: `${pct}%` }} />
-            </div>
-            {updating && (
-              <div className="flex items-center gap-2 mt-2">
-                <input type="number" min={0} max={book.pages} value={page} onChange={(e) => setPage(Math.max(0, Math.min(book.pages, parseInt(e.target.value) || 0)))} className="w-20 bg-background border border-border px-2 py-1 text-xs rounded-sm" />
-                <button onClick={() => onSaveProgress(page)} className="text-xs font-mono-label text-accent">Guardar</button>
-                <button onClick={onCancelProgress} className="text-xs font-mono-label text-muted-foreground">Cancelar</button>
-              </div>
-            )}
-          </div>
-        )}
-
+        {book.status==="READING" && <button className="text-accent underline text-sm mt-3" onClick={onStartProgress}>Actualizar progreso · {book.current_page}{book.pages>0?`/${book.pages} (${pct}%)`:" páginas"}</button>}
         <div className="flex gap-1 mt-3">
           {(["TBR", "READING", "READ"] as BookStatus[]).map((s) => (
             <button
               key={s}
-              onClick={() => onStatus(s)}
+              disabled={s===book.status} onClick={() => onStatus(s)}
               className={`text-[10px] font-mono-label px-2 py-1 rounded-sm transition-colors ${book.status === s ? "bg-foreground text-background" : "bg-muted hover:bg-border"}`}
             >
-              {STATUS_LABEL[s]}
+              {book.status==="READ"&&s==="READING"?"Volver a leer":STATUS_LABEL[s]}
             </button>
           ))}
         </div>

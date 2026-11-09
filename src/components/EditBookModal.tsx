@@ -1,3 +1,4 @@
+import { IsbnEntry } from "@/components/IsbnEntry";
 import { useState } from "react";
 import { motion } from "motion/react";
 import { X, Save, Edit, Star } from "lucide-react";
@@ -5,11 +6,13 @@ import type { Book } from "@/types";
 
 interface EditBookModalProps {
   book: Book;
+  books: Book[];
+  refresh:()=>Promise<void>;
   onClose: () => void;
   onSave: (updatedFields: Partial<Book>) => Promise<void>;
 }
 
-export function EditBookModal({ book, onClose, onSave }: EditBookModalProps) {
+export function EditBookModal({ book, books, refresh, onClose, onSave }: EditBookModalProps) {
   const [title, setTitle] = useState(book.title);
   const [author, setAuthor] = useState(book.author);
   const [genre, setGenre] = useState(book.genre);
@@ -71,6 +74,7 @@ export function EditBookModal({ book, onClose, onSave }: EditBookModalProps) {
           <p className="text-xs text-muted-foreground italic mt-1">Ajusta los detalles de "{book.title}" para tu estantería personal.</p>
         </header>
 
+        {book.isbn?<p className="my-3 text-sm">ISBN {book.isbn}</p>:<IsbnEntry books={books} existingBook={book} saved={async()=>{await refresh();onClose();}}/>}
         <form onSubmit={submit} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>

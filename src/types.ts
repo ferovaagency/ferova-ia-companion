@@ -1,6 +1,8 @@
 export type BookStatus = "TBR" | "READING" | "READ";
 
 export interface Book {
+  reading_cycle: number;
+  isbn: string | null;
   id: string;
   user_id: string;
   title: string;
