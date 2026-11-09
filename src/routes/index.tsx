@@ -375,7 +375,7 @@ function DemoOracle() {
           Prueba el <em className="text-accent not-italic">Oráculo</em>
         </h2>
         <p className="mt-3 text-muted-foreground font-serif max-w-xl">
-          Describe tu vibe lector ahora mismo y el oráculo te sugerirá un libro. Sin login, sin registro.
+          Cuéntale al Oráculo qué te apetece leer y descubre tres libros con un motivo para elegir cada uno.
         </p>
 
         <div className="mt-8 flex flex-col gap-3">
@@ -390,7 +390,7 @@ function DemoOracle() {
             {examples.map((ex) => (
               <button
                 key={ex}
-                type="button"
+                type="button" disabled={loading}
                 onClick={() => { setVibe(ex); ask(ex); }}
                 className="text-xs px-3 py-1.5 border border-border rounded-full hover:border-foreground transition-colors font-mono-label"
               >
@@ -412,24 +412,24 @@ function DemoOracle() {
 
         {result && (
           <div className="mt-8 border border-border bg-background p-6 rounded-sm">
-            {result.external ? (
-              <div className="flex flex-col sm:flex-row gap-5">
-                {result.external.cover_url && (
-                  <img src={result.external.cover_url} alt={result.external.title} className="w-24 h-auto shadow-md self-start" />
+            {result.options.map(option => option.external && (
+              <div key={option.external.title+"|"+option.external.author} className="flex flex-col sm:flex-row gap-5 py-4 border-b border-border">
+                {option.external.cover_url && (
+                  <img src={option.external.cover_url} alt={option.external.title} className="w-24 h-auto shadow-md self-start" />
                 )}
                 <div>
                   <span className="font-mono-label text-accent">Sugerencia externa</span>
-                  <h3 className="mt-1 font-serif text-2xl font-black">{result.external.title}</h3>
-                  <p className="text-sm text-muted-foreground">{result.external.author}</p>
-                  {result.external.genre && (
-                    <p className="mt-1 text-xs font-mono-label">{result.external.genre}</p>
+                  <h3 className="mt-1 font-serif text-2xl font-black">{option.external.title}</h3>
+                  <p className="text-sm text-muted-foreground">{option.external.author}</p>
+                  {option.external.genre && (
+                    <p className="mt-1 text-xs font-mono-label">{option.external.genre}</p>
                   )}
-                  <p className="mt-3 font-serif italic text-foreground/90 leading-relaxed">"{result.reasoning}"</p>
-                  {result.external.description && (
-                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{result.external.description}</p>
+                  <p className="mt-3 font-serif italic text-foreground/90 leading-relaxed">"{option.reasoning}"</p>
+                  {option.external.description && (
+                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{option.external.description}</p>
                   )}
                   <a
-                    href={amazonWishlistUrl(result.external.title, result.external.author)}
+                    href={amazonWishlistUrl(option.external.title, option.external.author)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-4 inline-flex items-center gap-2 bg-accent text-accent-foreground px-4 py-2.5 font-mono-label rounded-sm hover:opacity-90"
@@ -438,9 +438,8 @@ function DemoOracle() {
                   </a>
                 </div>
               </div>
-            ) : (
-              <p className="font-serif italic text-foreground/90 leading-relaxed">"{result.reasoning}"</p>
-            )}
+            ))}
+            {result.errorType && <p role="alert">{result.reasoning}</p>}
             <div className="mt-5 pt-5 border-t border-border flex items-center justify-between gap-3">
               <p className="text-xs text-muted-foreground">¿Quieres que el Oráculo recuerde tu estantería y respete tus sagas?</p>
               <Link to="/auth" className="text-xs font-mono-label hover:text-accent transition-colors flex items-center gap-1">

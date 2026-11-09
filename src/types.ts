@@ -1,6 +1,9 @@
-export type BookStatus = "TBR" | "READING" | "READ";
+export type BookStatus = "TBR" | "READING" | "READ" | "PAUSED" | "ABANDONED";
 
 export interface Book {
+  reading_cycle: number;
+  goodreads_id: string | null;
+  isbn: string | null;
   id: string;
   user_id: string;
   title: string;
@@ -35,7 +38,7 @@ export interface EnrichedBook {
   cover_url?: string | null;
 }
 
-export interface RecommendationResult {
+export interface RecommendationOption {
   bookId?: string | null;
   external?: {
     title: string;
@@ -46,7 +49,13 @@ export interface RecommendationResult {
     cover_url?: string | null;
     description?: string;
     series_name?: string | null;
+    series_index?: number | null;
   } | null;
+  reasoning: string;
+}
+
+export interface RecommendationResult {
+  options: RecommendationOption[];
   reasoning: string;
   errorType?: "PERMISSION_DENIED" | "QUOTA_EXHAUSTED" | "GENERIC";
   errorMessage?: string;
