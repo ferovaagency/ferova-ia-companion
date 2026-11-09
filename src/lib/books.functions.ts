@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { collectOptions, eligibleBooks } from "./oracle-options";
 import { z } from "zod";
 import type { EnrichedBook, RecommendationResult } from "@/types";
 
@@ -211,7 +212,7 @@ const RecommendInput = z.object({
       moods: z.array(z.string()),
       series_name: z.string().nullable().optional(),
       series_index: z.number().nullable().optional(),
-      status: z.enum(["TBR", "READING", "READ"]),
+      status: z.enum(["TBR", "READING", "READ","PAUSED","ABANDONED"]),
       user_rating: z.number().nullable().optional(),
       user_review: z.string().nullable().optional(),
     }),
@@ -224,6 +225,7 @@ export const recommendBook = createServerFn({ method: "POST" })
     const key = process.env.LOVABLE_API_KEY;
     if (!key) {
       return {
+        options: [],
         reasoning: "El Oráculo no está disponible porque falta la configuración de IA.",
         errorType: "GENERIC",
       };
@@ -234,20 +236,19 @@ export const recommendBook = createServerFn({ method: "POST" })
       const { generateText } = await import("ai");
       const gateway = createLovableAiGatewayProvider(key);
 
-      const available = data.books.filter((b) => b.status !== "READ");
+      const inactive = data.books.filter(b=>b.status==="PAUSED"||b.status==="ABANDONED");
+      const available=eligibleBooks(data.books);
       const read = data.books
         .filter((b) => b.status === "READ")
         .map((b) => {
           const stars = b.user_rating ? ` ★${b.user_rating}/5` : "";
           const note = b.user_review ? ` — "${String(b.user_review).slice(0, 280)}"` : "";
-          return `${b.title} de ${b.author}${stars}${note}`;
+          return `${b.title} de ${b.author}${b.series_name ? " · "+b.series_name+" #"+(b.series_index??"?") : ""}${stars}${note}`;
         });
       const loved = data.books.filter((b) => (b.user_rating ?? 0) >= 4);
       const disliked = data.books.filter((b) => b.user_rating != null && b.user_rating <= 2);
 
-      const { text } = await generateText({
-        model: gateway("google/gemini-3-flash-preview"),
-        prompt: `Eres EL ORÁCULO de Librero IA: una inteligencia lectora cálida, precisa y obsesiva con el orden narrativo.
+      const prompt = `Eres EL ORÁCULO de Librero IA: una inteligencia lectora cálida, precisa y obsesiva con el orden narrativo.
 
 EL USUARIO DICE: "${data.userRequest}"
 
@@ -260,6 +261,9 @@ ${read.length ? read.join("\n") : "ninguno"}
 LO QUE AMA (★4-5): ${loved.map((b) => `${b.title}${b.user_review ? ` ("${String(b.user_review).slice(0, 160)}")` : ""}`).join(" | ") || "—"}
 LO QUE NO LE FUNCIONÓ (★1-2): ${disliked.map((b) => `${b.title}${b.user_review ? ` ("${String(b.user_review).slice(0, 160)}")` : ""}`).join(" | ") || "—"}
 
+PAUSADOS Y ABANDONADOS: ${JSON.stringify(inactive.map(b=>({titulo:b.title,saga:b.series_name,estado:b.status})))}
+Una pausa es temporal. No ofrezcas esos libros como próxima lectura ni recomiendes continuar sagas abandonadas. Cuando sugieras una continuación, indica el número de tomo y explica qué lectura previa lo justifica.
+
 REGLAS:
 1. Si un libro de su lista encaja con su vibe actual, devuelve su bookId (UUID exacto del campo "id").
 2. REGLA DE SAGAS ABSOLUTA: si el libro está en una saga (series_name), solo recomiéndalo si series_index es 1 o si el libro anterior de la misma saga ya aparece en LIBROS YA LEÍDOS. Nunca saltes volúmenes. Si el usuario tiene una entrega posterior pendiente, pero falta la anterior, sugiere la anterior como externa o busca otra opción.
@@ -270,22 +274,20 @@ REGLAS:
 7. APRENDE DE SUS RESEÑAS: usa "LO QUE AMA" y "LO QUE NO LE FUNCIONÓ" para afinar el tono, ritmo, tropos y temas. Evita patrones que rechazó (★1-2) y refuerza los que le encantan (★4-5). Si una reseña personal revela un gusto concreto (prosa lírica, romance lento, finales agridulces, etc.), respétalo.
 8. "reasoning" en español, 2-3 frases cálidas explicando por qué este libro/saga sanará su momento. Si te apoyaste en una reseña suya, menciónalo brevemente ("como te encantó X por Y...").
 
-Devuelve SOLO JSON válido, sin markdown, con esta forma exacta:
-{"bookId": string|null, "external": {"title": string, "author": string, "genre": string, "pages": number, "moods": string[], "description": string, "series_name": string|null}|null, "reasoning": string}
-Devuelve bookId o external, no ambos.`,
-      });
-
-      const out = parseJsonObject(text);
-      let external = out.external;
-      if (external?.title) {
-        const cover = await fetchOriginalCover(external.title, external.author);
-        external = { ...external, cover_url: cover };
+Propón tres libros distintos. Prioriza la estantería cuando encaje y completa con externos si hacen falta. Da un motivo específico para cada alternativa.
+Devuelve JSON {"options":[{"bookId":null,"external":{"title":"...","author":"...","series_name":null,"series_index":null},"reasoning":"..."}, ...]}.
+Para una opción interna usa bookId y external null. Para una saga externa incluye el número del tomo.`;
+      const options:RecommendationResult["options"]=[];
+      for(let attempt=0;attempt<2 && options.length<3;attempt++){
+        const retry=attempt?`\nFaltan ${3-options.length} opciones válidas. Devuelve alternativas diferentes. Ya elegidas: ${JSON.stringify(options)}`:"";
+        const {text}=await generateText({model:gateway("google/gemini-3-flash-preview"),prompt:prompt+retry});
+        try {collectOptions(parseJsonObject(text).options,data.books,options);} catch { /* Retry an incomplete model response. */ }
       }
-      return {
-        bookId: out.bookId || null,
-        external,
-        reasoning: out.reasoning,
-      };
+      if(options.length!==3)return {options:[],errorType:"GENERIC",reasoning:"No pude reunir tres opciones que respeten tus preferencias. Prueba con otro género o estado de ánimo."};
+      await Promise.all(options.map(async o=>{
+        if(o.external)o.external.cover_url=await fetchOriginalCover(o.external.title,o.external.author).catch(()=>null);
+      }));
+      return {options,reasoning:""};
     } catch (e: any) {
       const msg = e?.message || String(e);
       let errorType: RecommendationResult["errorType"] = "GENERIC";
@@ -293,6 +295,7 @@ Devuelve bookId o external, no ambos.`,
       else if (/403|denied|permission/i.test(msg)) errorType = "PERMISSION_DENIED";
       console.error("[recommendBook] failed:", msg);
       return {
+        options: [],
         reasoning:
           errorType === "QUOTA_EXHAUSTED"
             ? "Los créditos de IA se agotaron. Añade créditos en Workspace → Usage."

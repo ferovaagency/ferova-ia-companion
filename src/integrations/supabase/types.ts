@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       books: {
         Row: {
+          goodreads_id: string | null
           isbn: string | null
           reading_cycle: number
           author: string
@@ -40,6 +41,7 @@ export type Database = {
           user_review: string | null
         }
         Insert: {
+          goodreads_id?: string | null
           isbn?: string | null
           reading_cycle?: number
           author?: string
@@ -64,6 +66,7 @@ export type Database = {
           user_review?: string | null
         }
         Update: {
+          goodreads_id?: string | null
           isbn?: string | null
           reading_cycle?: number
           author?: string
@@ -218,6 +221,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          onboarding_finished_at: string | null
           reading_goal: number
           updated_at: string
         }
@@ -225,6 +229,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          onboarding_finished_at?: string | null
           reading_goal?: number
           updated_at?: string
         }
@@ -232,6 +237,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          onboarding_finished_at?: string | null
           reading_goal?: number
           updated_at?: string
         }
@@ -271,6 +277,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      import_goodreads: { Args: { p_rows: Json }; Returns: number }
       finish_active_book: { Args: { p_book: string; p_cycle: number; p_zone: string }; Returns: undefined }
       record_reading: { Args: { p_book: string; p_cycle: number; p_from: number; p_to: number; p_day: string; p_zone: string; p_minutes: number | null; p_note: string }; Returns: undefined }
       revise_session: { Args: { p_id: string; p_day: string; p_zone: string; p_minutes: number | null; p_note: string; p_remove: boolean }; Returns: undefined }
@@ -284,7 +291,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
-      book_status: "TBR" | "READING" | "READ"
+      book_status: "TBR" | "READING" | "READ" | "PAUSED" | "ABANDONED"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -413,7 +420,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
-      book_status: ["TBR", "READING", "READ"],
+      book_status: ["TBR", "READING", "READ","PAUSED","ABANDONED"],
     },
   },
 } as const

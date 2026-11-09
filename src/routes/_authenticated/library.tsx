@@ -8,10 +8,12 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ReadingJournal, SessionForm, type Completion, type Session } from "@/components/ReadingJournal";
+import { ReaderWelcome } from "@/components/ReaderWelcome";
+import { GoodreadsImport } from "@/components/GoodreadsImport";
 import { IsbnEntry } from "@/components/IsbnEntry";
 import { BookCover } from "@/components/BookCover";
 import { EditBookModal } from "@/components/EditBookModal";
-import type { Book, BookStatus, RecommendationResult } from "@/types";
+import type { Book, BookStatus, RecommendationOption, RecommendationResult } from "@/types";
 import { enrichBook, recommendBook } from "@/lib/books.functions";
 import { ensureMembership } from "@/lib/membership.functions";
 import { submitFeedback } from "@/lib/feedback.functions";
@@ -34,8 +36,8 @@ export const Route = createFileRoute("/_authenticated/library")({
   component: LibraryPage,
 });
 
-const STATUS_LABEL: Record<BookStatus, string> = { TBR: "Por leer", READING: "Leyendo", READ: "Leídos" };
-const STATUS_ORDER: BookStatus[] = ["READING", "TBR", "READ"];
+const STATUS_LABEL: Record<BookStatus, string> = { TBR: "Por leer", READING: "Leyendo", READ: "Leídos", PAUSED: "Pausados", ABANDONED: "Abandonados" };
+const STATUS_ORDER: BookStatus[] = ["READING", "TBR", "PAUSED", "READ", "ABANDONED"];
 
 function LibraryPage() {
   const navigate = useNavigate();
@@ -53,6 +55,10 @@ function LibraryPage() {
   const [completed,setCompleted]=useState<Completion[]>([]);
   const [journalError,setJournalError]=useState("");
   const [editingSession,setEditingSession]=useState<Session>();
+  const [guide,setGuide]=useState(false);
+  const [guideError,setGuideError]=useState("");
+  const [importOpen,setImportOpen]=useState(false);
+  const [importBusy,setImportBusy]=useState(false);
   const [search, setSearch] = useState("");
   const [filterGenre, setFilterGenre] = useState("Todos");
   const [isAdding, setIsAdding] = useState(false);
@@ -65,6 +71,8 @@ function LibraryPage() {
   const [view, setView] = useState<"library" | "recommendation">("library");
   const [userInput, setUserInput] = useState("");
   const [recommendation, setRecommendation] = useState<RecommendationResult | null>(null);
+  const [savingRec,setSavingRec]=useState(false);
+  const [recError,setRecError]=useState("");
   const [recLoading, setRecLoading] = useState(false);
 
   // Goal editor
@@ -83,8 +91,9 @@ function LibraryPage() {
       const membership = await ensureMembershipFn();
       setIsAdmin(Boolean(membership.isAdmin));
 
-      const { data: prof } = await supabase.from("profiles").select("reading_goal").eq("id", u.user.id).maybeSingle();
+      const { data: prof } = await supabase.from("profiles").select("reading_goal,onboarding_finished_at").eq("id", u.user.id).maybeSingle();
       if (prof) {
+        setGuide(!prof.onboarding_finished_at);
         setReadingGoal(prof.reading_goal);
         setGoalDraft(prof.reading_goal);
       }
@@ -101,8 +110,14 @@ function LibraryPage() {
   }, []);
 
   async function refreshBooks() {
-    const { data, error } = await supabase.from("books").select("*").order("created_at", { ascending: false });
-    if (!error && data) setBooks(data as Book[]);
+    const list:Book[]=[];
+    for(let offset=0;;offset+=500){
+      const {data,error}=await supabase.from("books").select("*").order("created_at",{ascending:false}).order("id").range(offset,offset+499);
+      if(error) {setActionError("No se pudo actualizar la biblioteca.");return;}
+      list.push(...data);
+      if(data.length<500) break;
+    }
+    setBooks(list);
   }
 
   async function refreshAll() {
@@ -126,6 +141,14 @@ function LibraryPage() {
     }catch{setJournalError("No se pudo cargar el historial.");}
   }
 
+  async function finishGuide(){
+    const {data}=await supabase.auth.getUser();
+    if(!data.user)return;
+    const {error}=await supabase.from("profiles").update({onboarding_finished_at:new Date().toISOString()}).eq("id",data.user.id).select("id").single();
+    if(error){setGuideError("No se pudo guardar la guía. Vuelve a intentarlo.");return;}
+    setGuide(false);setGuideError("");
+  }
+
   const logout = async () => {
     await supabase.auth.signOut();
     navigate({ to: "/" });
@@ -146,7 +169,7 @@ function LibraryPage() {
   }, [books, search, filterGenre]);
 
   const grouped = useMemo(() => {
-    const out: Record<BookStatus, Book[]> = { TBR: [], READING: [], READ: [] };
+    const out: Record<BookStatus, Book[]> = { TBR: [], READING: [], READ: [], PAUSED: [], ABANDONED: [] };
     filtered.forEach((b) => out[b.status].push(b));
     return out;
   }, [filtered]);
@@ -215,7 +238,7 @@ function LibraryPage() {
     } else if (status === "READ") {
       patch.finished_reading_at = now;
       patch.current_page = book.pages || 0;
-    } else {
+    } else if(status==="TBR") {
       patch.started_reading_at = null;
       patch.finished_reading_at = null;
       patch.reading_speed_days = null;
@@ -248,7 +271,7 @@ function LibraryPage() {
 
   const askOracle = async () => {
     if (!userInput.trim()) return;
-    setRecLoading(true);
+    setRecLoading(true);setRecError("");
     setView("recommendation");
     setRecommendation(null);
     try {
@@ -263,31 +286,35 @@ function LibraryPage() {
         },
       });
       setRecommendation(r);
+    } catch {setRecommendation({options:[],reasoning:"No se pudo consultar el Oráculo. Inténtalo otra vez.",errorType:"GENERIC"});
     } finally {
       setRecLoading(false);
     }
   };
 
-  const acceptExternal = async () => {
-    if (!recommendation?.external) return;
+  const acceptExternal = async (rec:RecommendationOption) => {
+    if (!rec.external || savingRec) return;
+    setSavingRec(true);setRecError("");
+    try {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) return;
       const { error } = await supabase.from("books").insert({
       user_id: u.user.id,
-      title: recommendation.external.title,
-      author: recommendation.external.author || "Autor desconocido",
-      genre: recommendation.external.genre || "Literatura",
-      pages: recommendation.external.pages || 0,
-      moods: recommendation.external.moods || [],
-      description: recommendation.external.description || "",
-      cover_url: recommendation.external.cover_url ?? null,
+      title: rec.external.title,
+      author: rec.external.author || "Autor desconocido",
+      genre: rec.external.genre || "Literatura",
+      pages: rec.external.pages || 0,
+      moods: rec.external.moods || [],
+      description: rec.external.description || "",
+      series_name: rec.external.series_name??null,
+      series_index: rec.external.series_index??null,
+      cover_url: rec.external.cover_url ?? null,
       status: "TBR",
     });
       if (error) throw error;
-    setView("library");
-    setRecommendation(null);
-    setUserInput("");
-    await refreshBooks();
+      await refreshBooks();
+    } catch {setRecError("No se pudo añadir el libro. Inténtalo otra vez.");}
+    finally {setSavingRec(false);}
   };
 
   if (loading) {
@@ -322,6 +349,8 @@ function LibraryPage() {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
         <h1 className="font-serif text-3xl sm:text-4xl font-black tracking-tight">Mi Biblioteca</h1>
+        {guide?<ReaderWelcome books={books} add={()=>setIsAdding(true)} importCsv={()=>setImportOpen(true)} start={b=>updateStatus(b,"READING")} progress={b=>{setEditingSession(undefined);setUpdatingProgressId(b.id);}} oracle={()=>{document.getElementById("oracle-request")?.focus();}} finish={finishGuide}/>:<button className="text-sm underline" onClick={()=>setGuide(true)}>Ver guía de primeros pasos</button>}
+        {guideError&&<p role="alert">{guideError}</p>}
         {/* Stats strip */}
         <section className="grid grid-cols-3 gap-3 sm:gap-6">
           <StatCard icon={Library} label="En tu estantería" value={String(books.length)} />
@@ -351,7 +380,7 @@ function LibraryPage() {
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <input
-              value={userInput}
+              id="oracle-request" value={userInput}
               onChange={(e) => setUserInput(e.target.value)}
               placeholder="¿Cómo te sientes hoy? ej. 'Quiero algo gótico y corto, estoy en bloqueo lector'"
               className="flex-1 bg-background border border-border px-3 py-3 rounded-sm focus:outline-none focus:border-foreground text-sm font-serif italic"
@@ -379,6 +408,7 @@ function LibraryPage() {
               {genres.map((g) => <option key={g}>{g}</option>)}
             </select>
           </div>
+          <button onClick={()=>setImportOpen(true)} className="border border-border px-3 py-2 rounded-sm text-sm">Importar Goodreads</button>
           <button onClick={() => setIsAdding(true)} className="bg-foreground text-background px-5 py-2.5 rounded-sm font-mono-label flex items-center justify-center gap-2 hover:opacity-90">
             <Plus className="w-3.5 h-3.5" /> Añadir libro
           </button>
@@ -410,7 +440,7 @@ function LibraryPage() {
           );
         })}
 
-        {!books.length && (
+        {!books.length && !guide && (
           <div className="border border-dashed border-border rounded-sm p-12 text-center">
             <BookMarked className="w-8 h-8 mx-auto text-muted-foreground mb-3" />
             <h3 className="font-serif text-xl font-bold">Tu estantería está vacía</h3>
@@ -422,6 +452,7 @@ function LibraryPage() {
         )}
       </main>
 
+      {importOpen && <Modal onClose={()=>{if(!importBusy)setImportOpen(false);}}><GoodreadsImport books={books} refresh={refreshAll} onBusy={setImportBusy}/></Modal>}
       {/* Add book modal */}
       <AnimatePresence>
         {isAdding && (
@@ -469,7 +500,7 @@ function LibraryPage() {
                 <p className="font-serif">{recommendation.reasoning}</p>
               </div>
             ) : recommendation ? (
-              <RecommendationView rec={recommendation} books={books} onAccept={acceptExternal} onClose={() => { setView("library"); setRecommendation(null); }} />
+              <div className="space-y-6"><h2 className="font-serif text-2xl font-bold">Tres libros para ti</h2>{recommendation.options.map(o=><RecommendationView key={o.bookId??o.external?.title+"|"+o.external?.author} rec={o} books={books} onAccept={()=>acceptExternal(o)} saving={savingRec}/>)}{recError&&<p role="alert">{recError}</p>}</div>
             ) : null}
           </Modal>
         )}
@@ -555,8 +586,8 @@ function BookRow({
         </div>
 
         {book.status==="READING" && <button className="text-accent underline text-sm mt-3" onClick={onStartProgress}>Actualizar progreso · {book.current_page}{book.pages>0?`/${book.pages} (${pct}%)`:" páginas"}</button>}
-        <div className="flex gap-1 mt-3">
-          {(["TBR", "READING", "READ"] as BookStatus[]).map((s) => (
+        <div className="flex flex-wrap gap-1 mt-3">
+          {STATUS_ORDER.map((s) => (
             <button
               key={s}
               disabled={s===book.status} onClick={() => onStatus(s)}
@@ -571,7 +602,7 @@ function BookRow({
   );
 }
 
-function RecommendationView({ rec, books, onAccept, onClose }: { rec: RecommendationResult; books: Book[]; onAccept: () => void; onClose: () => void }) {
+function RecommendationView({ rec, books, onAccept, saving }: { rec: RecommendationOption; books: Book[]; onAccept: () => void; saving:boolean }) {
   const internal = rec.bookId ? books.find((b) => b.id === rec.bookId) : null;
   const ext = rec.external;
   const display = internal
@@ -579,6 +610,7 @@ function RecommendationView({ rec, books, onAccept, onClose }: { rec: Recommenda
     : ext
       ? { title: ext.title, author: ext.author, cover_url: ext.cover_url ?? null }
       : null;
+  const saved=ext && books.some(b=>b.title===ext.title&&b.author===ext.author);
   const amazonUrl = display ? amazonWishlistUrl(display.title, display.author) : null;
 
   return (
@@ -598,15 +630,15 @@ function RecommendationView({ rec, books, onAccept, onClose }: { rec: Recommenda
       )}
       <p className="font-serif italic leading-relaxed text-sm border-l-2 border-accent pl-4">{rec.reasoning}</p>
       <div className="flex flex-col sm:flex-row gap-3 mt-6">
-        <button onClick={onClose} className="flex-1 border border-border py-3 font-mono-label rounded-sm hover:bg-muted">Cerrar</button>
+
         {amazonUrl && (
           <a href={amazonUrl} target="_blank" rel="noopener noreferrer" className="flex-1 bg-accent text-accent-foreground py-3 font-mono-label rounded-sm hover:opacity-90 flex items-center justify-center gap-2">
             <ShoppingCart className="w-3.5 h-3.5" /> Lista de deseos Amazon
           </a>
         )}
         {ext && !internal && (
-          <button onClick={onAccept} className="flex-1 bg-foreground text-background py-3 font-mono-label rounded-sm hover:opacity-90 flex items-center justify-center gap-2">
-            <Plus className="w-3.5 h-3.5" /> Añadir a mi TBR
+          <button disabled={saving||Boolean(saved)} onClick={onAccept} className="flex-1 bg-foreground text-background py-3 font-mono-label rounded-sm hover:opacity-90 flex items-center justify-center gap-2">
+            <Plus className="w-3.5 h-3.5" /> {saved?"En tu estantería":"Añadir a mi TBR"}
           </button>
         )}
       </div>
