@@ -198,6 +198,16 @@ function LibraryPage() {
   };
 
   const updateStatus = async (book: Book, status: BookStatus) => {
+    if (book.status === "READING" && status === "READ") {
+      const { error } = await supabase.rpc("finish_active_book", {
+        p_book: book.id,
+        p_cycle: book.reading_cycle,
+        p_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      });
+      if (error) { setJournalError("No se pudo registrar la finalización. Vuelve a intentarlo."); return; }
+      await refreshAll();
+      return;
+    }
     const patch: Partial<Book> = { status };
     const now = new Date().toISOString();
     if (status === "READING") {

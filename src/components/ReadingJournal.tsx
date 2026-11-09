@@ -178,7 +178,10 @@ export function ReadingJournal({
     const id = setInterval(() => setToday(localDay()), 30000);
     return () => clearInterval(id);
   }, []);
-  const days = sessions.map((s) => s.day);
+  const days = [
+    ...sessions.map((s) => s.day),
+    ...completed.flatMap((r) => (r.streak_day ? [r.streak_day] : [])),
+  ];
   const streak = readingStreak(days, today);
   const recentDays = Array.from({ length: 7 }, (_, index) => {
     const date = new Date(today + "T12:00:00");
@@ -191,6 +194,12 @@ export function ReadingJournal({
   const [open, setOpen] = useState(false);
   const [limit, setLimit] = useState(20);
   const [selectedDay, setSelectedDay] = useState("");
+  const visibleCompletions = selectedDay
+    ? completed.filter(
+        (r) =>
+          (r.streak_day ?? (r.finished_at && localDay(new Date(r.finished_at)))) === selectedDay,
+      )
+    : completed;
   const visible = selectedDay ? sessions.filter((s) => s.day === selectedDay) : sessions;
   const titles = new Map(books.map((b) => [b.id, b.title]));
   return (
@@ -200,8 +209,8 @@ export function ReadingJournal({
       </h2>
       <p className="text-sm text-muted-foreground">
         {days.includes(today)
-          ? "Hoy ya registraste páginas."
-          : "Registra páginas leídas para marcar hoy."}{" "}
+          ? "Hoy ya registraste una lectura."
+          : "Registra un avance o termina un libro que estés leyendo para marcar hoy."}{" "}
         Cada fecha cuenta una vez.
       </p>
       <div className="grid grid-cols-7 gap-1 max-w-md mt-3">
@@ -239,8 +248,10 @@ export function ReadingJournal({
             Ver todas las fechas
           </button>
         )}
-        {selectedDay && visible.length === 0 && <p>Sin sesiones ese día.</p>}
-        {sessions.length === 0 && (
+        {selectedDay && visible.length === 0 && visibleCompletions.length === 0 && (
+          <p>Sin sesiones ese día.</p>
+        )}
+        {sessions.length === 0 && completed.length === 0 && (
           <p className="text-sm my-3">Aquí aparecerá tu primera sesión cuando guardes un avance.</p>
         )}
         {visible.slice(0, limit).map((s) => (
@@ -263,10 +274,10 @@ export function ReadingJournal({
             Ver más sesiones
           </button>
         )}
-        {completed.length > 0 && (
+        {visibleCompletions.length > 0 && (
           <>
             <h3 className="font-semibold mt-4">Lecturas terminadas</h3>
-            {completed.map((r) => (
+            {visibleCompletions.map((r) => (
               <div key={r.book_id + r.cycle} className="text-sm">
                 {titles.get(r.book_id)} · lectura {r.cycle} ·{" "}
                 {r.finished_at

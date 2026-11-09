@@ -96,7 +96,7 @@ export type Database = {
         Relationships: []
       }
       completed_readings: {
-        Row: { book_id: string; cycle: number; started_at: string | null; finished_at: string | null }
+        Row: { book_id: string; cycle: number; streak_day: string | null; started_at: string | null; finished_at: string | null }
         Insert: never
         Update: never
         Relationships: []
@@ -271,6 +271,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      finish_active_book: { Args: { p_book: string; p_cycle: number; p_zone: string }; Returns: undefined }
       record_reading: { Args: { p_book: string; p_cycle: number; p_from: number; p_to: number; p_day: string; p_zone: string; p_minutes: number | null; p_note: string }; Returns: undefined }
       revise_session: { Args: { p_id: string; p_day: string; p_zone: string; p_minutes: number | null; p_note: string; p_remove: boolean }; Returns: undefined }
       has_role: {
