@@ -3,12 +3,9 @@ import { isbn13 } from "@/lib/reading";
 import { supabase } from "@/integrations/supabase/client";
 import type { Book } from "@/types";
 
-interface Edition {
-  title: string;
-  authors?: { name: string }[];
-  number_of_pages?: number;
-  cover?: { medium?: string };
-}
+import { useServerFn } from "@tanstack/react-start";
+import { lookupIsbn } from "@/lib/isbn.functions";
+import type { Edition } from "@/lib/isbn-catalog";
 const field = "border border-border bg-background px-3 py-2 rounded-sm w-full";
 export function IsbnEntry({
   books,
@@ -25,49 +22,106 @@ export function IsbnEntry({
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [camera, setCamera] = useState(false);
-  const scanLocked = useRef(false);
+  const search = useServerFn(lookupIsbn);
   const video = useRef<HTMLVideoElement>(null);
+  const photo = useRef<HTMLInputElement>(null);
+  const scanLocked = useRef(false);
+  const lastScan = useRef("");
+  const onScan = useRef((isbn: string) => {});
+  useEffect(() => {
+    onScan.current = (isbn) => {
+      if (scanLocked.current || lastScan.current === isbn) return;
+      lastScan.current = isbn;
+      scanLocked.current = true;
+      void lookup(isbn);
+    };
+  });
   useEffect(() => {
     if (!camera || !video.current) return;
     const element = video.current;
-    let closed = false;
-    let stop: (() => void) | undefined;
-    (async () => {
-      const { BrowserMultiFormatReader } = await import("@zxing/browser");
-      if (closed) return;
-      const controls = await new BrowserMultiFormatReader().decodeFromConstraints(
-        { video: { facingMode: { ideal: "environment" } }, audio: false },
-        element,
-        (result) => {
-          const found = result && isbn13(result.getText());
-          if (found && !closed && !scanLocked.current) {
-            scanLocked.current = true;
-            setCode(found);
-            setEdition(null);
-            setMessage("Código leído. Consulta la edición para continuar.");
-          }
+    let active = true;
+    let stream: MediaStream | undefined;
+    let timer: ReturnType<typeof setTimeout>;
+    const canvas = document.createElement("canvas");
+    async function start() {
+      if (!navigator.mediaDevices?.getUserMedia)
+        throw Error("La cámara no está disponible en este navegador. Usa una foto del código.");
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
         },
-      );
-      stop = () => controls.stop();
-      if (closed) stop();
-    })().catch(() => {
-      if (!closed) {
-        setCamera(false);
-        setMessage("No se pudo abrir la cámara. Puedes escribir el ISBN.");
+        audio: false,
+      });
+      if (!active) {
+        stream.getTracks().forEach((t) => t.stop());
+        return;
       }
+      element.srcObject = stream;
+      await element.play();
+      const { captureBarcode } = await import("@/lib/barcode-frame");
+      function tick() {
+        if (!active) return;
+        if (!scanLocked.current && element.readyState >= 2) {
+          const found = captureBarcode(element, canvas);
+          if (found) onScan.current(found);
+        }
+        timer = setTimeout(tick, 350);
+      }
+      tick();
+    }
+    start().catch((error: Error) => {
+      if (!active) return;
+      setCamera(false);
+      setMessage(
+        error.name === "NotAllowedError"
+          ? "Permite el acceso a la cámara o selecciona una foto del código."
+          : "No se pudo abrir la cámara. Puedes usar una foto o escribir el ISBN.",
+      );
     });
     return () => {
-      closed = true;
-      stop?.();
+      active = false;
+      clearTimeout(timer);
+      stream?.getTracks().forEach((t) => t.stop());
+      element.srcObject = null;
     };
   }, [camera]);
-
-  async function lookup() {
-    const isbn = isbn13(code);
+  async function readPhoto(file?: File) {
+    if (!file) return;
+    setCamera(false);
+    scanLocked.current = true;
+    setBusy(true);
+    setMessage("");
+    setEdition(null);
+    setCode("");
+    const url = URL.createObjectURL(file);
+    try {
+      const image = new Image();
+      image.src = url;
+      await image.decode();
+      const { captureBarcode } = await import("@/lib/barcode-frame");
+      const isbn = captureBarcode(image, document.createElement("canvas"));
+      if (!isbn) {
+        setMessage("No se distinguen las barras. Prueba una foto más cerca o escribe el ISBN.");
+        return;
+      }
+      await lookup(isbn);
+    } catch {
+      setMessage("No se pudo leer la imagen. Prueba con una foto JPG o PNG.");
+    } finally {
+      URL.revokeObjectURL(url);
+      setBusy(false);
+    }
+  }
+  async function lookup(raw: string) {
+    const isbn = isbn13(raw);
     if (!isbn) {
       setMessage("Revisa los 10 o 13 caracteres del ISBN.");
       return;
     }
+    setCode(isbn);
+    setEdition(null);
     const existing = books.find((b) => b.isbn === isbn);
     if (existing) {
       scanLocked.current = false;
@@ -78,17 +132,15 @@ export function IsbnEntry({
     setMessage("");
     setCode(isbn);
     try {
-      const key = "ISBN:" + isbn;
-      const response = await fetch(
-        "https://openlibrary.org/api/books?format=json&jscmd=data&bibkeys=" + key,
-        { signal: AbortSignal.timeout(10000) },
-      );
-      if (!response.ok) throw Error();
-      const result: Edition | undefined = (await response.json())[key];
+      const { edition: result, unavailable } = await search({ data: isbn });
       setEdition(result ?? { title: "" });
       setTarget(existingBook?.id ?? "");
       if (!result)
-        setMessage("Edición sin ficha. Escribe el título o vincula un libro que ya tengas.");
+        setMessage(
+          unavailable
+            ? "No se pudo completar la búsqueda en los catálogos. Puedes escribir el título."
+            : "No encontramos esta edición. Puedes escribir el título o vincular un libro.",
+        );
     } catch {
       setEdition({ title: "" });
       setTarget(existingBook?.id ?? "");
@@ -113,16 +165,14 @@ export function IsbnEntry({
             .is("isbn", null)
             .select("id")
             .single()
-        : await supabase
-            .from("books")
-            .insert({
-              user_id: user.id,
-              isbn,
-              title: edition.title.trim(),
-              author: edition.authors?.map((a) => a.name).join(", ") || "Autor desconocido",
-              pages: edition.number_of_pages || 0,
-              cover_url: edition.cover?.medium ?? null,
-            });
+        : await supabase.from("books").insert({
+            user_id: user.id,
+            isbn,
+            title: edition.title.trim(),
+            author: edition.authors?.map((a) => a.name).join(", ") || "Autor desconocido",
+            pages: edition.number_of_pages || 0,
+            cover_url: edition.cover?.medium ?? null,
+          });
       if (result.error)
         throw Error(
           result.error.code === "23505"
@@ -141,8 +191,8 @@ export function IsbnEntry({
     }
   }
   return (
-    <details className="border border-border rounded-sm p-3 my-4">
-      <summary className="cursor-pointer font-semibold">Escanear o escribir ISBN</summary>
+    <section className="border border-border rounded-sm p-3 my-4" aria-label="Escáner de libros">
+      <h3 className="font-semibold">Escanear código de barras</h3>
       <div className="space-y-2 mt-3">
         <label>
           ISBN
@@ -158,27 +208,44 @@ export function IsbnEntry({
             }}
           />
         </label>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-4">
           <button
             type="button"
             disabled={busy}
             onClick={() => {
               scanLocked.current = false;
+              lastScan.current = "";
               setCamera(!camera);
             }}
           >
             {camera ? "Cerrar cámara" : "Abrir cámara"}
           </button>
-          <button type="button" disabled={busy || !code} onClick={lookup}>
+          <input
+            ref={photo}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              void readPhoto(file);
+            }}
+          />
+          <button type="button" disabled={busy} onClick={() => photo.current?.click()}>
+            Usar foto
+          </button>
+          <button type="button" disabled={busy || !code} onClick={() => lookup(code)}>
             Consultar edición
           </button>
         </div>
         {camera && (
           <button
             className="text-sm underline"
+            disabled={busy}
             type="button"
             onClick={() => {
               scanLocked.current = false;
+              lastScan.current = "";
               setCode("");
               setEdition(null);
             }}
@@ -186,9 +253,25 @@ export function IsbnEntry({
             Escanear otro código
           </button>
         )}
-        {camera && <video ref={video} muted playsInline className="w-full" />}
+        {camera && (
+          <video
+            ref={video}
+            autoPlay
+            muted
+            playsInline
+            className="w-full aspect-video bg-black rounded-sm object-contain"
+          />
+        )}
         {edition && (
           <>
+            {edition.title && (
+              <p className="text-sm font-semibold">
+                {edition.title}
+                {edition.authors?.length
+                  ? " · " + edition.authors.map((a) => a.name).join(", ")
+                  : ""}
+              </p>
+            )}
             {!existingBook && (
               <label>
                 Guardar en
@@ -232,6 +315,6 @@ export function IsbnEntry({
           {busy ? "Un momento…" : message}
         </p>
       </div>
-    </details>
+    </section>
   );
 }
