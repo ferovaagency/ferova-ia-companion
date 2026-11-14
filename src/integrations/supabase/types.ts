@@ -24,8 +24,10 @@ export type Database = {
           finished_reading_at: string | null
           genre: string
           id: string
+          isbn: string | null
           moods: string[]
           pages: number
+          reading_cycle: number
           reading_speed_days: number | null
           series_index: number | null
           series_name: string | null
@@ -46,8 +48,10 @@ export type Database = {
           finished_reading_at?: string | null
           genre?: string
           id?: string
+          isbn?: string | null
           moods?: string[]
           pages?: number
+          reading_cycle?: number
           reading_speed_days?: number | null
           series_index?: number | null
           series_name?: string | null
@@ -68,8 +72,10 @@ export type Database = {
           finished_reading_at?: string | null
           genre?: string
           id?: string
+          isbn?: string | null
           moods?: string[]
           pages?: number
+          reading_cycle?: number
           reading_speed_days?: number | null
           series_index?: number | null
           series_name?: string | null
@@ -82,6 +88,35 @@ export type Database = {
           user_review?: string | null
         }
         Relationships: []
+      }
+      completed_readings: {
+        Row: {
+          book_id: string
+          cycle: number
+          finished_at: string | null
+          started_at: string | null
+        }
+        Insert: {
+          book_id: string
+          cycle: number
+          finished_at?: string | null
+          started_at?: string | null
+        }
+        Update: {
+          book_id?: string
+          cycle?: number
+          finished_at?: string | null
+          started_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "completed_readings_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       courtesy_accounts: {
         Row: {
@@ -219,6 +254,50 @@ export type Database = {
         }
         Relationships: []
       }
+      reading_sessions: {
+        Row: {
+          book_id: string
+          created_at: string
+          cycle: number
+          day: string
+          from_page: number
+          id: string
+          minutes: number | null
+          note: string
+          to_page: number
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          cycle: number
+          day: string
+          from_page: number
+          id?: string
+          minutes?: number | null
+          note?: string
+          to_page: number
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          cycle?: number
+          day?: string
+          from_page?: number
+          id?: string
+          minutes?: number | null
+          note?: string
+          to_page?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reading_sessions_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -259,6 +338,30 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      record_reading: {
+        Args: {
+          p_book: string
+          p_cycle: number
+          p_day: string
+          p_from: number
+          p_minutes: number
+          p_note: string
+          p_to: number
+          p_zone: string
+        }
+        Returns: undefined
+      }
+      revise_session: {
+        Args: {
+          p_day: string
+          p_id: string
+          p_minutes: number
+          p_note: string
+          p_remove: boolean
+          p_zone: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
