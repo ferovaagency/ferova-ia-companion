@@ -202,6 +202,7 @@ Devuelve SOLO JSON válido, sin markdown, con esta forma exacta:
 /* ---------- AI recommendation ---------- */
 const RecommendInput = z.object({
   userRequest: z.string().min(1).max(2000),
+  exclude: z.array(z.string().max(300)).max(30).optional(),
   books: z.array(
     z.object({
       id: z.string(),
@@ -274,7 +275,7 @@ REGLAS:
 7. APRENDE DE SUS RESEÑAS: usa "LO QUE AMA" y "LO QUE NO LE FUNCIONÓ" para afinar el tono, ritmo, tropos y temas. Evita patrones que rechazó (★1-2) y refuerza los que le encantan (★4-5). Si una reseña personal revela un gusto concreto (prosa lírica, romance lento, finales agridulces, etc.), respétalo.
 8. "reasoning" en español, 2-3 frases cálidas explicando por qué este libro/saga sanará su momento. Si te apoyaste en una reseña suya, menciónalo brevemente ("como te encantó X por Y...").
 
-Propón tres libros distintos. Prioriza la estantería cuando encaje y completa con externos si hacen falta. Da un motivo específico para cada alternativa.
+${data.exclude?.length ? `NO repitas ninguna de estas sugerencias anteriores que el usuario descartó: ${JSON.stringify(data.exclude)}. Ofrece alternativas realmente diferentes.\n` : ""}Propón tres libros distintos. Prioriza la estantería cuando encaje y completa con externos si hacen falta. Da un motivo específico para cada alternativa.
 Devuelve JSON {"options":[{"bookId":null,"external":{"title":"...","author":"...","series_name":null,"series_index":null},"reasoning":"..."}, ...]}.
 Para una opción interna usa bookId y external null. Para una saga externa incluye el número del tomo.`;
       const options:RecommendationResult["options"]=[];
@@ -304,4 +305,28 @@ Para una opción interna usa bookId y external null. Para una saga externa inclu
         errorMessage: msg,
       };
     }
+  });
+/* ---------- identify a book from a cover photo ---------- */
+const CoverInput = z.object({ image: z.string().startsWith("data:image/").max(8_000_000) });
+export const identifyCover = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => CoverInput.parse(input))
+  .handler(async ({ data }): Promise<{ title: string; author: string } | null> => {
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) return null;
+    const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
+    const { generateText } = await import("ai");
+    const gateway = createLovableAiGatewayProvider(key);
+    const { text } = await generateText({
+      model: gateway("google/gemini-3-flash-preview"),
+      messages: [{
+        role: "user",
+        content: [
+          { type: "text", text: 'Identifica el libro de esta portada. Conserva el idioma original del título (no traduzcas). Devuelve SOLO JSON {"title": string, "author": string}. Si no se distingue un libro, devuelve {"title": "", "author": ""}.' },
+          { type: "image", image: data.image },
+        ],
+      }],
+    });
+    const r = parseJsonObject(text);
+    const title = String(r.title ?? "").trim();
+    return title ? { title, author: String(r.author ?? "").trim() } : null;
   });
