@@ -23,6 +23,7 @@ export type Database = {
           description: string
           finished_reading_at: string | null
           genre: string
+          goodreads_id: string | null
           id: string
           isbn: string | null
           moods: string[]
@@ -47,6 +48,7 @@ export type Database = {
           description?: string
           finished_reading_at?: string | null
           genre?: string
+          goodreads_id?: string | null
           id?: string
           isbn?: string | null
           moods?: string[]
@@ -71,6 +73,7 @@ export type Database = {
           description?: string
           finished_reading_at?: string | null
           genre?: string
+          goodreads_id?: string | null
           id?: string
           isbn?: string | null
           moods?: string[]
@@ -238,6 +241,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          onboarding_finished_at: string | null
           reading_goal: number
           updated_at: string
         }
@@ -245,6 +249,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          onboarding_finished_at?: string | null
           reading_goal?: number
           updated_at?: string
         }
@@ -252,6 +257,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          onboarding_finished_at?: string | null
           reading_goal?: number
           updated_at?: string
         }
@@ -346,6 +352,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      import_goodreads: { Args: { p_rows: Json }; Returns: number }
       record_reading: {
         Args: {
           p_book: string
@@ -373,7 +380,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
-      book_status: "TBR" | "READING" | "READ"
+      book_status: "TBR" | "READING" | "READ" | "PAUSED" | "ABANDONED"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -502,7 +509,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
-      book_status: ["TBR", "READING", "READ"],
+      book_status: ["TBR", "READING", "READ", "PAUSED", "ABANDONED"],
     },
   },
 } as const
