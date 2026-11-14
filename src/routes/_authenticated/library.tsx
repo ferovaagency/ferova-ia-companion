@@ -269,7 +269,7 @@ function LibraryPage() {
     setEditingGoal(false);
   };
 
-  const askOracle = async () => {
+  const askOracle = async (exclude: string[] = []) => {
     if (!userInput.trim()) return;
     setRecLoading(true);setRecError("");
     setView("recommendation");
@@ -278,6 +278,7 @@ function LibraryPage() {
       const r = await recommend({
         data: {
           userRequest: userInput,
+          exclude,
           books: books.map((b) => ({
             id: b.id, title: b.title, author: b.author, genre: b.genre, pages: b.pages,
             moods: b.moods, series_name: b.series_name, series_index: b.series_index, status: b.status,
@@ -290,6 +291,47 @@ function LibraryPage() {
     } finally {
       setRecLoading(false);
     }
+  };
+
+  const recTitles = (r: RecommendationResult | null) =>
+    (r?.options ?? []).map((o) => {
+      const b = o.bookId ? books.find((x) => x.id === o.bookId) : null;
+      return b ? `${b.title} · ${b.author}` : `${o.external?.title ?? ""} · ${o.external?.author ?? ""}`;
+    });
+  const [seenRecs, setSeenRecs] = useState<string[]>([]);
+  const askAgain = () => {
+    const all = [...seenRecs, ...recTitles(recommendation)].slice(-30);
+    setSeenRecs(all);
+    void askOracle(all);
+  };
+  const chooseRec = async (rec: RecommendationOption) => {
+    if (savingRec) return;
+    setSavingRec(true); setRecError("");
+    try {
+      const existing = rec.bookId
+        ? books.find((b) => b.id === rec.bookId)
+        : books.find((b) => rec.external && b.title === rec.external.title && b.author === rec.external.author);
+      if (existing) {
+        if (existing.status !== "READING") {
+          const { error } = await supabase.from("books").update({ status: "READING", started_reading_at: new Date().toISOString() }).eq("id", existing.id);
+          if (error) throw error;
+        }
+      } else if (rec.external) {
+        const { data: u } = await supabase.auth.getUser();
+        if (!u.user) throw Error();
+        const { error } = await supabase.from("books").insert({
+          user_id: u.user.id, title: rec.external.title, author: rec.external.author || "Autor desconocido",
+          genre: rec.external.genre || "Literatura", pages: rec.external.pages || 0, moods: rec.external.moods || [],
+          description: rec.external.description || "", series_name: rec.external.series_name ?? null,
+          series_index: rec.external.series_index ?? null, cover_url: rec.external.cover_url ?? null,
+          status: "READING", started_reading_at: new Date().toISOString(),
+        });
+        if (error) throw error;
+      }
+      await refreshAll();
+      setView("library"); setRecommendation(null); setSeenRecs([]);
+    } catch { setRecError("No se pudo empezar este libro. Inténtalo otra vez."); }
+    finally { setSavingRec(false); }
   };
 
   const acceptExternal = async (rec:RecommendationOption) => {
@@ -386,7 +428,7 @@ function LibraryPage() {
               className="flex-1 bg-background border border-border px-3 py-3 rounded-sm focus:outline-none focus:border-foreground text-sm font-serif italic"
             />
             <button
-              onClick={askOracle}
+              onClick={() => { setSeenRecs([]); void askOracle(); }}
               disabled={!userInput.trim() || recLoading}
               className="bg-foreground text-background px-6 py-3 font-mono-label rounded-sm hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
             >
@@ -414,12 +456,22 @@ function LibraryPage() {
           </button>
         </section>
 
+        <nav aria-label="Ir a sección" className="flex flex-wrap gap-2 -mt-4">
+          {([["READING","Leyendo"],["TBR","Por leer"],["READ","Leídos"],["ABANDONED","Abandonados"]] as [BookStatus,string][]).map(([s,label])=>(
+            <button key={s} type="button" disabled={!grouped[s].length}
+              onClick={()=>document.getElementById(`shelf-${s}`)?.scrollIntoView({behavior:"smooth",block:"start"})}
+              className="border border-border bg-card px-3 py-1.5 rounded-sm text-xs font-mono-label hover:border-foreground disabled:opacity-40">
+              {label} · {grouped[s].length}
+            </button>
+          ))}
+        </nav>
+
         {/* Sections */}
         {STATUS_ORDER.map((status) => {
           const list = grouped[status];
           if (!list.length) return null;
           return (
-            <section key={status}>
+            <section key={status} id={`shelf-${status}`} className="scroll-mt-4">
               <h2 className="font-serif text-2xl font-black tracking-tight mb-4 flex items-center gap-3">
                 {STATUS_LABEL[status]}
                 <span className="font-mono-label">{list.length}</span>
@@ -498,9 +550,10 @@ function LibraryPage() {
               <div className="py-6">
                 <AlertCircle className="w-5 h-5 text-destructive mb-2" />
                 <p className="font-serif">{recommendation.reasoning}</p>
+                <button type="button" onClick={askAgain} className="mt-4 underline text-sm">Intentar con otras sugerencias</button>
               </div>
             ) : recommendation ? (
-              <div className="space-y-6"><h2 className="font-serif text-2xl font-bold">Tres libros para ti</h2>{recommendation.options.map(o=><RecommendationView key={o.bookId??o.external?.title+"|"+o.external?.author} rec={o} books={books} onAccept={()=>acceptExternal(o)} saving={savingRec}/>)}{recError&&<p role="alert">{recError}</p>}</div>
+              <div className="space-y-6"><h2 className="font-serif text-2xl font-bold">Tres libros para ti</h2>{recommendation.options.map(o=><RecommendationView key={o.bookId??o.external?.title+"|"+o.external?.author} rec={o} books={books} onAccept={()=>acceptExternal(o)} onChoose={()=>chooseRec(o)} saving={savingRec}/>)}{recError&&<p role="alert">{recError}</p>}<button type="button" onClick={askAgain} disabled={recLoading||savingRec} className="w-full border border-border py-3 font-mono-label rounded-sm hover:bg-muted flex items-center justify-center gap-2"><Sparkles className="w-3.5 h-3.5" /> Dame otras sugerencias</button></div>
             ) : null}
           </Modal>
         )}
@@ -602,7 +655,7 @@ function BookRow({
   );
 }
 
-function RecommendationView({ rec, books, onAccept, saving }: { rec: RecommendationOption; books: Book[]; onAccept: () => void; saving:boolean }) {
+function RecommendationView({ rec, books, onAccept, onChoose, saving }: { rec: RecommendationOption; books: Book[]; onAccept: () => void; onChoose: () => void; saving:boolean }) {
   const internal = rec.bookId ? books.find((b) => b.id === rec.bookId) : null;
   const ext = rec.external;
   const display = internal
@@ -630,6 +683,11 @@ function RecommendationView({ rec, books, onAccept, saving }: { rec: Recommendat
       )}
       <p className="font-serif italic leading-relaxed text-sm border-l-2 border-accent pl-4">{rec.reasoning}</p>
       <div className="flex flex-col sm:flex-row gap-3 mt-6">
+        {(internal || ext) && internal?.status !== "READING" && (
+          <button disabled={saving} onClick={onChoose} className="flex-1 bg-primary text-primary-foreground py-3 font-mono-label rounded-sm hover:opacity-90 flex items-center justify-center gap-2">
+            <BookOpen className="w-3.5 h-3.5" /> Elijo este · empezar a leer
+          </button>
+        )}
 
         {amazonUrl && (
           <a href={amazonUrl} target="_blank" rel="noopener noreferrer" className="flex-1 bg-accent text-accent-foreground py-3 font-mono-label rounded-sm hover:opacity-90 flex items-center justify-center gap-2">

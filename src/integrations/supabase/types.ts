@@ -10,15 +10,12 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.18"
   }
   public: {
     Tables: {
       books: {
         Row: {
-          goodreads_id: string | null
-          isbn: string | null
-          reading_cycle: number
           author: string
           cover_url: string | null
           created_at: string
@@ -26,9 +23,12 @@ export type Database = {
           description: string
           finished_reading_at: string | null
           genre: string
+          goodreads_id: string | null
           id: string
+          isbn: string | null
           moods: string[]
           pages: number
+          reading_cycle: number
           reading_speed_days: number | null
           series_index: number | null
           series_name: string | null
@@ -41,9 +41,6 @@ export type Database = {
           user_review: string | null
         }
         Insert: {
-          goodreads_id?: string | null
-          isbn?: string | null
-          reading_cycle?: number
           author?: string
           cover_url?: string | null
           created_at?: string
@@ -51,9 +48,12 @@ export type Database = {
           description?: string
           finished_reading_at?: string | null
           genre?: string
+          goodreads_id?: string | null
           id?: string
+          isbn?: string | null
           moods?: string[]
           pages?: number
+          reading_cycle?: number
           reading_speed_days?: number | null
           series_index?: number | null
           series_name?: string | null
@@ -66,9 +66,6 @@ export type Database = {
           user_review?: string | null
         }
         Update: {
-          goodreads_id?: string | null
-          isbn?: string | null
-          reading_cycle?: number
           author?: string
           cover_url?: string | null
           created_at?: string
@@ -76,9 +73,12 @@ export type Database = {
           description?: string
           finished_reading_at?: string | null
           genre?: string
+          goodreads_id?: string | null
           id?: string
+          isbn?: string | null
           moods?: string[]
           pages?: number
+          reading_cycle?: number
           reading_speed_days?: number | null
           series_index?: number | null
           series_name?: string | null
@@ -92,17 +92,37 @@ export type Database = {
         }
         Relationships: []
       }
-      reading_sessions: {
-        Row: { id: string; book_id: string; cycle: number; day: string; from_page: number; to_page: number; minutes: number | null; note: string; created_at: string }
-        Insert: never
-        Update: never
-        Relationships: []
-      }
       completed_readings: {
-        Row: { book_id: string; cycle: number; streak_day: string | null; started_at: string | null; finished_at: string | null }
-        Insert: never
-        Update: never
-        Relationships: []
+        Row: {
+          book_id: string
+          cycle: number
+          finished_at: string | null
+          started_at: string | null
+          streak_day: string | null
+        }
+        Insert: {
+          book_id: string
+          cycle: number
+          finished_at?: string | null
+          started_at?: string | null
+          streak_day?: string | null
+        }
+        Update: {
+          book_id?: string
+          cycle?: number
+          finished_at?: string | null
+          started_at?: string | null
+          streak_day?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "completed_readings_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       courtesy_accounts: {
         Row: {
@@ -243,6 +263,50 @@ export type Database = {
         }
         Relationships: []
       }
+      reading_sessions: {
+        Row: {
+          book_id: string
+          created_at: string
+          cycle: number
+          day: string
+          from_page: number
+          id: string
+          minutes: number | null
+          note: string
+          to_page: number
+        }
+        Insert: {
+          book_id: string
+          created_at?: string
+          cycle: number
+          day: string
+          from_page: number
+          id?: string
+          minutes?: number | null
+          note?: string
+          to_page: number
+        }
+        Update: {
+          book_id?: string
+          created_at?: string
+          cycle?: number
+          day?: string
+          from_page?: number
+          id?: string
+          minutes?: number | null
+          note?: string
+          to_page?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reading_sessions_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -277,16 +341,41 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      import_goodreads: { Args: { p_rows: Json }; Returns: number }
-      finish_active_book: { Args: { p_book: string; p_cycle: number; p_zone: string }; Returns: undefined }
-      record_reading: { Args: { p_book: string; p_cycle: number; p_from: number; p_to: number; p_day: string; p_zone: string; p_minutes: number | null; p_note: string }; Returns: undefined }
-      revise_session: { Args: { p_id: string; p_day: string; p_zone: string; p_minutes: number | null; p_note: string; p_remove: boolean }; Returns: undefined }
+      finish_active_book: {
+        Args: { p_book: string; p_cycle: number; p_zone: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      import_goodreads: { Args: { p_rows: Json }; Returns: number }
+      record_reading: {
+        Args: {
+          p_book: string
+          p_cycle: number
+          p_day: string
+          p_from: number
+          p_minutes: number
+          p_note: string
+          p_to: number
+          p_zone: string
+        }
+        Returns: undefined
+      }
+      revise_session: {
+        Args: {
+          p_day: string
+          p_id: string
+          p_minutes: number
+          p_note: string
+          p_remove: boolean
+          p_zone: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
@@ -420,7 +509,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
-      book_status: ["TBR", "READING", "READ","PAUSED","ABANDONED"],
+      book_status: ["TBR", "READING", "READ", "PAUSED", "ABANDONED"],
     },
   },
 } as const

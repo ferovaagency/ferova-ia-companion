@@ -5,6 +5,27 @@ import type { Book } from "@/types";
 
 import { useServerFn } from "@tanstack/react-start";
 import { lookupIsbn } from "@/lib/isbn.functions";
+import { enrichBook, identifyCover } from "@/lib/books.functions";
+type Detector = { detect: (s: CanvasImageSource) => Promise<{ rawValue: string }[]> };
+function nativeDetector(): Detector | null {
+  const D = (globalThis as any).BarcodeDetector;
+  if (!D) return null;
+  try { return new D({ formats: ["ean_13"] }); } catch { return null; }
+}
+async function detectNative(d: Detector | null, src: CanvasImageSource) {
+  if (!d) return null;
+  try {
+    for (const r of await d.detect(src)) { const i = isbn13(r.rawValue); if (i) return i; }
+  } catch {}
+  return null;
+}
+function toDataUrl(img: HTMLImageElement) {
+  const c = document.createElement("canvas");
+  const k = Math.min(1, 1024 / Math.max(img.naturalWidth, img.naturalHeight));
+  c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+  c.getContext("2d")!.drawImage(img, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", 0.85);
+}
 import type { Edition } from "@/lib/isbn-catalog";
 const field = "border border-border bg-background px-3 py-2 rounded-sm w-full";
 export function IsbnEntry({
@@ -25,6 +46,29 @@ export function IsbnEntry({
   const search = useServerFn(lookupIsbn);
   const video = useRef<HTMLVideoElement>(null);
   const photo = useRef<HTMLInputElement>(null);
+  const coverInput = useRef<HTMLInputElement>(null);
+  const identify = useServerFn(identifyCover);
+  const enrich = useServerFn(enrichBook);
+  async function readCover(file?: File) {
+    if (!file) return;
+    setCamera(false); setBusy(true); setMessage(""); setEdition(null);
+    const url = URL.createObjectURL(file);
+    try {
+      const image = new Image(); image.src = url; await image.decode();
+      const found = await identify({ data: { image: toDataUrl(image) } });
+      if (!found) { setMessage("No reconocí la portada. Prueba con una foto más nítida y de frente."); return; }
+      const info = await enrich({ data: { title: found.title, author: found.author || undefined } });
+      if (books.some((b) => b.title.toLowerCase() === info.title.toLowerCase())) { setMessage("Ya tienes este libro: " + info.title); return; }
+      const user = (await supabase.auth.getUser()).data.user;
+      if (!user) throw Error();
+      const { error } = await supabase.from("books").insert({ user_id: user.id, ...info });
+      if (error) throw error;
+      await saved();
+      setMessage(`Añadido: ${info.title} · ${info.author}`);
+    } catch {
+      setMessage("No se pudo reconocer la portada. Inténtalo otra vez o escribe el título.");
+    } finally { URL.revokeObjectURL(url); setBusy(false); }
+  }
   const scanLocked = useRef(false);
   const lastScan = useRef("");
   const onScan = useRef((isbn: string) => {});
@@ -61,13 +105,14 @@ export function IsbnEntry({
       element.srcObject = stream;
       await element.play();
       const { captureBarcode } = await import("@/lib/barcode-frame");
-      function tick() {
+      const native = nativeDetector();
+      async function tick() {
         if (!active) return;
         if (!scanLocked.current && element.readyState >= 2) {
-          const found = captureBarcode(element, canvas);
-          if (found) onScan.current(found);
+          const found = (await detectNative(native, element)) ?? captureBarcode(element, canvas);
+          if (found && active) onScan.current(found);
         }
-        timer = setTimeout(tick, 350);
+        timer = setTimeout(tick, 250);
       }
       tick();
     }
@@ -101,7 +146,7 @@ export function IsbnEntry({
       image.src = url;
       await image.decode();
       const { captureBarcode } = await import("@/lib/barcode-frame");
-      const isbn = captureBarcode(image, document.createElement("canvas"));
+      const isbn = (await detectNative(nativeDetector(), image)) ?? captureBarcode(image, document.createElement("canvas"));
       if (!isbn) {
         setMessage("No se distinguen las barras. Prueba una foto más cerca o escribe el ISBN.");
         return;
@@ -192,7 +237,7 @@ export function IsbnEntry({
   }
   return (
     <section className="border border-border rounded-sm p-3 my-4" aria-label="Escáner de libros">
-      <h3 className="font-semibold">Escanear código de barras</h3>
+      <h3 className="font-semibold">Escanear código de barras o portada</h3>
       <div className="space-y-2 mt-3">
         <label>
           ISBN
@@ -233,6 +278,11 @@ export function IsbnEntry({
           />
           <button type="button" disabled={busy} onClick={() => photo.current?.click()}>
             Usar foto
+          </button>
+          <input ref={coverInput} type="file" accept="image/*" capture="environment" hidden
+            onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; void readCover(f); }} />
+          <button type="button" disabled={busy} onClick={() => coverInput.current?.click()}>
+            Foto de la portada (IA)
           </button>
           <button type="button" disabled={busy || !code} onClick={() => lookup(code)}>
             Consultar edición
