@@ -38,7 +38,7 @@ export function SessionForm({
       const common = {
         p_day: draft.day,
         p_zone: zone,
-        p_minutes: draft.minutes,
+        p_minutes: draft.minutes as number,
         p_note: draft.note,
       };
       const { error } = entry
