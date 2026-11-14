@@ -95,18 +95,21 @@ export type Database = {
           cycle: number
           finished_at: string | null
           started_at: string | null
+          streak_day: string | null
         }
         Insert: {
           book_id: string
           cycle: number
           finished_at?: string | null
           started_at?: string | null
+          streak_day?: string | null
         }
         Update: {
           book_id?: string
           cycle?: number
           finished_at?: string | null
           started_at?: string | null
+          streak_day?: string | null
         }
         Relationships: [
           {
@@ -332,6 +335,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      finish_active_book: {
+        Args: { p_book: string; p_cycle: number; p_zone: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
