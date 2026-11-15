@@ -57,6 +57,13 @@
       "when": 1794776707811,
       "tag": "0007_joint_reading_author_fix",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794776921598,
+      "tag": "0008_privacy_media_policy_binding",
+      "breakpoints": true
     }
   ]
 }
