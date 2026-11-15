@@ -1,0 +1,2 @@
+import { createFileRoute } from "@tanstack/react-router";
+export const Route=createFileRoute("/api/public/oracle-demo")({server:{handlers:{POST:async({request})=>{const {publicOracle}=await import("@/lib/public-oracle.server");return publicOracle(request);}}}});
