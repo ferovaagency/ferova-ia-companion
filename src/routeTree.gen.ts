@@ -9,22 +9,27 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as BlogMejoresRecomendadoresLibrosIaRouteImport } from './routes/blog.mejores-recomendadores-libros-ia'
-import { Route as AuthenticatedReadRouteImport } from './routes/_authenticated/read'
-import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
-import { Route as AuthenticatedNotebookRouteImport } from './routes/_authenticated/notebook'
-import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
-import { Route as AuthenticatedDiscoverRouteImport } from './routes/_authenticated/discover'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedDiscoverRouteImport } from './routes/_authenticated/discover'
+import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
+import { Route as AuthenticatedNotebookRouteImport } from './routes/_authenticated/notebook'
+import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
+import { Route as AuthenticatedReadRouteImport } from './routes/_authenticated/read'
+import { Route as AuthCallbackRouteImport } from './routes/auth_.callback'
+import { Route as BlogMejoresRecomendadoresLibrosIaRouteImport } from './routes/blog.mejores-recomendadores-libros-ia'
 import { Route as AuthenticatedBooksBookIdRouteImport } from './routes/_authenticated/books.$bookId'
 
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -32,13 +37,44 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDiscoverRoute = AuthenticatedDiscoverRouteImport.update({
+  id: '/discover',
+  path: '/discover',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedNotebookRoute = AuthenticatedNotebookRouteImport.update({
+  id: '/notebook',
+  path: '/notebook',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedReadRoute = AuthenticatedReadRouteImport.update({
+  id: '/read',
+  path: '/read',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth_/callback',
+  path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BlogMejoresRecomendadoresLibrosIaRoute =
@@ -47,36 +83,6 @@ const BlogMejoresRecomendadoresLibrosIaRoute =
     path: '/blog/mejores-recomendadores-libros-ia',
     getParentRoute: () => rootRouteImport,
   } as any)
-const AuthenticatedReadRoute = AuthenticatedReadRouteImport.update({
-  id: '/read',
-  path: '/read',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedOnboardingRoute = AuthenticatedOnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedNotebookRoute = AuthenticatedNotebookRouteImport.update({
-  id: '/notebook',
-  path: '/notebook',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
-  id: '/library',
-  path: '/library',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedDiscoverRoute = AuthenticatedDiscoverRouteImport.update({
-  id: '/discover',
-  path: '/discover',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedBooksBookIdRoute =
   AuthenticatedBooksBookIdRouteImport.update({
     id: '/books/$bookId',
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/notebook': typeof AuthenticatedNotebookRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/read': typeof AuthenticatedReadRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/blog/mejores-recomendadores-libros-ia': typeof BlogMejoresRecomendadoresLibrosIaRoute
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
 }
@@ -107,6 +114,7 @@ export interface FileRoutesByTo {
   '/notebook': typeof AuthenticatedNotebookRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/read': typeof AuthenticatedReadRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/blog/mejores-recomendadores-libros-ia': typeof BlogMejoresRecomendadoresLibrosIaRoute
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
 }
@@ -122,6 +130,7 @@ export interface FileRoutesById {
   '/_authenticated/notebook': typeof AuthenticatedNotebookRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/read': typeof AuthenticatedReadRoute
+  '/auth_/callback': typeof AuthCallbackRoute
   '/blog/mejores-recomendadores-libros-ia': typeof BlogMejoresRecomendadoresLibrosIaRoute
   '/_authenticated/books/$bookId': typeof AuthenticatedBooksBookIdRoute
 }
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/notebook'
     | '/onboarding'
     | '/read'
+    | '/auth/callback'
     | '/blog/mejores-recomendadores-libros-ia'
     | '/books/$bookId'
   fileRoutesByTo: FileRoutesByTo
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/notebook'
     | '/onboarding'
     | '/read'
+    | '/auth/callback'
     | '/blog/mejores-recomendadores-libros-ia'
     | '/books/$bookId'
   id:
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notebook'
     | '/_authenticated/onboarding'
     | '/_authenticated/read'
+    | '/auth_/callback'
     | '/blog/mejores-recomendadores-libros-ia'
     | '/_authenticated/books/$bookId'
   fileRoutesById: FileRoutesById
@@ -173,23 +185,17 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
   BlogMejoresRecomendadoresLibrosIaRoute: typeof BlogMejoresRecomendadoresLibrosIaRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -199,46 +205,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/blog/mejores-recomendadores-libros-ia': {
-      id: '/blog/mejores-recomendadores-libros-ia'
-      path: '/blog/mejores-recomendadores-libros-ia'
-      fullPath: '/blog/mejores-recomendadores-libros-ia'
-      preLoaderRoute: typeof BlogMejoresRecomendadoresLibrosIaRouteImport
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/read': {
-      id: '/_authenticated/read'
-      path: '/read'
-      fullPath: '/read'
-      preLoaderRoute: typeof AuthenticatedReadRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/onboarding': {
-      id: '/_authenticated/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/notebook': {
-      id: '/_authenticated/notebook'
-      path: '/notebook'
-      fullPath: '/notebook'
-      preLoaderRoute: typeof AuthenticatedNotebookRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/library': {
-      id: '/_authenticated/library'
-      path: '/library'
-      fullPath: '/library'
-      preLoaderRoute: typeof AuthenticatedLibraryRouteImport
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/discover': {
@@ -248,12 +233,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDiscoverRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/admin': {
-      id: '/_authenticated/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+    '/_authenticated/library': {
+      id: '/_authenticated/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof AuthenticatedLibraryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/notebook': {
+      id: '/_authenticated/notebook'
+      path: '/notebook'
+      fullPath: '/notebook'
+      preLoaderRoute: typeof AuthenticatedNotebookRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/onboarding': {
+      id: '/_authenticated/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof AuthenticatedOnboardingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/read': {
+      id: '/_authenticated/read'
+      path: '/read'
+      fullPath: '/read'
+      preLoaderRoute: typeof AuthenticatedReadRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/auth_/callback': {
+      id: '/auth_/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog/mejores-recomendadores-libros-ia': {
+      id: '/blog/mejores-recomendadores-libros-ia'
+      path: '/blog/mejores-recomendadores-libros-ia'
+      fullPath: '/blog/mejores-recomendadores-libros-ia'
+      preLoaderRoute: typeof BlogMejoresRecomendadoresLibrosIaRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/books/$bookId': {
       id: '/_authenticated/books/$bookId'
@@ -293,6 +313,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
   BlogMejoresRecomendadoresLibrosIaRoute:
     BlogMejoresRecomendadoresLibrosIaRoute,
 }
