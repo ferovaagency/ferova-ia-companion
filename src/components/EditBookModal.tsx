@@ -1,3 +1,5 @@
+import { Modal, ErrorNotice } from "@/components/koa/UI";
+import { userError } from "@/lib/koa-data";
 import { IsbnEntry } from "@/components/IsbnEntry";
 import { useState } from "react";
 import { motion } from "motion/react";
@@ -25,11 +27,12 @@ export function EditBookModal({ book, books, refresh, onClose, onSave }: EditBoo
   const [userRating, setUserRating] = useState<number | null>(book.user_rating ?? null);
   const [userReview, setUserReview] = useState(book.user_review ?? "");
   const [isSaving, setIsSaving] = useState(false);
+  const [error,setError]=useState("");
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    setIsSaving(true);
+    setIsSaving(true);setError("");
     try {
       const moods = moodsInput.split(",").map((m) => m.trim().toLowerCase()).filter(Boolean);
       await onSave({
@@ -46,7 +49,7 @@ export function EditBookModal({ book, books, refresh, onClose, onSave }: EditBoo
         user_review: userReview.trim() || null,
       });
       onClose();
-    } finally {
+    } catch(e) {setError(userError(e));} finally {
       setIsSaving(false);
     }
   };
@@ -56,15 +59,7 @@ export function EditBookModal({ book, books, refresh, onClose, onSave }: EditBoo
   const labelCls = "font-mono-label block mb-1";
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-md z-50 flex items-center justify-center p-4 sm:p-6">
-      <motion.div
-        initial={{ scale: 0.95, y: 15, opacity: 0 }}
-        animate={{ scale: 1, y: 0, opacity: 1 }}
-        className="max-w-xl w-full bg-card p-8 sm:p-10 border border-foreground/80 shadow-2xl relative max-h-[85vh] overflow-y-auto rounded-sm"
-      >
-        <button onClick={onClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground p-2" disabled={isSaving} aria-label="Cerrar">
-          <X className="w-5 h-5" />
-        </button>
+    <Modal title="Editar libro y reseña" onClose={()=>{if(!isSaving)onClose();}}>
         <header className="mb-6">
           <div className="flex items-center gap-2 mb-2">
             <Edit className="w-4 h-4 text-accent" />
@@ -167,7 +162,7 @@ export function EditBookModal({ book, books, refresh, onClose, onSave }: EditBoo
             </button>
           </div>
         </form>
-      </motion.div>
-    </div>
+      {error&&<ErrorNotice>{error}</ErrorNotice>}
+    </Modal>
   );
 }

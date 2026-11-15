@@ -14,9 +14,9 @@ import { listFeedback, updateFeedbackStatus } from "@/lib/feedback.functions";
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
     meta: [
-      { title: "Admin — Librero IA" },
+      { title: "Admin — Lee con Koa" },
       { name: "description", content: "Portal administrativo de lectores, pagos y cortesías." },
-      { property: "og:title", content: "Panel de Administración — Librero IA" },
+      { property: "og:title", content: "Panel de Administración — Lee con Koa" },
       { property: "og:description", content: "Gestión interna de usuarios, pagos, cortesías y feedback." },
       { property: "og:url", content: "https://ferova-ia-companion.lovable.app/admin" },
       { name: "robots", content: "noindex, nofollow" },

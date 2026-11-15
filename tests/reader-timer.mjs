@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {elapsedMs,pauseTimer,parseTimer} from '../src/lib/reader-timer.ts';
+const d={id:'session',bookId:'book',cycle:1,from:10,elapsed:1000,runningSince:10000,page:'10',note:''};
+assert.equal(elapsedMs(d,15000),6000);
+assert.equal(elapsedMs(d,9000),1000);
+const paused=pauseTimer(d,15000);assert.equal(elapsedMs(paused,90000),6000);
+assert.equal(parseTimer(JSON.stringify(d),'book',2),null);
+assert.equal(parseTimer('{broken','book',1),null);
+assert.equal(parseTimer(JSON.stringify({...d,elapsed:-1}),'book',1),null);
+assert.equal(parseTimer(JSON.stringify(d),'book',1).id,'session');
+assert.equal(elapsedMs({...d,elapsed:86400000},15000),86400000);
+console.log('8 timer assertions passed');
