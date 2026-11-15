@@ -922,6 +922,7 @@ export type Database = {
           created_at: string
           id: string
           reason: string
+          status: string
           target_id: string
           user_id: string
         }
@@ -929,6 +930,7 @@ export type Database = {
           created_at?: string
           id?: string
           reason: string
+          status?: string
           target_id: string
           user_id?: string
         }
@@ -936,6 +938,7 @@ export type Database = {
           created_at?: string
           id?: string
           reason?: string
+          status?: string
           target_id?: string
           user_id?: string
         }
