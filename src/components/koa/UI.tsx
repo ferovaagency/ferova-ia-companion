@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { BookOpen, Library, NotebookPen, Sparkles, LogOut, Settings, Loader2, Compass } from "lucide-react";
+import { BookOpen, Library, NotebookPen, Sparkles, LogOut, Settings, Loader2, Compass, List } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 export function Koa({
@@ -55,6 +55,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         <div className="flex gap-2">
+          <Link to="/lists" className="koa-icon" aria-label="Mis listas" title="Mis listas"><List size={18} /></Link>
           <Link to="/settings" className="koa-icon" aria-label="Ajustes y ayuda">
             <Settings size={18} />
           </Link>

@@ -8,6 +8,7 @@ import { SessionForm } from "@/components/ReadingJournal";
 import { PageTitle, Loading, ErrorNotice, Empty, Modal } from "@/components/koa/UI";
 import { userError } from "@/lib/koa-data";
 import type { Book } from "@/types";
+import { BookFeelings } from "@/components/koa/BookFeelings";
 export const Route = createFileRoute("/_authenticated/books/$bookId")({
   head: () => ({
     meta: [{ title: "Tu libro — Lee con Koa" }, { name: "description", content: "Detalles y progreso de tu libro privado." }, { property: "og:title", content: "Tu libro — Lee con Koa" }, { property: "og:description", content: "Tu lectura, tus reseñas y tu cuaderno." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }],
@@ -121,6 +122,7 @@ function BookPage() {
         </section>
       )}
       {failure && <ErrorNotice>{failure}</ErrorNotice>}
+      <BookFeelings book={b} refresh={refresh} />
       {edit && (
         <EditBookModal
           books={books}
