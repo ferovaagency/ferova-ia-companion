@@ -4,6 +4,7 @@ import { collectOptions, eligibleBooks } from "./oracle-options";
 import { z } from "zod";
 import type { EnrichedBook, RecommendationResult } from "@/types";
 import { feelingPrompt } from "./reader-discoveries";
+import { generateChatCompletion } from "@lovable.dev/ai-gateway";
 
 /* ---------- cover fetching helpers (no AI key needed) ---------- */
 type CatalogMetadata = Partial<EnrichedBook> & { language?: string | null };
@@ -228,15 +229,6 @@ export const recommendBook = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => RecommendInput.parse(input))
   .handler(async ({ data, context }): Promise<RecommendationResult> => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) {
-      return {
-        options: [],
-        reasoning: "El Oráculo no está disponible porque falta la configuración de IA.",
-        errorType: "GENERIC",
-      };
-    }
-
     try {
       const { error: quotaError } = await context.supabase.rpc("claim_koa_request");
       if (quotaError) return { options: [], reasoning: "Has alcanzado el límite temporal del Oráculo. Reintenta más tarde.", errorType: "QUOTA_EXHAUSTED" };
@@ -244,9 +236,6 @@ export const recommendBook = createServerFn({ method: "POST" })
       const reader = await readerContext(context.supabase, context.userId);
       // Never trust the caller's shelf, ratings or emotional signals.
       const books = reader.books;
-      const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
-      const { generateText } = await import("ai");
-      const gateway = createLovableAiGatewayProvider(key);
 
       const inactive = books.filter(b=>b.status==="PAUSED"||b.status==="ABANDONED");
       const available=eligibleBooks(books);
@@ -294,7 +283,8 @@ Para una opción interna usa bookId y external null. Para una saga externa inclu
       const options:RecommendationResult["options"]=[];
       for(let attempt=0;attempt<2 && options.length<3;attempt++){
         const retry=attempt?`\nFaltan ${3-options.length} opciones válidas. Devuelve alternativas diferentes. Ya elegidas: ${JSON.stringify(options)}`:"";
-        const {text}=await generateText({model:gateway("google/gemini-3-flash-preview"),prompt:prompt+retry});
+        const completion = await generateChatCompletion({ model: "google/gemini-3-flash-preview", messages: [{ role: "user", content: prompt + retry }] });
+        const text = completion.choices[0]?.message.content ?? "";
         try {collectOptions(parseJsonObject(text).options,books,options);} catch { /* Retry an incomplete model response. */ }
       }
       if(options.length!==3)return {options:[],errorType:"GENERIC",reasoning:"No pude reunir tres opciones que respeten tus preferencias. Prueba con otro género o estado de ánimo."};
@@ -315,7 +305,6 @@ Para una opción interna usa bookId y external null. Para una saga externa inclu
             ? "Los créditos de IA se agotaron. Añade créditos en Workspace → Usage."
             : "La conexión con el archivo se ha interrumpido. Confía en tu instinto.",
         errorType,
-        errorMessage: msg,
       };
     }
   });
