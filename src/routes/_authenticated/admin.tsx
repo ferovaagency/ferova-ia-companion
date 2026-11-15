@@ -10,6 +10,8 @@ import {
   setMembershipPaid,
 } from "@/lib/membership.functions";
 import { listFeedback, updateFeedbackStatus } from "@/lib/feedback.functions";
+import { listReaderReports, updateReaderReport } from "@/lib/social.functions";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -61,6 +63,9 @@ function AdminPage() {
   const removeCourtesy = useServerFn(removeCourtesyAccount);
   const listFeedbackFn = useServerFn(listFeedback);
   const updateFeedbackFn = useServerFn(updateFeedbackStatus);
+  const listReportsFn = useServerFn(listReaderReports);
+  const updateReportFn = useServerFn(updateReaderReport);
+  const [reports, setReports] = useState<Array<{ id: string; user_id: string; target_id: string; reason: string; created_at: string; status: string }>>([]);
   const [data, setData] = useState<AdminData | null>(null);
   const [feedback, setFeedback] = useState<FeedbackItem[]>([]);
   const [search, setSearch] = useState("");
@@ -72,9 +77,10 @@ function AdminPage() {
   const refresh = async () => {
     setError(null);
     await ensureMembershipFn();
-    const [next, fb] = await Promise.all([listPortal(), listFeedbackFn().catch(() => [])]);
+    const [next, fb, rp] = await Promise.all([listPortal(), listFeedbackFn(), listReportsFn()]);
     setData(next);
     setFeedback(fb as FeedbackItem[]);
+    setReports(rp);
   };
 
   useEffect(() => {
@@ -153,6 +159,7 @@ function AdminPage() {
           <p className="mt-2 text-sm text-muted-foreground">{error}</p>
           <Link to="/library" className="mt-6 inline-flex items-center gap-2 font-mono-label hover:text-accent"><ArrowLeft className="w-3.5 h-3.5" /> Volver</Link>
         </div>
+        <section className="border-t border-border py-6"><h2>Reportes de lectores</h2>{!reports.length && <p className="text-muted-foreground mt-4">No hay reportes.</p>}{reports.map(r => <article key={r.id} className="border-b border-border py-4"><p className="text-sm text-muted-foreground break-all">Persona reportada: {r.target_id} · {new Date(r.created_at).toLocaleString()}</p><p className="whitespace-pre-wrap break-words my-3">{r.reason}</p><div className="flex flex-wrap gap-2">{(["new", "in_progress", "done", "wontfix"] as const).map(status => <Button key={status} variant={r.status === status ? "default" : "secondary"} disabled={saving} onClick={async () => { setSaving(true); try { await updateReportFn({ data: { id: r.id, status } }); await refresh(); } catch(e) { setError(e instanceof Error ? e.message : "No pudimos actualizar el reporte."); } finally { setSaving(false); } }}>{status === "new" ? "Nuevo" : status === "in_progress" ? "En revisión" : status === "done" ? "Resuelto" : "Descartado"}</Button>)}</div></article>)}</section>
       </main>
     );
   }
