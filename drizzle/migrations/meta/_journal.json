@@ -43,6 +43,13 @@
       "when": 1794759043070,
       "tag": "0005_atomic_catalog_candidate_install",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794776682992,
+      "tag": "0006_reader_social_privacy_clubs",
+      "breakpoints": true
     }
   ]
 }

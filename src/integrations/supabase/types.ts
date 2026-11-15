@@ -339,6 +339,7 @@ export type Database = {
           ends_on: string | null
           id: string
           purpose: string
+          shared_source_id: string | null
           size: number
           starts_on: string | null
           state: string
@@ -353,6 +354,7 @@ export type Database = {
           ends_on?: string | null
           id?: string
           purpose?: string
+          shared_source_id?: string | null
           size?: number
           starts_on?: string | null
           state?: string
@@ -367,10 +369,34 @@ export type Database = {
           ends_on?: string | null
           id?: string
           purpose?: string
+          shared_source_id?: string | null
           size?: number
           starts_on?: string | null
           state?: string
           title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_bingos_shared_source_id_fkey"
+            columns: ["shared_source_id"]
+            isOneToOne: false
+            referencedRelation: "reader_shares"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reader_blocks: {
+        Row: {
+          blocked_id: string
+          user_id: string
+        }
+        Insert: {
+          blocked_id: string
+          user_id?: string
+        }
+        Update: {
+          blocked_id?: string
           user_id?: string
         }
         Relationships: []
@@ -456,6 +482,82 @@ export type Database = {
         }
         Relationships: []
       }
+      reader_club_invites: {
+        Row: {
+          club_id: string
+          user_id: string
+        }
+        Insert: {
+          club_id: string
+          user_id: string
+        }
+        Update: {
+          club_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_club_invites_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "reader_clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reader_club_members: {
+        Row: {
+          club_id: string
+          joined_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          club_id: string
+          joined_at?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          club_id?: string
+          joined_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_club_members_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "reader_clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reader_clubs: {
+        Row: {
+          description: string
+          id: string
+          name: string
+          owner_id: string
+          timezone: string
+        }
+        Insert: {
+          description?: string
+          id?: string
+          name: string
+          owner_id: string
+          timezone?: string
+        }
+        Update: {
+          description?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          timezone?: string
+        }
+        Relationships: []
+      }
       reader_conversations: {
         Row: {
           answer: string
@@ -528,6 +630,136 @@ export type Database = {
             columns: ["book_id"]
             isOneToOne: true
             referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reader_friendships: {
+        Row: {
+          recipient: string
+          requester: string
+          state: string
+        }
+        Insert: {
+          recipient: string
+          requester: string
+          state?: string
+        }
+        Update: {
+          recipient?: string
+          requester?: string
+          state?: string
+        }
+        Relationships: []
+      }
+      reader_joint_comments: {
+        Row: {
+          body: string
+          chapter: number
+          created_at: string
+          id: string
+          reading_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          chapter: number
+          created_at?: string
+          id?: string
+          reading_id: string
+          user_id?: string
+        }
+        Update: {
+          body?: string
+          chapter?: number
+          created_at?: string
+          id?: string
+          reading_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_joint_comments_reading_id_fkey"
+            columns: ["reading_id"]
+            isOneToOne: false
+            referencedRelation: "reader_joint_readings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reader_joint_participants: {
+        Row: {
+          book_id: string
+          joined_at: string
+          reading_id: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          joined_at?: string
+          reading_id: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          joined_at?: string
+          reading_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_joint_participants_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reader_joint_participants_reading_id_fkey"
+            columns: ["reading_id"]
+            isOneToOne: false
+            referencedRelation: "reader_joint_readings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reader_joint_readings: {
+        Row: {
+          author: string
+          chapters: number
+          club_id: string
+          created_at: string
+          goal: string
+          id: string
+          isbn: string | null
+          title: string
+        }
+        Insert: {
+          author: string
+          chapters?: number
+          club_id: string
+          created_at?: string
+          goal?: string
+          id?: string
+          isbn?: string | null
+          title: string
+        }
+        Update: {
+          author?: string
+          chapters?: number
+          club_id?: string
+          created_at?: string
+          goal?: string
+          id?: string
+          isbn?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_joint_readings_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "reader_clubs"
             referencedColumns: ["id"]
           },
         ]
@@ -684,6 +916,106 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      reader_reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          target_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          target_id: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          target_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reader_shares: {
+        Row: {
+          club_id: string | null
+          id: string
+          kind: string
+          source_id: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          club_id?: string | null
+          id?: string
+          kind: string
+          source_id: string
+          user_id?: string
+          visibility?: string
+        }
+        Update: {
+          club_id?: string | null
+          id?: string
+          kind?: string
+          source_id?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_shares_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "reader_clubs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reader_social_profiles: {
+        Row: {
+          avatar_path: string | null
+          bio: string
+          club_id: string | null
+          cover_path: string | null
+          handle: string
+          name: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          avatar_path?: string | null
+          bio?: string
+          club_id?: string | null
+          cover_path?: string | null
+          handle: string
+          name?: string
+          user_id?: string
+          visibility?: string
+        }
+        Update: {
+          avatar_path?: string | null
+          bio?: string
+          club_id?: string | null
+          cover_path?: string | null
+          handle?: string
+          name?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_profile_club_fk"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "reader_clubs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reader_timer_receipts: {
         Row: {
@@ -867,11 +1199,64 @@ export type Database = {
         Args: { p_calendar: string; p_entries: Json; p_user: string }
         Returns: undefined
       }
+      reader_blocked: { Args: { a: string; b: string }; Returns: boolean }
+      reader_can_view: {
+        Args: { c: string; owner_id: string; v: string }
+        Returns: boolean
+      }
+      reader_chapter_access: {
+        Args: { p_chapter: number; p_reading: string }
+        Returns: boolean
+      }
+      reader_club_action: {
+        Args: {
+          p_action: string
+          p_club?: string
+          p_description?: string
+          p_handle?: string
+          p_name?: string
+          p_zone?: string
+        }
+        Returns: string
+      }
+      reader_club_member: { Args: { c: string; u: string }; Returns: boolean }
+      reader_connections: { Args: never; Returns: Json }
+      reader_copy_bingo: { Args: { p_share: string }; Returns: string }
+      reader_friend_action: {
+        Args: { p_action: string; p_handle: string }
+        Returns: undefined
+      }
       reader_identity: {
         Args: { p_author: string; p_title: string }
         Returns: string
       }
       reader_isbn: { Args: { p_isbn: string }; Returns: string }
+      reader_joint_action: {
+        Args: {
+          p_action: string
+          p_book?: string
+          p_chapters?: number
+          p_club?: string
+          p_goal?: string
+          p_reading?: string
+        }
+        Returns: string
+      }
+      reader_joint_percent: {
+        Args: { p_reading: string; p_user: string }
+        Returns: number
+      }
+      reader_joint_summary: { Args: { p_reading: string }; Returns: Json }
+      reader_share: {
+        Args: {
+          p_club?: string
+          p_kind: string
+          p_source: string
+          p_visibility: string
+        }
+        Returns: string
+      }
+      reader_share_payload: { Args: { p_id: string }; Returns: Json }
       record_reading: {
         Args: {
           p_book: string
