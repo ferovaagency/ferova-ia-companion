@@ -1,5 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { revokeViews } from "@/lib/privacy-cache";
+import { useServerFn } from "@tanstack/react-start";
+import { uploadProfileMedia } from "@/lib/creative.functions";
+import { deviceImage } from "@/lib/image-device";
+import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PageTitle, ErrorNotice } from "@/components/koa/UI";
@@ -10,12 +14,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { userError } from "@/lib/koa-data";
 export const Route = createFileRoute("/_authenticated/refuge")({ head: () => ({ meta: [{ title: "Mi refugio — Lee con Koa" }, { name: "description", content: "Tu perfil lector, amistades, privacidad y clubes." }, { property: "og:title", content: "Mi refugio — Lee con Koa" }, { property: "og:description", content: "Comparte solo lo que elijas." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }), loader: ({ context }) => context.queryClient.ensureQueryData(socialOptions), component: Refuge });
 function Refuge() {
+  const queryClient=useQueryClient();const upload=useServerFn(uploadProfileMedia);
   const { data, refetch } = useSuspenseQuery(socialOptions);
   const [form, setForm] = useState<ProfileInput>(data.profile ? profileSchema.parse(data.profile) : { handle: "", name: "", bio: "", visibility: "private", club_id: null, avatar_path: null, cover_path: null });
   const [busy, setBusy] = useState(false); const [error, setError] = useState(""); const [notice, setNotice] = useState("");
   const [handle, setHandle] = useState(""); const [clubName, setClubName] = useState(""); const [clubDescription, setClubDescription] = useState("");
   const [kind, setKind] = useState<"book" | "rating" | "list" | "bingo">("book"); const [source, setSource] = useState(""); const [visibility, setVisibility] = useState("private"); const [shareClub, setShareClub] = useState(""); const [consent, setConsent] = useState(false);
-  async function act(fn: () => Promise<void>) { setBusy(true); setError(""); setNotice(""); try { await fn(); await refetch(); setNotice("Guardado."); } catch(e) { setError(userError(e)); } finally { setBusy(false); } }
+  async function act(fn: () => Promise<void>) { setBusy(true); setError(""); setNotice(""); try { await fn(); revokeViews(queryClient); await refetch(); setNotice("Guardado."); } catch(e) { setError(userError(e)); } finally { setBusy(false); } }
   async function friend(action: string, target = handle) { await act(async () => { const r = await supabase.rpc("reader_friend_action", { p_handle: target, p_action: action }); if (r.error) throw r.error; }); }
   const sources = kind === "list" ? data.lists.map(l => ({ id: l.id, label: l.name })) : kind === "bingo" ? data.bingos.filter(b => b.state === "active").map(b => ({ id: b.id, label: b.title })) : data.books.map(b => ({ id: b.id, label: b.title }));
   return <><PageTitle eyebrow="Un espacio propio" title="Mi refugio" actions={<><Link className="koa-secondary" to="/notebook" search={{ book: undefined }}>Cuaderno</Link><Link className="koa-secondary" to="/settings">Ajustes</Link></>} />{error && <ErrorNotice>{error}</ErrorNotice>}{notice && <p role="status" className="text-primary my-3">{notice}</p>}
@@ -25,7 +30,7 @@ function Refuge() {
         <label className="sm:col-span-2">Sobre mí<textarea className="koa-field" maxLength={1200} value={form.bio} onChange={e => setForm({ ...form, bio: e.target.value })} /></label>
         <label>Quién ve mi perfil<select className="koa-field" value={form.visibility} onChange={e => setForm({ ...form, visibility: e.target.value as ProfileInput["visibility"], club_id: e.target.value === "club" ? data.clubs[0]?.id ?? null : null })}><option value="private">Solo yo</option><option value="friends">Amistades aceptadas</option><option value="club">Un club</option><option value="public">Público</option></select></label>
         {form.visibility === "club" && <label>Club del perfil<select required className="koa-field" value={form.club_id ?? ""} onChange={e => setForm({ ...form, club_id: e.target.value })}><option value="">Seleccionar…</option>{data.clubs.filter(c => !data.invites.some(i => i.club_id === c.id)).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>}
-        {(["avatar", "cover"] as const).map(type => <label key={type}>{type === "avatar" ? "Foto de perfil" : "Portada"}<input className="koa-field" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={e => { const file = e.target.files?.[0]; if (!file) return; void act(async () => { const path = await uploadProfileImage(file, type, data.id); setForm(prev => ({ ...prev, [type === "avatar" ? "avatar_path" : "cover_path"]: path })); }); }} /></label>)}
+        {(["avatar", "cover"] as const).map(type => <label key={type}>{type === "avatar" ? "Foto de perfil" : "Portada"}<input className="koa-field" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={e => { const file = e.target.files?.[0]; if (!file) return; void act(async () => { const {path} = await upload({data:{kind:type,image:await deviceImage(file)}}); setForm(prev => ({ ...prev, [type === "avatar" ? "avatar_path" : "cover_path"]: path })); }); }} /></label>)}
         <p className="koa-muted sm:col-span-2">Tu cuaderno, emociones y biblioteca no se publican con el perfil. JPG, PNG o WebP; máximo 5 MB.</p><div><Button disabled={busy}>{busy ? "Guardando…" : "Guardar perfil"}</Button></div>
       </form>{data.profile && <div className="flex flex-wrap gap-3 mt-4"><Link className="koa-secondary" to="/u/$handle" params={{ handle: data.profile.handle }}>Ver mi perfil</Link><Link className="koa-secondary" to="/u/$handle" params={{ handle: data.profile.handle }} search={{ preview: true }}>Vista pública sin sesión</Link></div>}
     </section>
