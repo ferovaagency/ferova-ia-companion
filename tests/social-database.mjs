@@ -7,7 +7,7 @@ for (const file of ['20260610151907_92ad47d7-a4d5-4623-9753-e2806f14205e.sql','2
 await db.exec(readFileSync(new URL('../drizzle/migrations/0003_private_reading_bingos.sql', import.meta.url), 'utf8'));
 
 await db.exec(`create schema storage; create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text,metadata jsonb);grant usage on schema storage to anon,authenticated;grant select,insert,delete on storage.objects to anon,authenticated;alter table storage.objects enable row level security;create function storage.foldername(text) returns text[] language sql immutable as $$select string_to_array($1,'/')$$;create function storage.extension(text) returns text language sql immutable as $$select regexp_replace($1,'^.*\\.','')$$;`);
-for (const file of ['0004_reader_calendars_lists_feelings.sql','0005_atomic_catalog_candidate_install.sql','0006_reader_social_privacy_clubs.sql','0007_joint_reading_author_fix.sql']) await db.exec(readFileSync(new URL('../drizzle/migrations/'+file,import.meta.url),'utf8'));
+for (const file of ['0004_reader_calendars_lists_feelings.sql','0005_atomic_catalog_candidate_install.sql','0006_reader_social_privacy_clubs.sql','0007_joint_reading_author_fix.sql','0008_privacy_media_policy_binding.sql']) await db.exec(readFileSync(new URL('../drizzle/migrations/'+file,import.meta.url),'utf8'));
 const owner='00000000-0000-4000-8000-000000000001',member='00000000-0000-4000-8000-000000000002',friend='00000000-0000-4000-8000-000000000003',outsider='00000000-0000-4000-8000-000000000004';
 const book='10000000-0000-4000-8000-000000000001',edition='10000000-0000-4000-8000-000000000002',foreign='10000000-0000-4000-8000-000000000004';
 const board='30000000-0000-4000-8000-000000000001';
