@@ -10,7 +10,7 @@ import { userError } from "@/lib/koa-data";
 import type { Book } from "@/types";
 export const Route = createFileRoute("/_authenticated/books/$bookId")({
   head: () => ({
-    meta: [{ title: "Tu libro — Lee con Koa" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Tu libro — Lee con Koa" }, { name: "description", content: "Detalles y progreso de tu libro privado." }, { property: "og:title", content: "Tu libro — Lee con Koa" }, { property: "og:description", content: "Tu lectura, tus reseñas y tu cuaderno." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }],
   }),
   component: BookPage,
 });

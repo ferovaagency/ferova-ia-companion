@@ -22,7 +22,7 @@ export const Route = createFileRoute("/_authenticated/read")({
     book: typeof s.book === "string" ? s.book : undefined,
   }),
   head: () => ({
-    meta: [{ title: "Tu sesión de lectura — Lee con Koa" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Tu sesión de lectura — Lee con Koa" }, { name: "description", content: "Acompaña tu sesión y registra progreso real." }, { property: "og:title", content: "Leer — Lee con Koa" }, { property: "og:description", content: "Una sesión para tus páginas, a tu ritmo." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }],
   }),
   component: ReadPage,
 });
