@@ -18,6 +18,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAdventuresRouteImport } from './routes/_authenticated/adventures'
 import { Route as AuthenticatedDiscoverRouteImport } from './routes/_authenticated/discover'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
+import { Route as AuthenticatedListsRouteImport } from './routes/_authenticated/lists'
 import { Route as AuthenticatedNotebookRouteImport } from './routes/_authenticated/notebook'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedReadRouteImport } from './routes/_authenticated/read'
@@ -70,6 +71,11 @@ const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
   path: '/library',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedListsRoute = AuthenticatedListsRouteImport.update({
+  id: '/lists',
+  path: '/lists',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedNotebookRoute = AuthenticatedNotebookRouteImport.update({
   id: '/notebook',
   path: '/notebook',
@@ -117,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/adventures': typeof AuthenticatedAdventuresRoute
   '/discover': typeof AuthenticatedDiscoverRoute
   '/library': typeof AuthenticatedLibraryRoute
+  '/lists': typeof AuthenticatedListsRoute
   '/notebook': typeof AuthenticatedNotebookRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/read': typeof AuthenticatedReadRoute
@@ -134,6 +141,7 @@ export interface FileRoutesByTo {
   '/adventures': typeof AuthenticatedAdventuresRoute
   '/discover': typeof AuthenticatedDiscoverRoute
   '/library': typeof AuthenticatedLibraryRoute
+  '/lists': typeof AuthenticatedListsRoute
   '/notebook': typeof AuthenticatedNotebookRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/read': typeof AuthenticatedReadRoute
@@ -153,6 +161,7 @@ export interface FileRoutesById {
   '/_authenticated/adventures': typeof AuthenticatedAdventuresRoute
   '/_authenticated/discover': typeof AuthenticatedDiscoverRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
+  '/_authenticated/lists': typeof AuthenticatedListsRoute
   '/_authenticated/notebook': typeof AuthenticatedNotebookRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/read': typeof AuthenticatedReadRoute
@@ -172,6 +181,7 @@ export interface FileRouteTypes {
     | '/adventures'
     | '/discover'
     | '/library'
+    | '/lists'
     | '/notebook'
     | '/onboarding'
     | '/read'
@@ -189,6 +199,7 @@ export interface FileRouteTypes {
     | '/adventures'
     | '/discover'
     | '/library'
+    | '/lists'
     | '/notebook'
     | '/onboarding'
     | '/read'
@@ -207,6 +218,7 @@ export interface FileRouteTypes {
     | '/_authenticated/adventures'
     | '/_authenticated/discover'
     | '/_authenticated/library'
+    | '/_authenticated/lists'
     | '/_authenticated/notebook'
     | '/_authenticated/onboarding'
     | '/_authenticated/read'
@@ -291,6 +303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLibraryRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/lists': {
+      id: '/_authenticated/lists'
+      path: '/lists'
+      fullPath: '/lists'
+      preLoaderRoute: typeof AuthenticatedListsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/notebook': {
       id: '/_authenticated/notebook'
       path: '/notebook'
@@ -348,6 +367,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdventuresRoute: typeof AuthenticatedAdventuresRoute
   AuthenticatedDiscoverRoute: typeof AuthenticatedDiscoverRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
+  AuthenticatedListsRoute: typeof AuthenticatedListsRoute
   AuthenticatedNotebookRoute: typeof AuthenticatedNotebookRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedReadRoute: typeof AuthenticatedReadRoute
@@ -360,6 +380,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdventuresRoute: AuthenticatedAdventuresRoute,
   AuthenticatedDiscoverRoute: AuthenticatedDiscoverRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
+  AuthenticatedListsRoute: AuthenticatedListsRoute,
   AuthenticatedNotebookRoute: AuthenticatedNotebookRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedReadRoute: AuthenticatedReadRoute,

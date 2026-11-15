@@ -375,6 +375,87 @@ export type Database = {
         }
         Relationships: []
       }
+      reader_calendar_entries: {
+        Row: {
+          author: string
+          calendar_id: string
+          catalog_id: string
+          cover_url: string | null
+          description: string
+          isbn: string | null
+          opened_at: string | null
+          saved_wish_id: string | null
+          slot: number
+          task: string
+          title: string
+        }
+        Insert: {
+          author: string
+          calendar_id: string
+          catalog_id: string
+          cover_url?: string | null
+          description?: string
+          isbn?: string | null
+          opened_at?: string | null
+          saved_wish_id?: string | null
+          slot: number
+          task?: string
+          title: string
+        }
+        Update: {
+          author?: string
+          calendar_id?: string
+          catalog_id?: string
+          cover_url?: string | null
+          description?: string
+          isbn?: string | null
+          opened_at?: string | null
+          saved_wish_id?: string | null
+          slot?: number
+          task?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_calendar_entries_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "reader_calendars"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reader_calendar_entries_saved_wish_id_fkey"
+            columns: ["saved_wish_id"]
+            isOneToOne: false
+            referencedRelation: "reader_wishes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reader_calendars: {
+        Row: {
+          context: string
+          id: string
+          kind: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          context?: string
+          id?: string
+          kind: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          context?: string
+          id?: string
+          kind?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
+      }
       reader_conversations: {
         Row: {
           answer: string
@@ -410,6 +491,123 @@ export type Database = {
           },
         ]
       }
+      reader_feelings: {
+        Row: {
+          book_id: string
+          immersion: number | null
+          tags: string[]
+          tears: number | null
+          tier: string | null
+          tier_rank: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          immersion?: number | null
+          tags?: string[]
+          tears?: number | null
+          tier?: string | null
+          tier_rank?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          book_id?: string
+          immersion?: number | null
+          tags?: string[]
+          tears?: number | null
+          tier?: string | null
+          tier_rank?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_feelings_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: true
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reader_list_items: {
+        Row: {
+          book_id: string | null
+          id: string
+          list_id: string
+          position: number
+          user_id: string
+          wish_id: string | null
+        }
+        Insert: {
+          book_id?: string | null
+          id?: string
+          list_id: string
+          position?: number
+          user_id?: string
+          wish_id?: string | null
+        }
+        Update: {
+          book_id?: string | null
+          id?: string
+          list_id?: string
+          position?: number
+          user_id?: string
+          wish_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_list_items_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reader_list_items_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "reader_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reader_list_items_wish_id_fkey"
+            columns: ["wish_id"]
+            isOneToOne: false
+            referencedRelation: "reader_wishes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reader_lists: {
+        Row: {
+          annual_year: number | null
+          created_at: string
+          description: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          annual_year?: number | null
+          created_at?: string
+          description?: string
+          id?: string
+          name: string
+          user_id?: string
+        }
+        Update: {
+          annual_year?: number | null
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reader_notes: {
         Row: {
           book_id: string
@@ -417,6 +615,7 @@ export type Database = {
           content: string
           created_at: string
           favorite: boolean
+          feeling_tags: string[]
           id: string
           kind: string
           page: number | null
@@ -430,6 +629,7 @@ export type Database = {
           content: string
           created_at?: string
           favorite?: boolean
+          feeling_tags?: string[]
           id?: string
           kind?: string
           page?: number | null
@@ -443,6 +643,7 @@ export type Database = {
           content?: string
           created_at?: string
           favorite?: boolean
+          feeling_tags?: string[]
           id?: string
           kind?: string
           page?: number | null
@@ -526,6 +727,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          isbn: string | null
           title: string
           user_id: string
         }
@@ -535,6 +737,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          isbn?: string | null
           title: string
           user_id?: string
         }
@@ -544,6 +747,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          isbn?: string | null
           title?: string
           user_id?: string
         }
@@ -627,6 +831,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      advent_unlocked: {
+        Args: { p_day: string; p_slot: number; p_year: number }
+        Returns: boolean
+      }
       claim_koa_request: { Args: never; Returns: undefined }
       close_reader_session: {
         Args: {
@@ -655,6 +863,15 @@ export type Database = {
         Returns: boolean
       }
       import_goodreads: { Args: { p_rows: Json }; Returns: number }
+      install_reader_candidates: {
+        Args: { p_calendar: string; p_entries: Json; p_user: string }
+        Returns: undefined
+      }
+      reader_identity: {
+        Args: { p_author: string; p_title: string }
+        Returns: string
+      }
+      reader_isbn: { Args: { p_isbn: string }; Returns: string }
       record_reading: {
         Args: {
           p_book: string
@@ -668,6 +885,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      reorder_reader_list: {
+        Args: { p_ids: string[]; p_list: string }
+        Returns: undefined
+      }
+      reveal_reader_window: {
+        Args: { p_calendar: string; p_slot: number; p_zone: string }
+        Returns: Json
+      }
       revise_session: {
         Args: {
           p_day: string
@@ -678,6 +903,10 @@ export type Database = {
           p_zone: string
         }
         Returns: undefined
+      }
+      save_reader_discovery: {
+        Args: { p_calendar: string; p_slot: number }
+        Returns: string
       }
       set_bingo_cell: {
         Args: {
