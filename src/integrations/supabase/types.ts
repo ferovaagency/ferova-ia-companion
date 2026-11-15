@@ -28,6 +28,7 @@ export type Database = {
           isbn: string | null
           moods: string[]
           pages: number
+          private_cover_path: string | null
           reading_cycle: number
           reading_speed_days: number | null
           series_index: number | null
@@ -53,6 +54,7 @@ export type Database = {
           isbn?: string | null
           moods?: string[]
           pages?: number
+          private_cover_path?: string | null
           reading_cycle?: number
           reading_speed_days?: number | null
           series_index?: number | null
@@ -78,6 +80,7 @@ export type Database = {
           isbn?: string | null
           moods?: string[]
           pages?: number
+          private_cover_path?: string | null
           reading_cycle?: number
           reading_speed_days?: number | null
           series_index?: number | null
@@ -341,6 +344,7 @@ export type Database = {
           purpose: string
           shared_source_id: string | null
           size: number
+          source_credit: string
           starts_on: string | null
           state: string
           title: string
@@ -356,6 +360,7 @@ export type Database = {
           purpose?: string
           shared_source_id?: string | null
           size?: number
+          source_credit?: string
           starts_on?: string | null
           state?: string
           title: string
@@ -371,6 +376,7 @@ export type Database = {
           purpose?: string
           shared_source_id?: string | null
           size?: number
+          source_credit?: string
           starts_on?: string | null
           state?: string
           title?: string
@@ -593,6 +599,30 @@ export type Database = {
           },
         ]
       }
+      reader_day_rewards: {
+        Row: {
+          day: string
+          decoration: string
+          equipped: boolean
+          slot: number
+          user_id: string
+        }
+        Insert: {
+          day: string
+          decoration: string
+          equipped?: boolean
+          slot?: number
+          user_id: string
+        }
+        Update: {
+          day?: string
+          decoration?: string
+          equipped?: boolean
+          slot?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       reader_feelings: {
         Row: {
           book_id: string
@@ -687,9 +717,52 @@ export type Database = {
           },
         ]
       }
+      reader_joint_intervals: {
+        Row: {
+          book_id: string
+          ends_at: string | null
+          id: string
+          reading_id: string
+          starts_at: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          ends_at?: string | null
+          id?: string
+          reading_id: string
+          starts_at?: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          ends_at?: string | null
+          id?: string
+          reading_id?: string
+          starts_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_joint_intervals_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reader_joint_intervals_reading_id_fkey"
+            columns: ["reading_id"]
+            isOneToOne: false
+            referencedRelation: "reader_joint_readings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reader_joint_participants: {
         Row: {
           book_id: string
+          chapter_ends: number[]
           joined_at: string
           left_at: string | null
           reading_id: string
@@ -697,6 +770,7 @@ export type Database = {
         }
         Insert: {
           book_id: string
+          chapter_ends?: number[]
           joined_at?: string
           left_at?: string | null
           reading_id: string
@@ -704,6 +778,7 @@ export type Database = {
         }
         Update: {
           book_id?: string
+          chapter_ends?: number[]
           joined_at?: string
           left_at?: string | null
           reading_id?: string
@@ -1214,6 +1289,7 @@ export type Database = {
         Args: { p_chapter: number; p_reading: string }
         Returns: boolean
       }
+      reader_claim_rewards: { Args: never; Returns: number }
       reader_club_action: {
         Args: {
           p_action: string
@@ -1228,6 +1304,10 @@ export type Database = {
       reader_club_member: { Args: { c: string; u: string }; Returns: boolean }
       reader_connections: { Args: never; Returns: Json }
       reader_copy_bingo: { Args: { p_share: string }; Returns: string }
+      reader_equip_reward: {
+        Args: { p_day: string; p_equipped: boolean; p_slot: number }
+        Returns: undefined
+      }
       reader_friend_action: {
         Args: { p_action: string; p_handle: string }
         Returns: undefined
@@ -1248,11 +1328,35 @@ export type Database = {
         }
         Returns: string
       }
+      reader_joint_days: {
+        Args: { p_reading: string }
+        Returns: {
+          day: string
+          user_id: string
+        }[]
+      }
       reader_joint_percent: {
         Args: { p_reading: string; p_user: string }
         Returns: number
       }
       reader_joint_summary: { Args: { p_reading: string }; Returns: Json }
+      reader_preview: {
+        Args: { p_club?: string; p_handle?: string; p_mode: string }
+        Returns: Json
+      }
+      reader_preview_allows: {
+        Args: {
+          p_club: string
+          p_owner: string
+          p_viewer: string
+          p_visibility: string
+        }
+        Returns: boolean
+      }
+      reader_set_chapter_ends: {
+        Args: { p_ends: number[]; p_reading: string }
+        Returns: undefined
+      }
       reader_share: {
         Args: {
           p_club?: string
