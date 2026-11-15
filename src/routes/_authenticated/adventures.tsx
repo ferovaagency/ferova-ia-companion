@@ -8,6 +8,7 @@ import { PageTitle, ErrorNotice, Empty, Modal, Koa } from "@/components/koa/UI";
 import { BingoEditor } from "@/components/koa/BingoEditor";
 import { ReaderCalendars } from "@/components/koa/ReaderCalendars";
 import { SharedAdventures } from "@/components/koa/SharedAdventures";
+import { BingoImageImport, CellOracle } from "@/components/koa/CreativeBingo";
 import { sharedOptions } from "@/lib/social-data";
 import { bingoTemplates, newDraft, matchesCell, type BingoDraft } from "@/lib/bingo";
 import { bingoQueryOptions, bingoProgressQueryOptions } from "@/lib/bingo-data";
@@ -29,7 +30,7 @@ function Adventures() {
   const { data: boards, refetch } = useSuspenseQuery(bingoQueryOptions);
   const { data: progress, refetch: refetchProgress } = useSuspenseQuery(bingoProgressQueryOptions);
   const { data: books } = useSuspenseQuery(booksOptions);
-  const [editor, setEditor] = useState<{ initial: BingoDraft; id?: string }>();
+  const [editor, setEditor] = useState<{ initial: BingoDraft; id?: string; review?: boolean }>();
   const [selected, setSelected] = useState<{ board: typeof boards[number]; index: number }>();
   const [bookId, setBookId] = useState("");
   const [busy, setBusy] = useState(false);
@@ -49,6 +50,7 @@ function Adventures() {
     <PageTitle eyebrow="Historias y pequeños momentos" title="Mis aventuras" actions={<Button onClick={() => setEditor({ initial: newDraft() })}><Plus />Crear bingo</Button>}>Un libro a la vez. Las experiencias son opcionales y no suman días de lectura.</PageTitle>
     {error && <ErrorNotice>{error}</ErrorNotice>}
     <ReaderCalendars />
+    <BingoImageImport review={initial=>setEditor({initial,review:true})}/>
     <SharedAdventures />
     <section className="mb-10"><h2 className="mb-4">Una aventura para empezar</h2><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">{bingoTemplates.map((template) => <article className="koa-card" key={template.title}><p className="koa-eyebrow">Plantilla original · 3 × 3</p><h3 className="text-lg font-semibold">{template.title}</h3><p className="koa-muted my-3">{template.purpose}</p><Button variant="secondary" onClick={() => setEditor({ initial: structuredClone(template) })}>Personalizar</Button></article>)}</div></section>
     <section><h2 className="mb-5">Mis bingos y mi progreso</h2>{!boards.length && <Empty title="Tu primera aventura te espera">Elige una plantilla o crea tu propio bingo.</Empty>}
@@ -72,6 +74,7 @@ function Adventures() {
     {deleting && <Modal title="¿Eliminar este borrador?" onClose={() => { if (!busy) setDeleting(undefined); }}><p className="my-4">Esta acción elimina el borrador, no tus libros ni tu historial.</p><div className="flex gap-3"><Button variant="secondary" disabled={busy} onClick={() => setDeleting(undefined)}>Cancelar</Button><Button variant="destructive" disabled={busy} onClick={() => action(async () => { const { error } = await supabase.from("reader_bingos").delete().eq("id", deleting); if (error) throw error; setDeleting(undefined); })}>Eliminar borrador</Button></div></Modal>}
     {selected && <Modal title={selected.board.cells[selected.index]?.label ?? "Casilla"} onClose={() => { if (!busy) setSelected(undefined); }}>
       {selected.board.cells[selected.index]?.kind === "book" ? <label className="block my-5">Libro de mi biblioteca<select className="koa-field" value={bookId} onChange={(e) => setBookId(e.target.value)}><option value="">Sin asignar</option>{books.filter((b) => matchesCell(b, selected.board.cells[selected.index])).map((b) => <option key={b.id} value={b.id}>{b.title} · {b.author}</option>)}</select></label> : <p className="koa-muted my-5">Completar esta experiencia no registra lectura ni aumenta tu racha.</p>}
+      {selected.board.cells[selected.index]?.kind === "book" && <CellOracle key={`${selected.board.id}-${selected.index}`} board={selected.board.id} index={selected.index} assign={setBookId}/>}
       {error && <ErrorNotice>{error}</ErrorNotice>}
       <div className="flex flex-wrap gap-3">{selected.board.cells[selected.index]?.kind === "book" && <Button variant="secondary" disabled={busy} onClick={() => saveCell(false)}>Guardar asignación</Button>}<Button disabled={busy} onClick={() => saveCell(true)}><Check />Completar</Button><Button variant="secondary" disabled={busy} onClick={() => { setBookId(""); void action(async () => { const { error } = await koaDb.rpc("set_bingo_cell", { p_board: selected.board.id, p_index: selected.index, p_book: null, p_complete: false }); if (error) throw error; setSelected(undefined); }); }}>Limpiar casilla</Button></div>
     </Modal>}
