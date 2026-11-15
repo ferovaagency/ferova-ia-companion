@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Current audit: close relationship probes, identity/media cache isolation, unknown-page completion, full preview, decoded image uploads, durable public demo and all-route QA evidence
 - [x] Cycle 4 implementation (authenticated acceptance pending): OCR/cell oracle, private cropped covers/shelf/rewards, authorized previews, exact chapter ends/rejoin intervals, audit fixes/help and regression evidence
 - [x] Expansion: Aventuras editor, private persistence, verified completion and original templates
 - [x] Expansion: shared bingo discovery/join with individual immutable copies (database tests passed; signed-in browser pending)
