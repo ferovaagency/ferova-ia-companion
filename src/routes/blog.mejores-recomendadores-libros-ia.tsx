@@ -5,9 +5,9 @@ export const Route = createFileRoute("/blog/mejores-recomendadores-libros-ia")({
   head: () => ({
     meta: [
       { title: "Mejores Recomendadores de Libros con IA (Guía 2026)" },
-      { name: "description", content: "Comparamos los mejores recomendadores de libros con IA: El Oráculo de Librero IA vs ChatGPT, Goodreads y otras herramientas automatizadas para lectores." },
+      { name: "description", content: "Comparamos los mejores recomendadores de libros con IA: El Oráculo de Lee con Koa vs ChatGPT, Goodreads y otras herramientas automatizadas para lectores." },
       { property: "og:title", content: "Mejores Recomendadores de Libros con IA (Guía 2026)" },
-      { property: "og:description", content: "Comparamos los mejores recomendadores de libros con IA: El Oráculo de Librero IA vs ChatGPT, Goodreads y otras herramientas automatizadas para lectores." },
+      { property: "og:description", content: "Comparamos los mejores recomendadores de libros con IA: El Oráculo de Lee con Koa vs ChatGPT, Goodreads y otras herramientas automatizadas para lectores." },
       { property: "og:url", content: "https://ferova-ia-companion.lovable.app/blog/mejores-recomendadores-libros-ia" },
       { property: "og:type", content: "article" },
     ],
@@ -21,15 +21,15 @@ export const Route = createFileRoute("/blog/mejores-recomendadores-libros-ia")({
           "@context": "https://schema.org",
           "@type": "BlogPosting",
           "headline": "Mejores Recomendadores de Libros con IA: ¿Cuál es el mejor en 2026?",
-          "description": "Comparamos detalladamente el Oráculo de Librero IA frente a ChatGPT y los algoritmos tradicionales como Goodreads para ver cuál ofrece las mejores sugerencias automáticas de lectura.",
+          "description": "Comparamos detalladamente el Oráculo de Lee con Koa frente a ChatGPT y los algoritmos tradicionales como Goodreads para ver cuál ofrece las mejores sugerencias automáticas de lectura.",
           "image": "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b64cbbe9-ab77-47e1-afa0-ac7b6eec9008/id-preview-e402db19--1cab2c8c-222e-4717-8c65-0dfa0737db89.lovable.app-1781111749985.png",
           "author": {
             "@type": "Organization",
-            "name": "Librero IA"
+            "name": "Lee con Koa"
           },
           "publisher": {
             "@type": "Organization",
-            "name": "Librero IA",
+            "name": "Lee con Koa",
             "logo": {
               "@type": "ImageObject",
               "url": "https://ferova-ia-companion.lovable.app/favicon.ico"
@@ -50,7 +50,7 @@ function BlogPage() {
       <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between border-b border-border/40">
         <Link to="/" className="flex items-center gap-2 group">
           <BookOpen className="w-5 h-5 text-accent group-hover:scale-110 transition-transform" />
-          <span className="font-serif font-black tracking-tight text-lg">Librero IA</span>
+          <span className="font-serif font-black tracking-tight text-lg">Lee con Koa</span>
         </Link>
         <Link to="/" className="font-mono-label text-sm flex items-center gap-1 hover:text-accent transition-colors">
           <ArrowLeft className="w-4 h-4" /> Volver al Inicio
@@ -116,10 +116,10 @@ function BlogPage() {
               </div>
             </div>
 
-            {/* Librero IA - El Oráculo */}
+            {/* Lee con Koa - El Oráculo */}
             <div className="border border-accent p-6 rounded-xl bg-accent/5">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="font-serif text-xl font-bold text-accent">3. El Oráculo (Librero IA)</h3>
+                <h3 className="font-serif text-xl font-bold text-accent">3. El Oráculo (Lee con Koa)</h3>
                 <span className="text-xs bg-accent text-accent-foreground px-2 py-1 rounded font-mono-label font-bold">IA Especializada</span>
               </div>
               <p className="text-sm text-muted-foreground mb-4">
@@ -138,7 +138,7 @@ function BlogPage() {
 
           <h2 className="font-serif text-2xl font-bold mt-8 mb-4">¿Por qué usar un recomendador de libros ia especializado?</h2>
           <p className="leading-relaxed mb-6">
-            Cuando usamos un <strong>recomendador de libros ia</strong> especializado como <em>El Oráculo</em> de Librero IA, eliminamos las fricciones comunes de los chats de IA generales. El Oráculo cuenta con tres reglas fundamentales optimizadas para la lectura:
+            Cuando usamos un <strong>recomendador de libros ia</strong> especializado como <em>El Oráculo</em> de Lee con Koa, eliminamos las fricciones comunes de los chats de IA generales. El Oráculo cuenta con tres reglas fundamentales optimizadas para la lectura:
           </p>
           
           <ul className="list-disc pl-6 space-y-3 mb-8">
@@ -169,14 +169,14 @@ function BlogPage() {
 
           <h2 className="font-serif text-2xl font-bold mt-8 mb-4">Conclusión: El veredicto sobre las sugerencias con IA</h2>
           <p className="leading-relaxed mb-6">
-            Los algoritmos estáticos están en decadencia. Si buscas recomendaciones genéricas e impersonales, Goodreads cumple su cometido. Si deseas experimentar con descripciones locas, ChatGPT es divertido. Pero si buscas un <strong>organizador inteligente de lectura</strong> que sea capaz de aconsejarte qué libro elegir de tu pila física, respetando tu tiempo, idioma y orden de sagas literarias, la especialización de <strong>Librero IA</strong> se corona como el indiscutible ganador.
+            Los algoritmos estáticos están en decadencia. Si buscas recomendaciones genéricas e impersonales, Goodreads cumple su cometido. Si deseas experimentar con descripciones locas, ChatGPT es divertido. Pero si buscas un <strong>organizador inteligente de lectura</strong> que sea capaz de aconsejarte qué libro elegir de tu pila física, respetando tu tiempo, idioma y orden de sagas literarias, la especialización de <strong>Lee con Koa</strong> se corona como el indiscutible ganador.
           </p>
         </article>
       </main>
 
       {/* Footer */}
       <footer className="border-t border-border/40 py-8 text-center font-mono-label text-sm text-muted-foreground mt-12">
-        Librero IA · {new Date().getFullYear()} · El mejor recomendador de libros ia para lectores devotos.
+        Lee con Koa · {new Date().getFullYear()} · El mejor recomendador de libros ia para lectores devotos.
       </footer>
     </div>
   );

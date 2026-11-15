@@ -1,3 +1,4 @@
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { createServerFn } from "@tanstack/react-start";
 import { collectOptions, eligibleBooks } from "./oracle-options";
 import { z } from "zod";
@@ -132,6 +133,7 @@ async function fetchOriginalCover(title: string, author?: string): Promise<strin
 const EnrichInput = z.object({ title: z.string().min(1), author: z.string().optional() });
 
 export const enrichBook = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => EnrichInput.parse(input))
   .handler(async ({ data }): Promise<EnrichedBook> => {
     const key = process.env.LOVABLE_API_KEY;
@@ -221,6 +223,7 @@ const RecommendInput = z.object({
 });
 
 export const recommendBook = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => RecommendInput.parse(input))
   .handler(async ({ data }): Promise<RecommendationResult> => {
     const key = process.env.LOVABLE_API_KEY;
@@ -249,7 +252,7 @@ export const recommendBook = createServerFn({ method: "POST" })
       const loved = data.books.filter((b) => (b.user_rating ?? 0) >= 4);
       const disliked = data.books.filter((b) => b.user_rating != null && b.user_rating <= 2);
 
-      const prompt = `Eres EL ORÁCULO de Librero IA: una inteligencia lectora cálida, precisa y obsesiva con el orden narrativo.
+      const prompt = `Eres EL ORÁCULO de Lee con Koa: una inteligencia lectora cálida, precisa y obsesiva con el orden narrativo.
 
 EL USUARIO DICE: "${data.userRequest}"
 
@@ -273,7 +276,7 @@ REGLAS:
 5. Para sugerencias externas incluye title (el libro EXACTO por el que debería empezar: si es saga, el tomo #1), author, genre, pages aproximadas, moods, description breve y opcionalmente series_name si es saga.
 6. Conserva el IDIOMA del título tal como sea el original (no traduzcas títulos en inglés).
 7. APRENDE DE SUS RESEÑAS: usa "LO QUE AMA" y "LO QUE NO LE FUNCIONÓ" para afinar el tono, ritmo, tropos y temas. Evita patrones que rechazó (★1-2) y refuerza los que le encantan (★4-5). Si una reseña personal revela un gusto concreto (prosa lírica, romance lento, finales agridulces, etc.), respétalo.
-8. "reasoning" en español, 2-3 frases cálidas explicando por qué este libro/saga sanará su momento. Si te apoyaste en una reseña suya, menciónalo brevemente ("como te encantó X por Y...").
+8. "reasoning" en español, 2-3 frases cálidas explicando por qué este libro/saga podría encajar con su momento, sin promesas terapéuticas ni atribuir emociones que no haya expresado. Si te apoyaste en una reseña suya, menciónalo brevemente ("como te encantó X por Y...").
 
 ${data.exclude?.length ? `NO repitas ninguna de estas sugerencias anteriores que el usuario descartó: ${JSON.stringify(data.exclude)}. Ofrece alternativas realmente diferentes.\n` : ""}Propón tres libros distintos. Prioriza la estantería cuando encaje y completa con externos si hacen falta. Da un motivo específico para cada alternativa.
 Devuelve JSON {"options":[{"bookId":null,"external":{"title":"...","author":"...","series_name":null,"series_index":null},"reasoning":"..."}, ...]}.
@@ -309,6 +312,7 @@ Para una opción interna usa bookId y external null. Para una saga externa inclu
 /* ---------- identify a book from a cover photo ---------- */
 const CoverInput = z.object({ image: z.string().startsWith("data:image/").max(8_000_000) });
 export const identifyCover = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => CoverInput.parse(input))
   .handler(async ({ data }): Promise<{ title: string; author: string } | null> => {
     const key = process.env.LOVABLE_API_KEY;

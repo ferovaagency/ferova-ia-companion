@@ -7,9 +7,9 @@ import { lovable } from "@/integrations/lovable";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Entrar — Librero IA" },
-      { name: "description", content: "Inicia sesión o crea tu cuenta en Librero IA para acceder a tu estantería personal con IA." },
-      { property: "og:title", content: "Entrar a Librero IA" },
+      { title: "Entrar — Lee con Koa" },
+      { name: "description", content: "Inicia sesión o crea tu cuenta en Lee con Koa para acceder a tu estantería personal con IA." },
+      { property: "og:title", content: "Entrar a Lee con Koa" },
       { property: "og:description", content: "Accede a tu santuario lector: organiza tu TBR y consulta al Oráculo." },
       { property: "og:url", content: "https://ferova-ia-companion.lovable.app/auth" },
     ],
@@ -30,7 +30,7 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/library" });
+      if (data.session) navigate({ to: "/discover" });
     });
   }, [navigate]);
 
@@ -43,10 +43,10 @@ function AuthPage() {
       const { error } = await fn.call(supabase.auth, {
         email,
         password,
-        options: { emailRedirectTo: window.location.origin + "/library" },
+        options: { emailRedirectTo: window.location.origin + "/discover" },
       } as any);
       if (error) throw error;
-      navigate({ to: "/library" });
+      navigate({ to: "/discover" });
     } catch (err: any) {
       setError(err?.message || "Algo salió mal");
     } finally {
@@ -57,22 +57,22 @@ function AuthPage() {
   const handleGoogle = async () => {
     setError(null);
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/library" });
+    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/discover" });
     if (result.error) {
       setError(result.error.message);
       setLoading(false);
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/library" });
+    navigate({ to: "/discover" });
   };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <Link to="/" className="flex items-center justify-center gap-2 mb-8">
-          <BookOpen className="w-5 h-5 text-accent" />
-          <span className="font-serif font-black tracking-tight">Librero IA</span>
+          <img src="/koa/icon.webp" width={48} height={48} alt=""/>
+          <span className="font-serif font-black tracking-tight">Lee con Koa</span>
         </Link>
 
         <div className="bg-card border border-border rounded-sm p-8 shadow-sm">

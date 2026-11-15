@@ -1,8 +1,8 @@
-# Librero IA
+# Lee con Koa
 
 > Estantería digital con IA: organiza tu TBR, sigue tu velocidad de lectura, respeta el orden de tus sagas y recibe recomendaciones según tu estado de ánimo.
 
-Librero IA es un santuario lector privado con un asistente de IA llamado el Oráculo, que recomienda libros y sagas respetando tu progreso y tus gustos. Suscripción de $7 USD al mes vía PayPal.
+Lee con Koa es un santuario lector privado con un asistente de IA llamado el Oráculo, que recomienda libros y sagas respetando tu progreso y tus gustos. Suscripción de $7 USD al mes vía PayPal.
 
 ## Pages
 

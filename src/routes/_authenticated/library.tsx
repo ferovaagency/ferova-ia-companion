@@ -1,3 +1,7 @@
+import { PageTitle, KoaMessage, Modal as KoaModal } from "@/components/koa/UI";
+import { Wishlist } from "@/components/koa/Wishlist";
+import { userError } from "@/lib/koa-data";
+import type { LucideIcon } from "lucide-react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
@@ -22,9 +26,9 @@ import { amazonWishlistUrl } from "@/lib/amazon";
 export const Route = createFileRoute("/_authenticated/library")({
   head: () => ({
     meta: [
-      { title: "Mi Biblioteca — Librero IA" },
+      { title: "Mi Biblioteca — Lee con Koa" },
       { name: "description", content: "Tu estantería personal: organiza libros, sigue tu progreso de lectura y consulta al Oráculo." },
-      { property: "og:title", content: "Mi Biblioteca — Librero IA" },
+      { property: "og:title", content: "Mi Biblioteca — Lee con Koa" },
       { property: "og:description", content: "Tu santuario lector privado: TBR, progreso y recomendaciones del Oráculo." },
       { property: "og:url", content: "https://ferova-ia-companion.lovable.app/library" },
       { name: "robots", content: "noindex, nofollow" },
@@ -61,6 +65,9 @@ function LibraryPage() {
   const [importBusy,setImportBusy]=useState(false);
   const [search, setSearch] = useState("");
   const [filterGenre, setFilterGenre] = useState("Todos");
+  const [statusFilter,setStatusFilter]=useState<BookStatus|"ALL"|"WISH">("ALL");
+  const [moodFilter,setMoodFilter]=useState("");
+  const [grid,setGrid]=useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [enriching, setEnriching] = useState(false);
 
@@ -88,7 +95,7 @@ function LibraryPage() {
       const { data: u } = await supabase.auth.getUser();
       setUserEmail(u.user?.email ?? null);
       if (!u.user) return;
-      const membership = await ensureMembershipFn();
+      const membership = await ensureMembershipFn().catch(()=>({isAdmin:false}));
       setIsAdmin(Boolean(membership.isAdmin));
 
       const { data: prof } = await supabase.from("profiles").select("reading_goal,onboarding_finished_at").eq("id", u.user.id).maybeSingle();
@@ -99,7 +106,7 @@ function LibraryPage() {
       }
       await refreshAll();
       setLoading(false);
-    })();
+    })().catch(e=>{setActionError(userError(e));setLoading(false);});
 
     const channel = supabase
       .channel("books-realtime")
@@ -162,11 +169,11 @@ function LibraryPage() {
   const filtered = useMemo(() => {
     return books.filter((b) => {
       const m = b.title.toLowerCase().includes(search.toLowerCase()) ||
-        b.author.toLowerCase().includes(search.toLowerCase());
+        b.author.toLowerCase().includes(search.toLowerCase()) || b.moods.some(m=>m.toLowerCase().includes(search.toLowerCase()));
       const g = filterGenre === "Todos" || b.genre === filterGenre;
-      return m && g;
+      return m && g && (!moodFilter||b.moods.includes(moodFilter));
     });
-  }, [books, search, filterGenre]);
+  }, [books, search, filterGenre,moodFilter]);
 
   const grouped = useMemo(() => {
     const out: Record<BookStatus, Book[]> = { TBR: [], READING: [], READ: [], PAUSED: [], ABANDONED: [] };
@@ -251,13 +258,15 @@ function LibraryPage() {
 
   const saveEdit = async (fields: Partial<Book>) => {
     if (!editingBook) return;
-    await supabase.from("books").update(fields).eq("id", editingBook.id);
-    refreshBooks();
+    const {error}=await supabase.from("books").update(fields).eq("id", editingBook.id);
+    if(error)throw error;
+    await refreshBooks();
   };
 
   const removeBook = async (id: string) => {
     if (!confirm("¿Eliminar este libro de tu estantería?")) return;
-    await supabase.from("books").delete().eq("id", id);
+    const {error}=await supabase.from("books").delete().eq("id", id);
+    if(error){setActionError(userError(error));return;}
     await refreshAll();
   };
 
@@ -365,33 +374,11 @@ function LibraryPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Header */}
-      <header className="border-b border-border">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-accent" />
-            <span className="font-serif font-black tracking-tight">Librero IA</span>
-          </Link>
-          <div className="flex items-center gap-4 text-xs">
-            <span className="hidden sm:inline text-muted-foreground truncate max-w-[200px]">{userEmail}</span>
-            {isAdmin && (
-              <Link to="/admin" className="font-mono-label hover:text-accent transition-colors">
-                Admin
-              </Link>
-            )}
-            <button onClick={() => setShowFeedback(true)} className="flex items-center gap-1.5 hover:text-accent transition-colors" title="Sugerencias o reportar errores">
-              <MessageSquare className="w-3.5 h-3.5" /> <span className="font-mono-label hidden sm:inline">Feedback</span>
-            </button>
-            <button onClick={logout} className="flex items-center gap-1.5 hover:text-accent transition-colors" title="Cerrar sesión">
-              <LogOut className="w-3.5 h-3.5" /> <span className="font-mono-label">Salir</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-        <h1 className="font-serif text-3xl sm:text-4xl font-black tracking-tight">Mi Biblioteca</h1>
-        {guide?<ReaderWelcome books={books} add={()=>setIsAdding(true)} importCsv={()=>setImportOpen(true)} start={b=>updateStatus(b,"READING")} progress={b=>{setEditingSession(undefined);setUpdatingProgressId(b.id);}} oracle={()=>{document.getElementById("oracle-request")?.focus();}} finish={finishGuide}/>:<button className="text-sm underline" onClick={()=>setGuide(true)}>Ver guía de primeros pasos</button>}
+      <main className="space-y-7">
+        <PageTitle eyebrow="Tu refugio lector" title="Mi biblioteca" actions={<><button className="koa-secondary" onClick={()=>setImportOpen(true)}>Importar Goodreads</button><button className="koa-gold" onClick={()=>setIsAdding(true)}>Escanear / Añadir libro</button></>}>Tus historias, tus pausas y todo lo que está por venir.</PageTitle>
+        <div className="flex gap-4 text-xs text-muted-foreground"><Link to="/onboarding" className="underline">Mis preferencias</Link><button onClick={()=>setShowFeedback(true)} className="underline">Sugerencias y ayuda</button>{isAdmin&&<Link to="/admin">Administración</Link>}</div>
+        {actionError&&!isAdding&&<p role="alert" className="koa-error">{actionError}</p>}
+        {guide?<ReaderWelcome books={books} add={()=>setIsAdding(true)} importCsv={()=>setImportOpen(true)} start={b=>updateStatus(b,"READING")} progress={b=>{setEditingSession(undefined);setUpdatingProgressId(b.id);}} oracle={()=>{void navigate({to:"/discover"});}} finish={finishGuide}/>:<button className="text-sm underline" onClick={()=>setGuide(true)}>Ver guía de primeros pasos</button>}
         {guideError&&<p role="alert">{guideError}</p>}
         {/* Stats strip */}
         <section className="grid grid-cols-3 gap-3 sm:gap-6">
@@ -410,34 +397,11 @@ function LibraryPage() {
               )
             }
           />
-          <StatCard icon={Wind} label="Ritmo estimado" value={stats.avgSpeed ? `${stats.avgSpeed} palabras/min` : "—"} />
+          <StatCard icon={Wind} label="Minutos registrados" value={String(sessions.reduce((n,s)=>n+(s.minutes??0),0))} />
         </section>
 
         {journalError ? <p role="alert">{journalError} <button onClick={refreshAll}>Reintentar</button></p> : <ReadingJournal books={books} sessions={sessions} completed={completed} edit={s=>{setEditingSession(s);setUpdatingProgressId(s.book_id);}}/>}
-        {/* Oracle recommend bar */}
-        <section className="bg-card border border-border rounded-sm p-5 sm:p-6">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-4 h-4 text-accent" />
-            <span className="font-mono-label">Pregúntale al Oráculo</span>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              id="oracle-request" value={userInput}
-              onChange={(e) => setUserInput(e.target.value)}
-              placeholder="¿Cómo te sientes hoy? ej. 'Quiero algo gótico y corto, estoy en bloqueo lector'"
-              className="flex-1 bg-background border border-border px-3 py-3 rounded-sm focus:outline-none focus:border-foreground text-sm font-serif italic"
-            />
-            <button
-              onClick={() => { setSeenRecs([]); void askOracle(); }}
-              disabled={!userInput.trim() || recLoading}
-              className="bg-foreground text-background px-6 py-3 font-mono-label rounded-sm hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {recLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-              Recomendar
-            </button>
-          </div>
-        </section>
-
+        <Link to="/discover" className="koa-message flex justify-between"><div><p className="koa-eyebrow">Tu próxima historia</p><h2>¿Cuál de tus pendientes va contigo hoy?</h2><p className="koa-muted mt-2">Cuéntale a Koa cómo estás y descubre tres opciones.</p></div><Sparkles className="text-primary shrink-0"/></Link>
         {/* Search + filter + add */}
         <section className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           <div className="relative flex-1">
@@ -456,19 +420,18 @@ function LibraryPage() {
           </button>
         </section>
 
-        <nav aria-label="Ir a sección" className="flex flex-wrap gap-2 -mt-4">
-          {([["READING","Leyendo"],["TBR","Por leer"],["READ","Leídos"],["ABANDONED","Abandonados"]] as [BookStatus,string][]).map(([s,label])=>(
-            <button key={s} type="button" disabled={!grouped[s].length}
-              onClick={()=>document.getElementById(`shelf-${s}`)?.scrollIntoView({behavior:"smooth",block:"start"})}
-              className="border border-border bg-card px-3 py-1.5 rounded-sm text-xs font-mono-label hover:border-foreground disabled:opacity-40">
-              {label} · {grouped[s].length}
-            </button>
-          ))}
+        <nav aria-label="Filtrar estantería" className="flex flex-wrap gap-2">
+          <button className={`koa-chip ${statusFilter==="ALL"?"active":""}`} onClick={()=>setStatusFilter("ALL")}>Todos · {books.length}</button>
+          {STATUS_ORDER.map(status=><button key={status} className={`koa-chip ${statusFilter===status?"active":""}`} onClick={()=>setStatusFilter(status)}>{STATUS_LABEL[status]} · {books.filter(b=>b.status===status).length}</button>)}
+          <button className={`koa-chip ${statusFilter==="WISH"?"active":""}`} onClick={()=>setStatusFilter("WISH")}>Deseos</button>
+          <button className="koa-chip ml-auto" onClick={()=>setGrid(!grid)}>{grid?"Vista lista":"Vista cuadrícula"}</button>
         </nav>
-
+        <div className="flex flex-wrap gap-2">{Array.from(new Set(books.flatMap(b=>b.moods))).slice(0,12).map(m=><button key={m} className={`koa-chip ${moodFilter===m?"active":""}`} onClick={()=>setMoodFilter(moodFilter===m?"":m)}>#{m}</button>)}</div>
+        {statusFilter==="WISH"&&<Wishlist books={books} refresh={refreshAll}/>}
+        {statusFilter!=="WISH"&&books.length>0&&!filtered.some(b=>statusFilter==="ALL"||b.status===statusFilter)&&<p className="koa-empty">No hay libros con estos filtros.</p>}
         {/* Sections */}
         {STATUS_ORDER.map((status) => {
-          const list = grouped[status];
+          const list = statusFilter==="WISH"||(statusFilter!=="ALL"&&statusFilter!==status)?[]:grouped[status];
           if (!list.length) return null;
           return (
             <section key={status} id={`shelf-${status}`} className="scroll-mt-4">
@@ -476,7 +439,7 @@ function LibraryPage() {
                 {STATUS_LABEL[status]}
                 <span className="font-mono-label">{list.length}</span>
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className={`grid gap-4 ${grid?"md:grid-cols-2":"grid-cols-1"}`}>
                 {list.map((b) => (
                   <BookRow
                     key={b.id}
@@ -572,7 +535,7 @@ function LibraryPage() {
 }
 
 /* ------------ Sub-components ------------ */
-function StatCard({ icon: Icon, label, value, extra }: { icon: any; label: string; value: string; extra?: React.ReactNode }) {
+function StatCard({ icon: Icon, label, value, extra }: { icon: LucideIcon; label: string; value: string; extra?: React.ReactNode }) {
   return (
     <div className="bg-card border border-border rounded-sm p-4">
       <div className="flex items-center gap-2 mb-2">
@@ -585,23 +548,7 @@ function StatCard({ icon: Icon, label, value, extra }: { icon: any; label: strin
   );
 }
 
-function Modal({ children, onClose }: { children: React.ReactNode; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-md z-50 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        className="max-w-lg w-full bg-card p-8 border border-foreground/80 rounded-sm shadow-2xl relative max-h-[85vh] overflow-y-auto"
-      >
-        <button onClick={onClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground p-2" aria-label="Cerrar">
-          <X className="w-5 h-5" />
-        </button>
-        {children}
-      </motion.div>
-    </div>
-  );
-}
+function Modal({children,onClose}:{children:React.ReactNode;onClose:()=>void}){return <KoaModal title="Tu biblioteca" onClose={onClose}>{children}</KoaModal>;}
 
 function BookRow({
   book, onStartProgress, onStatus, onEdit, onDelete,
@@ -613,12 +560,12 @@ function BookRow({
   const pct = book.pages > 0 ? Math.min(100, Math.round((book.current_page / book.pages) * 100)) : 0;
 
   return (
-    <div className="bg-card border border-border rounded-sm p-4 flex gap-4">
+    <div className="koa-card flex gap-4">
       <BookCover book={book} className="w-16 h-24 sm:w-20 sm:h-28 text-xs" />
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <h3 className="font-serif font-bold leading-tight truncate">{book.title}</h3>
+            <Link to="/books/$bookId" params={{bookId:book.id}}><h3 className="font-bold leading-tight">{book.title}</h3></Link>
             <p className="text-xs text-muted-foreground truncate">{book.author}</p>
             {book.series_name && (
               <p className="text-[10px] text-accent font-mono uppercase tracking-wider mt-0.5">
@@ -638,6 +585,8 @@ function BookRow({
           {book.moods?.slice(0, 2).map((m) => <span key={m} className="text-[10px] bg-accent/10 text-accent px-2 py-0.5 rounded-sm">#{m}</span>)}
         </div>
 
+        {book.status==="READING"&&<div className="koa-progress mt-4"><span style={{width:`${pct}%`}}/></div>}
+        {book.status==="READING"&&<Link to="/read" search={{book:book.id}} className="koa-button mt-3">Continuar sesión</Link>}
         {book.status==="READING" && <button className="text-accent underline text-sm mt-3" onClick={onStartProgress}>Actualizar progreso · {book.current_page}{book.pages>0?`/${book.pages} (${pct}%)`:" páginas"}</button>}
         <div className="flex flex-wrap gap-1 mt-3">
           {STATUS_ORDER.map((s) => (
