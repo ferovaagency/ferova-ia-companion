@@ -25,7 +25,7 @@ export function adventUnlocked(year: number, slot: number, zone: string, now = n
   return local.year === year && local.month === 12 && slot >= 1 && slot <= 24 && local.day >= slot;
 }
 export const catalogBookSchema = z.object({
-  catalog_id: z.string().min(1), title: z.string().min(1), author: z.string().min(1), isbn: z.string().nullable(), cover_url: z.string().nullable(), description: z.string(),
+  catalog_id: z.string().min(1), title: z.string().min(1), author: z.string().min(1), isbn: z.string().nullable(), cover_url: z.string().nullable(), description: z.string(), pages: z.number().optional(), genre: z.string().optional(),
 });
 export type CatalogBook = z.infer<typeof catalogBookSchema>;
 export const monthlyTasks = ["Elegir una historia para comenzar", "Descubrir una voz nueva", "Explorar otro lugar", "Volver a una lectura querida", "Probar un género diferente", "Leer a mi ritmo", "Compartir una recomendación", "Hacer espacio para un pendiente", "Guardar una cita con su fuente", "Descubrir un mundo imaginado", "Elegir una historia breve", "Mirar mis lecturas del año"];

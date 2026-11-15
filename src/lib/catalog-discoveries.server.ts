@@ -2,7 +2,7 @@ import { z } from "zod";
 import { generateResponse } from "@lovable.dev/ai-gateway";
 import { uniqueDiscoveries, type IdentityBook, type CatalogBook } from "./reader-discoveries";
 
-const volumeResponse = z.object({ items: z.array(z.object({ id: z.string(), volumeInfo: z.object({ title: z.string(), authors: z.array(z.string()).optional(), description: z.string().optional(), industryIdentifiers: z.array(z.object({ type: z.string(), identifier: z.string() })).optional(), imageLinks: z.object({ thumbnail: z.string().optional() }).optional() }) })).optional() });
+const volumeResponse = z.object({ items: z.array(z.object({ id: z.string(), volumeInfo: z.object({ title: z.string(), authors: z.array(z.string()).optional(), description: z.string().optional(), pageCount: z.number().optional(), categories: z.array(z.string()).optional(), industryIdentifiers: z.array(z.object({ type: z.string(), identifier: z.string() })).optional(), imageLinks: z.object({ thumbnail: z.string().optional() }).optional() }) })).optional() });
 const openResponse = z.object({ docs: z.array(z.object({ key: z.string(), title: z.string(), author_name: z.array(z.string()).optional(), isbn: z.array(z.string()).optional(), cover_i: z.number().optional() })) });
 export async function catalogPool(queries: string[]): Promise<CatalogBook[]> {
   const books: CatalogBook[] = [];
@@ -15,7 +15,7 @@ export async function catalogPool(queries: string[]): Promise<CatalogBook[]> {
         const info = item.volumeInfo;
         if (!info.authors?.length) continue;
         const url = info.imageLinks?.thumbnail?.replace(/^http:/, "https:");
-        books.push({ catalog_id: `google:${item.id}`, title: info.title, author: info.authors.join(", "), isbn: info.industryIdentifiers?.find((i) => i.type === "ISBN_13")?.identifier ?? info.industryIdentifiers?.find((i) => i.type === "ISBN_10")?.identifier ?? null, cover_url: url && new URL(url).hostname === "books.google.com" ? url : null, description: (info.description ?? "").replace(/<[^>]+>/g, "").slice(0, 1200) });
+        books.push({ catalog_id: `google:${item.id}`, title: info.title, author: info.authors.join(", "), isbn: info.industryIdentifiers?.find((i) => i.type === "ISBN_13")?.identifier ?? info.industryIdentifiers?.find((i) => i.type === "ISBN_10")?.identifier ?? null, cover_url: url && new URL(url).hostname === "books.google.com" ? url : null, pages: info.pageCount ?? 0, genre: info.categories?.[0] ?? "", description: (info.description ?? "").replace(/<[^>]+>/g, "").slice(0, 1200) });
       }
     } catch { /* A second established catalog is available, never arbitrary URLs. */ }
     try {
