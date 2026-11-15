@@ -5,9 +5,9 @@
 - [x] Current cycle: twelve monthly chapters and replaceable suggestions (database tests passed; live AI/browser acceptance pending)
 - [x] Current cycle: custom lists, ordering, emotional ratings and server oracle signals (database tests passed; signed-in browser acceptance pending)
 - [ ] Acceptance: signed-in calendar preparation/reveal/save, monthly replacement, list edits/reload and emotional ratings (requesting-user session unavailable; live AI not exercised)
-- [ ] Expansion: private profiles, safe uploads, per-content sharing and viewer preview
-- [ ] Expansion: friends, blocks/reports, clubs, invitations and spoiler discussions
-- [ ] Expansion: joint progress and qualifying group streaks
+- [ ] Current social cycle: private profiles, safe uploads, per-content sharing and viewer preview
+- [ ] Current social cycle: friends, blocks/reports, clubs, invitations and spoiler discussions
+- [ ] Current social cycle: joint progress, individual shared bingo copies and qualifying group streaks
 - [ ] Expansion: cozy shelf, cover crop/upload and idempotent earned decorations
 - [x] Expansion: settings/help, creator information and changelog
 - [x] Expansion: public FAQ/feedback and consistent canonical metadata
