@@ -313,7 +313,9 @@ const CoverInput = z.object({ image: z.string().startsWith("data:image/").max(8_
 export const identifyCover = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => CoverInput.parse(input))
-  .handler(async ({ data }): Promise<{ title: string; author: string } | null> => {
+  .handler(async ({ data, context }): Promise<{ title: string; author: string } | null> => {
+    const {decodeImage}=await import("./image-decode.server");const clean=decodeImage(data.image);
+    const quota=await context.supabase.rpc("claim_koa_request");if(quota.error)throw new Error("Has alcanzado el límite de consultas.");
     const key = process.env.LOVABLE_API_KEY;
     if (!key) return null;
     const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
@@ -325,7 +327,7 @@ export const identifyCover = createServerFn({ method: "POST" })
         role: "user",
         content: [
           { type: "text", text: 'Identifica el libro de esta portada. Conserva el idioma original del título (no traduzcas). Devuelve SOLO JSON {"title": string, "author": string}. Si no se distingue un libro, devuelve {"title": "", "author": ""}.' },
-          { type: "image", image: data.image },
+          { type: "image", image: clean.image },
         ],
       }],
     });

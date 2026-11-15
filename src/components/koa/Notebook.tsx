@@ -1,3 +1,4 @@
+import { deviceImage } from "@/lib/image-device";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Star, Copy, Trash2, Pencil, Camera, Mic, Download, Volume2 } from "lucide-react";
@@ -111,12 +112,7 @@ export function Notebook({ books, initialBook }: { books: Book[]; initialBook?: 
     try {
       if (f.size > 4_000_000 || !/^image\/(jpeg|png|webp)$/.test(f.type))
         throw Error("Usa una imagen JPG, PNG o WebP de hasta 4 MB.");
-      const image = await new Promise<string>((resolve, reject) => {
-        const r = new FileReader();
-        r.onload = () => resolve(String(r.result));
-        r.onerror = reject;
-        r.readAsDataURL(f);
-      });
+      const image = await deviceImage(f);
       const r = await ask({ data: { bookId, mode: "ocr", image } });
       setContent(r.text);
       setKind("quote");

@@ -31,21 +31,3 @@ export async function visibleShares() {
   }));
 }
 export const sharedOptions = { queryKey: ["koa-shared"], queryFn: visibleShares };
-export async function uploadProfileImage(file: File, kind: "avatar" | "cover", userId: string) {
-  if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5 * 1024 * 1024 || file.size === 0) throw new Error("Elige JPG, PNG o WebP de hasta 5 MB.");
-  const image = await createImageBitmap(file);
-  try {
-    if (image.width > 8192 || image.height > 8192 || image.width < 32 || image.height < 32) throw new Error("Revisa el tamaño de la imagen (32–8192 píxeles).");
-    // Decode then re-encode: strips embedded metadata and rejects disguised image files.
-    const canvas = document.createElement("canvas");
-    const scale = Math.min(1, 1600 / Math.max(image.width, image.height));
-    canvas.width = Math.round(image.width * scale); canvas.height = Math.round(image.height * scale);
-    const ctx = canvas.getContext("2d"); if (!ctx) throw new Error("No pudimos preparar la imagen.");
-    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob((b) => b ? resolve(b) : reject(new Error("No pudimos preparar la imagen.")), "image/webp", .86));
-    const path = `${userId}/${kind}/${crypto.randomUUID()}.webp`;
-    const result = await supabase.storage.from("reader-profile-media").upload(path, blob, { contentType: "image/webp", upsert: false });
-    if (result.error) throw result.error;
-    return path;
-  } finally { image.close(); }
-}

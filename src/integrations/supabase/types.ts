@@ -623,6 +623,39 @@ export type Database = {
         }
         Relationships: []
       }
+      reader_demo_budget: {
+        Row: {
+          calls: number
+          day: string
+        }
+        Insert: {
+          calls?: number
+          day: string
+        }
+        Update: {
+          calls?: number
+          day?: string
+        }
+        Relationships: []
+      }
+      reader_demo_visitors: {
+        Row: {
+          day: string
+          requests: number
+          visitor: string
+        }
+        Insert: {
+          day: string
+          requests?: number
+          visitor: string
+        }
+        Update: {
+          day?: string
+          requests?: number
+          visitor?: string
+        }
+        Relationships: []
+      }
       reader_feelings: {
         Row: {
           book_id: string
@@ -1249,6 +1282,7 @@ export type Database = {
         Returns: boolean
       }
       claim_koa_request: { Args: never; Returns: undefined }
+      claim_public_oracle: { Args: { p_visitor: string }; Returns: undefined }
       close_reader_session: {
         Args: {
           p_book: string

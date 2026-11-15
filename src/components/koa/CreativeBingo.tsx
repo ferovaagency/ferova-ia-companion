@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { importBingoImage, bingoOracle, saveBingoWish } from "@/lib/creative.functions";
+import { deviceImage } from "@/lib/image-device";
 import { IMAGE_LIMIT } from "@/lib/creative-input";
 import type { BingoDraft } from "@/lib/bingo";
 import { userError } from "@/lib/koa-data";
@@ -12,7 +13,7 @@ export async function fileData(file: Blob): Promise<string> {
 }
 export function BingoImageImport({review}:{review:(draft:BingoDraft)=>void}) {
   const run=useServerFn(importBingoImage);const [busy,setBusy]=useState(false);const [error,setError]=useState("");
-  return <div className="my-5"><label className="block">Importar bingo desde imagen<input className="koa-field" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={async e=>{const file=e.target.files?.[0];e.target.value="";if(!file)return;setBusy(true);setError("");try{if(file.size>IMAGE_LIMIT)throw new Error("Máximo 5 MB.");const result=await run({data:{image:await fileData(file)}});review(result);}catch(cause){setError(userError(cause));}finally{setBusy(false);}}}/></label>{busy&&<p role="status">Leyendo la cuadrícula…</p>}{error&&<ErrorNotice>{error}</ErrorNotice>}</div>;
+  return <div className="my-5"><label className="block">Importar bingo desde imagen<input className="koa-field" type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={async e=>{const file=e.target.files?.[0];e.target.value="";if(!file)return;setBusy(true);setError("");try{if(file.size>IMAGE_LIMIT)throw new Error("Máximo 5 MB.");const result=await run({data:{image:await deviceImage(file)}});review(result);}catch(cause){setError(userError(cause));}finally{setBusy(false);}}}/></label>{busy&&<p role="status">Leyendo la cuadrícula…</p>}{error&&<ErrorNotice>{error}</ErrorNotice>}</div>;
 }
 export function CellOracle({board,index,assign}:{board:string;index:number;assign:(id:string)=>void}){
   const run=useServerFn(bingoOracle);const save=useServerFn(saveBingoWish);const [options,setOptions]=useState<Awaited<ReturnType<typeof bingoOracle>>>([]);const [request,setRequest]=useState("");const [error,setError]=useState("");const [busy,setBusy]=useState(false);const [notice,setNotice]=useState("");

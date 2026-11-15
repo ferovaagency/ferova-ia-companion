@@ -1,0 +1,10 @@
+import { useState } from "react";
+import { z } from "zod";
+import { catalogBookSchema } from "@/lib/reader-discoveries";
+import { Button } from "@/components/ui/button";
+import { BookCover } from "@/components/BookCover";
+import { ErrorNotice } from "./UI";
+export function PublicOracleDemo(){
+  const [context,setContext]=useState("");const [busy,setBusy]=useState(false);const [error,setError]=useState("");const [options,setOptions]=useState<z.infer<typeof catalogBookSchema>[]>([]);
+  return <section className="border-t border-border py-10" id="oraculo-demo"><h2>Prueba el Oráculo</h2><form className="max-w-2xl my-5" onSubmit={async e=>{e.preventDefault();setBusy(true);setError("");setOptions([]);try{const r=await fetch("/api/public/oracle-demo",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({context}),signal:AbortSignal.timeout(55000)});const data=await r.json();if(!r.ok)throw new Error(typeof data.error==="string"?data.error:"Demo no disponible.");setOptions(z.object({options:z.array(catalogBookSchema).length(3)}).parse(data).options);}catch(cause){setError(cause instanceof Error?cause.message:"No pudimos conectar. Inténtalo más tarde.");}finally{setBusy(false);}}}><label>¿Qué te apetece leer hoy?<textarea required minLength={5} maxLength={800} className="koa-field" value={context} onChange={e=>setContext(e.target.value)} placeholder="Una historia breve de fantasía, con humor y sin mucha violencia…"/></label><Button className="mt-4" disabled={busy}>{busy?"Buscando tres historias…":"Encontrar tres libros"}</Button></form>{error&&<ErrorNotice>{error}</ErrorNotice>}<div className="grid sm:grid-cols-3 gap-5">{options.map(b=><article key={b.catalog_id} className="border-t border-border py-5"><BookCover book={b} className="w-24 h-36"/><h3 className="mt-4">{b.title}</h3><p className="koa-muted">{b.author}</p><p className="text-sm mt-3">{b.description||"Sin sinopsis disponible en el catálogo."}</p></article>)}</div></section>;
+}

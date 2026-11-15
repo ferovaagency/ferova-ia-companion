@@ -19,7 +19,7 @@ export async function catalogPool(queries: string[]): Promise<CatalogBook[]> {
       }
     } catch { /* A second established catalog is available, never arbitrary URLs. */ }
     try {
-      const response = await fetch(`https://openlibrary.org/search.json?${new URLSearchParams({ q: query, limit: "30", fields: "key,title,author_name,isbn,cover_i" })}`, { signal: AbortSignal.timeout(12000) });
+      const response = await fetch(`https://openlibrary.org/search.json?${new URLSearchParams({ q: query.replace(/(?:inauthor|subject|intitle):/g,""), limit: "30", fields: "key,title,author_name,isbn,cover_i" })}`, { signal: AbortSignal.timeout(12000) });
       if (!response.ok) return;
       const result = openResponse.parse(await response.json());
       for (const doc of result.docs) if (doc.author_name?.length) books.push({ catalog_id: `openlibrary:${doc.key}`, title: doc.title, author: doc.author_name.join(", "), isbn: doc.isbn?.find((i) => i.length === 13) ?? doc.isbn?.[0] ?? null, cover_url: doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg` : null, description: "" });
