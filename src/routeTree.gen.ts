@@ -30,6 +30,7 @@ import { Route as BlogMejoresRecomendadoresLibrosIaRouteImport } from './routes/
 import { Route as UHandleRouteImport } from './routes/u.$handle'
 import { Route as AuthenticatedBooksBookIdRouteImport } from './routes/_authenticated/books.$bookId'
 import { Route as AuthenticatedClubsClubIdRouteImport } from './routes/_authenticated/clubs.$clubId'
+import { Route as ApiPublicOracleDemoRouteImport } from './routes/api/public/oracle-demo'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -138,6 +139,11 @@ const AuthenticatedClubsClubIdRoute =
     path: '/clubs/$clubId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicOracleDemoRoute = ApiPublicOracleDemoRouteImport.update({
+  id: '/api/public/oracle-demo',
+  path: '/api/public/oracle-demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -160,6 +166,7 @@ export interface FileRoutesByFullPath {
   '/u/$handle': typeof UHandleRoute
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
   '/clubs/$clubId': typeof AuthenticatedClubsClubIdRoute
+  '/api/public/oracle-demo': typeof ApiPublicOracleDemoRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -182,6 +189,7 @@ export interface FileRoutesByTo {
   '/u/$handle': typeof UHandleRoute
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
   '/clubs/$clubId': typeof AuthenticatedClubsClubIdRoute
+  '/api/public/oracle-demo': typeof ApiPublicOracleDemoRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -206,6 +214,7 @@ export interface FileRoutesById {
   '/u/$handle': typeof UHandleRoute
   '/_authenticated/books/$bookId': typeof AuthenticatedBooksBookIdRoute
   '/_authenticated/clubs/$clubId': typeof AuthenticatedClubsClubIdRoute
+  '/api/public/oracle-demo': typeof ApiPublicOracleDemoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -230,6 +239,7 @@ export interface FileRouteTypes {
     | '/u/$handle'
     | '/books/$bookId'
     | '/clubs/$clubId'
+    | '/api/public/oracle-demo'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -252,6 +262,7 @@ export interface FileRouteTypes {
     | '/u/$handle'
     | '/books/$bookId'
     | '/clubs/$clubId'
+    | '/api/public/oracle-demo'
   id:
     | '__root__'
     | '/'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/u/$handle'
     | '/_authenticated/books/$bookId'
     | '/_authenticated/clubs/$clubId'
+    | '/api/public/oracle-demo'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -287,6 +299,7 @@ export interface RootRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
   BlogMejoresRecomendadoresLibrosIaRoute: typeof BlogMejoresRecomendadoresLibrosIaRoute
   UHandleRoute: typeof UHandleRoute
+  ApiPublicOracleDemoRoute: typeof ApiPublicOracleDemoRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -438,6 +451,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedClubsClubIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/oracle-demo': {
+      id: '/api/public/oracle-demo'
+      path: '/api/public/oracle-demo'
+      fullPath: '/api/public/oracle-demo'
+      preLoaderRoute: typeof ApiPublicOracleDemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -485,6 +505,7 @@ const rootRouteChildren: RootRouteChildren = {
   BlogMejoresRecomendadoresLibrosIaRoute:
     BlogMejoresRecomendadoresLibrosIaRoute,
   UHandleRoute: UHandleRoute,
+  ApiPublicOracleDemoRoute: ApiPublicOracleDemoRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

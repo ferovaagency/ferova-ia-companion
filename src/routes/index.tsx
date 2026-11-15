@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, BookOpen, Sparkles, NotebookPen, ScanLine } from "lucide-react";
+import { PublicOracleDemo } from "@/components/koa/PublicOracleDemo";
 import { Koa } from "@/components/koa/UI";
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -59,6 +60,7 @@ function Home() {
           </div>
           <Koa pose="read" className="!max-h-[440px]" />
         </section>
+        <PublicOracleDemo/>
         <section id="como-funciona" className="py-10">
           <p className="koa-eyebrow">Del «no sé qué leer» a la primera página</p>
           <h2 className="text-3xl mb-7">Tu próxima lectura empieza contigo.</h2>

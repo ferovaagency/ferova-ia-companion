@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { PageTitle, ErrorNotice } from "@/components/koa/UI";
 import { PrivacyPreview } from "@/components/koa/PrivacyPreview";
 import { PrivateImage } from "@/components/koa/PrivateImage";
-import { socialOptions, profileSchema, uploadProfileImage, type ProfileInput } from "@/lib/social-data";
+import { socialOptions, profileSchema, type ProfileInput } from "@/lib/social-data";
 import { supabase } from "@/integrations/supabase/client";
 import { userError } from "@/lib/koa-data";
 export const Route = createFileRoute("/_authenticated/refuge")({ head: () => ({ meta: [{ title: "Mi refugio — Lee con Koa" }, { name: "description", content: "Tu perfil lector, amistades, privacidad y clubes." }, { property: "og:title", content: "Mi refugio — Lee con Koa" }, { property: "og:description", content: "Comparte solo lo que elijas." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }), loader: ({ context }) => context.queryClient.ensureQueryData(socialOptions), component: Refuge });
