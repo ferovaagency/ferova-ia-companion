@@ -1,6 +1,7 @@
 import { Modal, ErrorNotice } from "@/components/koa/UI";
 import { userError } from "@/lib/koa-data";
 import { IsbnEntry } from "@/components/IsbnEntry";
+import { CoverCrop } from "@/components/koa/CoverCrop";
 import { useState } from "react";
 import { motion } from "motion/react";
 import { X, Save, Edit, Star } from "lucide-react";
@@ -70,6 +71,7 @@ export function EditBookModal({ book, books, refresh, onClose, onSave }: EditBoo
         </header>
 
         {book.isbn?<p className="my-3 text-sm">ISBN {book.isbn}</p>:<IsbnEntry books={books} existingBook={book} saved={async()=>{await refresh();onClose();}}/>}
+        <CoverCrop book={book.id} saved={refresh}/>
         <form onSubmit={submit} className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
