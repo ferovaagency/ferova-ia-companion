@@ -19,6 +19,7 @@ export type Note = {
   page: number | null;
   chapter: string;
   tags: string[];
+  feeling_tags?: string[];
   favorite: boolean;
   created_at: string;
 };

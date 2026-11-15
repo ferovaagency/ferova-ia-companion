@@ -1,9 +1,10 @@
 # Roadmap
 - [x] Expansion: Aventuras editor, private persistence, verified completion and original templates
 - [ ] Expansion: shared bingo join/copy, oracle cells, reviewed image OCR and source credit
-- [ ] Current cycle: catalog-verified Advent, exclusions, local date gates and saved annual discoveries
-- [ ] Current cycle: twelve monthly chapters and replaceable suggestions
-- [ ] Current cycle: custom lists, ordering, emotional ratings and server oracle signals
+- [x] Current cycle: catalog-verified Advent, exclusions, local date gates and saved annual discoveries (database/rule tests passed; live AI/browser acceptance pending)
+- [x] Current cycle: twelve monthly chapters and replaceable suggestions (database tests passed; live AI/browser acceptance pending)
+- [x] Current cycle: custom lists, ordering, emotional ratings and server oracle signals (database tests passed; signed-in browser acceptance pending)
+- [ ] Acceptance: signed-in calendar preparation/reveal/save, monthly replacement, list edits/reload and emotional ratings (requesting-user session unavailable; live AI not exercised)
 - [ ] Expansion: private profiles, safe uploads, per-content sharing and viewer preview
 - [ ] Expansion: friends, blocks/reports, clubs, invitations and spoiler discussions
 - [ ] Expansion: joint progress and qualifying group streaks

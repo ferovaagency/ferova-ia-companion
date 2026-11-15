@@ -9,6 +9,7 @@ import { koaDb, identity, userError } from "@/lib/koa-data";
 import { BookCover } from "@/components/BookCover";
 import { Koa, KoaMessage, Loading, ErrorNotice } from "@/components/koa/UI";
 import type { RecommendationOption, RecommendationResult } from "@/types";
+import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/_authenticated/discover")({
   head: () => ({
     meta: [
@@ -42,6 +43,7 @@ function Discover() {
   const [failure, setFailure] = useState("");
   const [excluded, setExcluded] = useState<string[]>([]);
   const [prefs, setPrefs] = useState("");
+  const [direction, setDirection] = useState<"similar" | "different">("similar");
   useEffect(() => {
     void currentUser()
       .then(async (u) => {
@@ -84,6 +86,7 @@ function Discover() {
           userRequest: `${request}. Tengo ${minutes} minutos para esta sesión. ${prefs}`,
           books,
           exclude: prev,
+          direction,
         },
       });
       setResult(response);
@@ -188,6 +191,7 @@ function Discover() {
         }}
       >
         <h2 className="mb-4">Afinemos tu lectura de hoy</h2>
+        <fieldset className="mb-4"><legend className="mb-2">Respecto a mis sensaciones guardadas</legend><div className="flex flex-wrap gap-2"><Button type="button" variant={direction === "similar" ? "default" : "secondary"} aria-pressed={direction === "similar"} onClick={() => setDirection("similar")}>Una sensación parecida</Button><Button type="button" variant={direction === "different" ? "default" : "secondary"} aria-pressed={direction === "different"} onClick={() => setDirection("different")}>Algo diferente hoy</Button></div></fieldset>
         <div className="flex flex-wrap gap-2 mb-5">
           {moods.map((m) => (
             <button

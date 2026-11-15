@@ -3,6 +3,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { collectOptions, eligibleBooks } from "./oracle-options";
 import { z } from "zod";
 import type { EnrichedBook, RecommendationResult } from "@/types";
+import { feelingPrompt } from "./reader-discoveries";
+import { generateChatCompletion } from "@lovable.dev/ai-gateway";
 
 /* ---------- cover fetching helpers (no AI key needed) ---------- */
 type CatalogMetadata = Partial<EnrichedBook> & { language?: string | null };
@@ -205,6 +207,7 @@ Devuelve SOLO JSON válido, sin markdown, con esta forma exacta:
 const RecommendInput = z.object({
   userRequest: z.string().min(1).max(2000),
   exclude: z.array(z.string().max(300)).max(30).optional(),
+  direction: z.enum(["similar", "different"]).default("similar"),
   books: z.array(
     z.object({
       id: z.string(),
@@ -225,36 +228,32 @@ const RecommendInput = z.object({
 export const recommendBook = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => RecommendInput.parse(input))
-  .handler(async ({ data }): Promise<RecommendationResult> => {
-    const key = process.env.LOVABLE_API_KEY;
-    if (!key) {
-      return {
-        options: [],
-        reasoning: "El Oráculo no está disponible porque falta la configuración de IA.",
-        errorType: "GENERIC",
-      };
-    }
-
+  .handler(async ({ data, context }): Promise<RecommendationResult> => {
     try {
-      const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
-      const { generateText } = await import("ai");
-      const gateway = createLovableAiGatewayProvider(key);
+      const { error: quotaError } = await context.supabase.rpc("claim_koa_request");
+      if (quotaError) return { options: [], reasoning: "Has alcanzado el límite temporal del Oráculo. Reintenta más tarde.", errorType: "QUOTA_EXHAUSTED" };
+      const { readerContext } = await import("./reader-context.server");
+      const reader = await readerContext(context.supabase, context.userId);
+      // Never trust the caller's shelf, ratings or emotional signals.
+      const books = reader.books;
 
-      const inactive = data.books.filter(b=>b.status==="PAUSED"||b.status==="ABANDONED");
-      const available=eligibleBooks(data.books);
-      const read = data.books
+      const inactive = books.filter(b=>b.status==="PAUSED"||b.status==="ABANDONED");
+      const available=eligibleBooks(books);
+      const read = books
         .filter((b) => b.status === "READ")
         .map((b) => {
           const stars = b.user_rating ? ` ★${b.user_rating}/5` : "";
           const note = b.user_review ? ` — "${String(b.user_review).slice(0, 280)}"` : "";
           return `${b.title} de ${b.author}${b.series_name ? " · "+b.series_name+" #"+(b.series_index??"?") : ""}${stars}${note}`;
         });
-      const loved = data.books.filter((b) => (b.user_rating ?? 0) >= 4);
-      const disliked = data.books.filter((b) => b.user_rating != null && b.user_rating <= 2);
+      const loved = books.filter((b) => (b.user_rating ?? 0) >= 4);
+      const disliked = books.filter((b) => b.user_rating != null && b.user_rating <= 2);
 
       const prompt = `Eres EL ORÁCULO de Lee con Koa: una inteligencia lectora cálida, precisa y obsesiva con el orden narrativo.
 
 EL USUARIO DICE: "${data.userRequest}"
+${feelingPrompt({ feelings: reader.feelings, pageFeelings: reader.pageFeelings }, data.direction)}
+PREFERENCIAS GUARDADAS: ${JSON.stringify(reader.preferences)}
 
 SU ESTANTERÍA PENDIENTE (TBR/READING):
 ${JSON.stringify(available, null, 2)}
@@ -284,8 +283,9 @@ Para una opción interna usa bookId y external null. Para una saga externa inclu
       const options:RecommendationResult["options"]=[];
       for(let attempt=0;attempt<2 && options.length<3;attempt++){
         const retry=attempt?`\nFaltan ${3-options.length} opciones válidas. Devuelve alternativas diferentes. Ya elegidas: ${JSON.stringify(options)}`:"";
-        const {text}=await generateText({model:gateway("google/gemini-3-flash-preview"),prompt:prompt+retry});
-        try {collectOptions(parseJsonObject(text).options,data.books,options);} catch { /* Retry an incomplete model response. */ }
+        const completion = await generateChatCompletion({ model: "google/gemini-3-flash-preview", messages: [{ role: "user", content: prompt + retry }] });
+        const text = completion.choices[0]?.message.content ?? "";
+        try {collectOptions(parseJsonObject(text).options,books,options);} catch { /* Retry an incomplete model response. */ }
       }
       if(options.length!==3)return {options:[],errorType:"GENERIC",reasoning:"No pude reunir tres opciones que respeten tus preferencias. Prueba con otro género o estado de ánimo."};
       await Promise.all(options.map(async o=>{
@@ -305,7 +305,6 @@ Para una opción interna usa bookId y external null. Para una saga externa inclu
             ? "Los créditos de IA se agotaron. Añade créditos en Workspace → Usage."
             : "La conexión con el archivo se ha interrumpido. Confía en tu instinto.",
         errorType,
-        errorMessage: msg,
       };
     }
   });

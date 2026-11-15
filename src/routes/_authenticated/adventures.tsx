@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { PageTitle, ErrorNotice, Empty, Modal, Koa } from "@/components/koa/UI";
 import { BingoEditor } from "@/components/koa/BingoEditor";
+import { ReaderCalendars } from "@/components/koa/ReaderCalendars";
 import { bingoTemplates, newDraft, matchesCell, type BingoDraft } from "@/lib/bingo";
 import { bingoQueryOptions, bingoProgressQueryOptions } from "@/lib/bingo-data";
 import { getBooks, userError, koaDb } from "@/lib/koa-data";
@@ -45,6 +46,7 @@ function Adventures() {
   return <>
     <PageTitle eyebrow="Historias y pequeños momentos" title="Mis aventuras" actions={<Button onClick={() => setEditor({ initial: newDraft() })}><Plus />Crear bingo</Button>}>Un libro a la vez. Las experiencias son opcionales y no suman días de lectura.</PageTitle>
     {error && <ErrorNotice>{error}</ErrorNotice>}
+    <ReaderCalendars />
     <section className="mb-10"><h2 className="mb-4">Una aventura para empezar</h2><div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">{bingoTemplates.map((template) => <article className="koa-card" key={template.title}><p className="koa-eyebrow">Plantilla original · 3 × 3</p><h3 className="text-lg font-semibold">{template.title}</h3><p className="koa-muted my-3">{template.purpose}</p><Button variant="secondary" onClick={() => setEditor({ initial: structuredClone(template) })}>Personalizar</Button></article>)}</div></section>
     <section><h2 className="mb-5">Mis bingos privados</h2>{!boards.length && <Empty title="Tu primera aventura te espera">Elige una plantilla o crea tu propio bingo.</Empty>}
       <div className="space-y-8">{boards.map((board) => {

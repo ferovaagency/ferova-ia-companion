@@ -219,7 +219,7 @@ export function Notebook({ books, initialBook }: { books: Book[]; initialBook?: 
   const visible = notes.filter(
     (n) =>
       (!favorites || n.favorite) &&
-      `${n.content} ${n.reflection} ${n.tags.join(" ")}`
+      `${n.content} ${n.reflection} ${n.tags.join(" ")} ${(n.feeling_tags ?? []).join(" ")} ${n.chapter}`
         .toLocaleLowerCase()
         .includes(search.toLocaleLowerCase()),
   );
@@ -401,7 +401,7 @@ export function Notebook({ books, initialBook }: { books: Book[]; initialBook?: 
         {visible.map((n) => (
           <article key={n.id} className="koa-card">
             <p className="koa-eyebrow">
-              {books.find((b) => b.id === n.book_id)?.title} {n.page !== null && `· pág. ${n.page}`}
+              {books.find((b) => b.id === n.book_id)?.title} {n.page !== null && `· pág. ${n.page}`} {n.chapter && `· capítulo ${n.chapter}`}
             </p>
             <div className="koa-quote">{n.content}</div>
             {n.reflection && (
@@ -413,6 +413,7 @@ export function Notebook({ books, initialBook }: { books: Book[]; initialBook?: 
                   #{t}
                 </span>
               ))}
+              {(n.feeling_tags ?? []).map((t) => <span className="koa-chip" key={`feeling-${t}`}>{t}</span>)}
             </div>
             <div className="flex flex-wrap gap-2 mt-4 no-print">
               <button
