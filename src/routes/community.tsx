@@ -1,0 +1,18 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
+import { payloadSchema } from "@/lib/social-data";
+import { Koa } from "@/components/koa/UI";
+const publicOptions = { queryKey: ["koa-public-community"], queryFn: async () => {
+  const client = createClient<Database>(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
+  const [profiles, shares] = await Promise.all([client.from("reader_social_profiles").select("handle,name,bio").eq("visibility", "public").order("handle").limit(100), client.from("reader_shares").select("id").eq("visibility", "public").eq("kind", "bingo").limit(100)]);
+  if (profiles.error) throw profiles.error; if (shares.error) throw shares.error;
+  const bingos = await Promise.all(shares.data.map(async s => { const r = await client.rpc("reader_share_payload", { p_id: s.id }); if (r.error) throw r.error; return r.data ? { id: s.id, ...payloadSchema.parse(r.data) } : null; }));
+  return { profiles: profiles.data, bingos: bingos.filter(b => b !== null) };
+} };
+export const Route = createFileRoute("/community")({ ssr: false, head: () => ({ meta: [{ title: "Comunidad lectora y bingos — Lee con Koa" }, { name: "description", content: "Perfiles y aventuras que sus lectores han elegido compartir públicamente." }, { property: "og:title", content: "Comunidad lectora — Lee con Koa" }, { property: "og:description", content: "Bingos originales y lectores, compartidos por elección." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }], links: [{ rel: "canonical", href: "https://librero-ia.ferova.com.co/community" }] }), loader: ({ context }) => context.queryClient.ensureQueryData(publicOptions), component: Community });
+function Community() {
+  const { data } = useSuspenseQuery(publicOptions);
+  return <main className="koa-container py-10"><div className="flex flex-wrap justify-between gap-4"><Link to="/" className="koa-brand"><img src="/koa/icon.webp" alt="" width={40} height={40} />Lee con Koa</Link><Link to="/auth" className="koa-secondary">Entrar</Link></div><h1 className="mt-10">Comunidad lectora</h1><section className="border-t border-border py-6 mt-6"><h2>Aventuras públicas</h2>{!data.bingos.length && <div className="py-8"><Koa pose="read" className="w-28" /><p className="koa-muted mt-4">Todavía no hay aventuras públicas.</p></div>}<div className="grid sm:grid-cols-2 gap-4 mt-5">{data.bingos.map(b => <article className="koa-card" key={b.id}><h3>{b.title}</h3><p className="koa-muted my-3">{b.purpose}</p><Link to="/adventures" className="koa-secondary">Unirme con mi progreso</Link></article>)}</div></section><section className="border-t border-border py-6"><h2>Perfiles públicos</h2>{!data.profiles.length && <p className="koa-muted mt-4">Todavía no hay perfiles públicos.</p>}<div className="grid sm:grid-cols-2 gap-4 mt-5">{data.profiles.map(p => <article className="koa-card" key={p.handle}><h3 className="break-words">{p.name || `@${p.handle}`}</h3><p className="koa-muted my-3 break-words">{p.bio}</p><Link to="/u/$handle" params={{ handle: p.handle }} className="text-primary">@{p.handle}</Link></article>)}</div></section></main>;
+}

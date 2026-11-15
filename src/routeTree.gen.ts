@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CommunityRouteImport } from './routes/community'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -22,10 +23,13 @@ import { Route as AuthenticatedListsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedNotebookRouteImport } from './routes/_authenticated/notebook'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedReadRouteImport } from './routes/_authenticated/read'
+import { Route as AuthenticatedRefugeRouteImport } from './routes/_authenticated/refuge'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthCallbackRouteImport } from './routes/auth_.callback'
 import { Route as BlogMejoresRecomendadoresLibrosIaRouteImport } from './routes/blog.mejores-recomendadores-libros-ia'
+import { Route as UHandleRouteImport } from './routes/u.$handle'
 import { Route as AuthenticatedBooksBookIdRouteImport } from './routes/_authenticated/books.$bookId'
+import { Route as AuthenticatedClubsClubIdRouteImport } from './routes/_authenticated/clubs.$clubId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -39,6 +43,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommunityRoute = CommunityRouteImport.update({
+  id: '/community',
+  path: '/community',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqRoute = FaqRouteImport.update({
@@ -91,6 +100,11 @@ const AuthenticatedReadRoute = AuthenticatedReadRouteImport.update({
   path: '/read',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRefugeRoute = AuthenticatedRefugeRouteImport.update({
+  id: '/refuge',
+  path: '/refuge',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -107,16 +121,28 @@ const BlogMejoresRecomendadoresLibrosIaRoute =
     path: '/blog/mejores-recomendadores-libros-ia',
     getParentRoute: () => rootRouteImport,
   } as any)
+const UHandleRoute = UHandleRouteImport.update({
+  id: '/u/$handle',
+  path: '/u/$handle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedBooksBookIdRoute =
   AuthenticatedBooksBookIdRouteImport.update({
     id: '/books/$bookId',
     path: '/books/$bookId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedClubsClubIdRoute =
+  AuthenticatedClubsClubIdRouteImport.update({
+    id: '/clubs/$clubId',
+    path: '/clubs/$clubId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/community': typeof CommunityRoute
   '/faq': typeof FaqRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -127,14 +153,18 @@ export interface FileRoutesByFullPath {
   '/notebook': typeof AuthenticatedNotebookRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/read': typeof AuthenticatedReadRoute
+  '/refuge': typeof AuthenticatedRefugeRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/mejores-recomendadores-libros-ia': typeof BlogMejoresRecomendadoresLibrosIaRoute
+  '/u/$handle': typeof UHandleRoute
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
+  '/clubs/$clubId': typeof AuthenticatedClubsClubIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/community': typeof CommunityRoute
   '/faq': typeof FaqRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -145,16 +175,20 @@ export interface FileRoutesByTo {
   '/notebook': typeof AuthenticatedNotebookRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/read': typeof AuthenticatedReadRoute
+  '/refuge': typeof AuthenticatedRefugeRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/mejores-recomendadores-libros-ia': typeof BlogMejoresRecomendadoresLibrosIaRoute
+  '/u/$handle': typeof UHandleRoute
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
+  '/clubs/$clubId': typeof AuthenticatedClubsClubIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/community': typeof CommunityRoute
   '/faq': typeof FaqRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
@@ -165,16 +199,20 @@ export interface FileRoutesById {
   '/_authenticated/notebook': typeof AuthenticatedNotebookRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/read': typeof AuthenticatedReadRoute
+  '/_authenticated/refuge': typeof AuthenticatedRefugeRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/auth_/callback': typeof AuthCallbackRoute
   '/blog/mejores-recomendadores-libros-ia': typeof BlogMejoresRecomendadoresLibrosIaRoute
+  '/u/$handle': typeof UHandleRoute
   '/_authenticated/books/$bookId': typeof AuthenticatedBooksBookIdRoute
+  '/_authenticated/clubs/$clubId': typeof AuthenticatedClubsClubIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
+    | '/community'
     | '/faq'
     | '/sitemap.xml'
     | '/admin'
@@ -185,14 +223,18 @@ export interface FileRouteTypes {
     | '/notebook'
     | '/onboarding'
     | '/read'
+    | '/refuge'
     | '/settings'
     | '/auth/callback'
     | '/blog/mejores-recomendadores-libros-ia'
+    | '/u/$handle'
     | '/books/$bookId'
+    | '/clubs/$clubId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
+    | '/community'
     | '/faq'
     | '/sitemap.xml'
     | '/admin'
@@ -203,15 +245,19 @@ export interface FileRouteTypes {
     | '/notebook'
     | '/onboarding'
     | '/read'
+    | '/refuge'
     | '/settings'
     | '/auth/callback'
     | '/blog/mejores-recomendadores-libros-ia'
+    | '/u/$handle'
     | '/books/$bookId'
+    | '/clubs/$clubId'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/community'
     | '/faq'
     | '/sitemap.xml'
     | '/_authenticated/admin'
@@ -222,20 +268,25 @@ export interface FileRouteTypes {
     | '/_authenticated/notebook'
     | '/_authenticated/onboarding'
     | '/_authenticated/read'
+    | '/_authenticated/refuge'
     | '/_authenticated/settings'
     | '/auth_/callback'
     | '/blog/mejores-recomendadores-libros-ia'
+    | '/u/$handle'
     | '/_authenticated/books/$bookId'
+    | '/_authenticated/clubs/$clubId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CommunityRoute: typeof CommunityRoute
   FaqRoute: typeof FaqRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   BlogMejoresRecomendadoresLibrosIaRoute: typeof BlogMejoresRecomendadoresLibrosIaRoute
+  UHandleRoute: typeof UHandleRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -259,6 +310,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/community': {
+      id: '/community'
+      path: '/community'
+      fullPath: '/community'
+      preLoaderRoute: typeof CommunityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -331,6 +389,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReadRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/refuge': {
+      id: '/_authenticated/refuge'
+      path: '/refuge'
+      fullPath: '/refuge'
+      preLoaderRoute: typeof AuthenticatedRefugeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -352,11 +417,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogMejoresRecomendadoresLibrosIaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/u/$handle': {
+      id: '/u/$handle'
+      path: '/u/$handle'
+      fullPath: '/u/$handle'
+      preLoaderRoute: typeof UHandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/books/$bookId': {
       id: '/_authenticated/books/$bookId'
       path: '/books/$bookId'
       fullPath: '/books/$bookId'
       preLoaderRoute: typeof AuthenticatedBooksBookIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/clubs/$clubId': {
+      id: '/_authenticated/clubs/$clubId'
+      path: '/clubs/$clubId'
+      fullPath: '/clubs/$clubId'
+      preLoaderRoute: typeof AuthenticatedClubsClubIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -371,8 +450,10 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNotebookRoute: typeof AuthenticatedNotebookRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedReadRoute: typeof AuthenticatedReadRoute
+  AuthenticatedRefugeRoute: typeof AuthenticatedRefugeRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedBooksBookIdRoute: typeof AuthenticatedBooksBookIdRoute
+  AuthenticatedClubsClubIdRoute: typeof AuthenticatedClubsClubIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -384,8 +465,10 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNotebookRoute: AuthenticatedNotebookRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedReadRoute: AuthenticatedReadRoute,
+  AuthenticatedRefugeRoute: AuthenticatedRefugeRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedBooksBookIdRoute: AuthenticatedBooksBookIdRoute,
+  AuthenticatedClubsClubIdRoute: AuthenticatedClubsClubIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -395,11 +478,13 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CommunityRoute: CommunityRoute,
   FaqRoute: FaqRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   BlogMejoresRecomendadoresLibrosIaRoute:
     BlogMejoresRecomendadoresLibrosIaRoute,
+  UHandleRoute: UHandleRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

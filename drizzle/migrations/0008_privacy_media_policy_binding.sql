@@ -1,0 +1,2 @@
+DROP POLICY reader_media_read ON storage.objects;
+CREATE POLICY reader_media_read ON storage.objects FOR SELECT TO authenticated,anon USING(bucket_id='reader-profile-media' AND ((storage.foldername(storage.objects.name))[1]=auth.uid()::text OR EXISTS(SELECT 1 FROM public.reader_social_profiles p WHERE (p.avatar_path=storage.objects.name OR p.cover_path=storage.objects.name) AND public.reader_can_view(p.user_id,p.visibility,p.club_id))));

@@ -43,6 +43,41 @@
       "when": 1794759043070,
       "tag": "0005_atomic_catalog_candidate_install",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794776682992,
+      "tag": "0006_reader_social_privacy_clubs",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794776707811,
+      "tag": "0007_joint_reading_author_fix",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794776921598,
+      "tag": "0008_privacy_media_policy_binding",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794776983731,
+      "tag": "0009_social_report_moderation",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794777045031,
+      "tag": "0010_retain_joint_reading_contributions",
+      "breakpoints": true
     }
   ]
 }

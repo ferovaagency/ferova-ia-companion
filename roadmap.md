@@ -1,13 +1,16 @@
 # Roadmap
 - [x] Expansion: Aventuras editor, private persistence, verified completion and original templates
-- [ ] Expansion: shared bingo join/copy, oracle cells, reviewed image OCR and source credit
+- [x] Expansion: shared bingo discovery/join with individual immutable copies (database tests passed; signed-in browser pending)
+- [ ] Expansion: oracle cells, reviewed image OCR and source credit
 - [x] Current cycle: catalog-verified Advent, exclusions, local date gates and saved annual discoveries (database/rule tests passed; live AI/browser acceptance pending)
 - [x] Current cycle: twelve monthly chapters and replaceable suggestions (database tests passed; live AI/browser acceptance pending)
 - [x] Current cycle: custom lists, ordering, emotional ratings and server oracle signals (database tests passed; signed-in browser acceptance pending)
 - [ ] Acceptance: signed-in calendar preparation/reveal/save, monthly replacement, list edits/reload and emotional ratings (requesting-user session unavailable; live AI not exercised)
-- [ ] Expansion: private profiles, safe uploads, per-content sharing and viewer preview
-- [ ] Expansion: friends, blocks/reports, clubs, invitations and spoiler discussions
-- [ ] Expansion: joint progress and qualifying group streaks
+- [x] Current social cycle: private profiles, safe uploads, per-content sharing and anonymous viewer preview (database tests passed)
+- [x] Current social cycle: friends, blocks/reports with admin review, owner/member clubs and invitations (database tests passed)
+- [x] Current social cycle: joint edition percentages, spoiler discussions, individual shared bingo copies and qualifying group streaks (database tests passed)
+- [ ] Social acceptance: signed-in save/reload/upload, friend/club two-reader flows, keyboard/offline and responsive five-nav audit (requesting-user session unavailable)
+- [ ] Social refinements: named friend/club viewer preview, edition-specific chapter boundaries and disjoint rejoin participation intervals
 - [ ] Expansion: cozy shelf, cover crop/upload and idempotent earned decorations
 - [x] Expansion: settings/help, creator information and changelog
 - [x] Expansion: public FAQ/feedback and consistent canonical metadata
