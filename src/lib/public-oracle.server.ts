@@ -32,5 +32,5 @@ export async function publicOracle(request: Request) {
     const ids=z.object({ids:z.array(z.string()).length(3)}).parse(JSON.parse(selected.replace(/^```json\s*|```$/g,""))).ids;
     const options=ids.flatMap(id=>{const b=pool.find(b=>b.catalog_id===id);return b?[b]:[];});if(options.length!==3||new Set(ids).size!==3)throw new Error("Selección incompleta.");
     return Response.json({options},{headers});
-  }catch(error){console.error("Public Oracle failed",error instanceof Error?error.name:"error");return Response.json({error:"No pudimos reunir tres sugerencias verificadas. Conserva tu contexto e inténtalo más tarde."},{status:503,headers});}
+  }catch(error){console.error("Public Oracle failed",error instanceof Error?`${error.name}: ${error.message}`:"error");return Response.json({error:"No pudimos reunir tres sugerencias verificadas. Conserva tu contexto e inténtalo más tarde."},{status:503,headers});}
 }
