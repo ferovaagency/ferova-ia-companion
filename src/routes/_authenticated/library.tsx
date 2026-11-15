@@ -1,4 +1,6 @@
 import { PageTitle, KoaMessage, Modal as KoaModal } from "@/components/koa/UI";
+import { CozyShelf } from "@/components/koa/CozyShelf";
+import { Button } from "@/components/ui/button";
 import { Wishlist } from "@/components/koa/Wishlist";
 import { userError } from "@/lib/koa-data";
 import type { LucideIcon } from "lucide-react";
@@ -69,6 +71,7 @@ function LibraryPage() {
   const [statusFilter,setStatusFilter]=useState<BookStatus|"ALL"|"WISH">("ALL");
   const [moodFilter,setMoodFilter]=useState("");
   const [grid,setGrid]=useState(true);
+  const [shelf,setShelf]=useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [enriching, setEnriching] = useState(false);
 
@@ -421,6 +424,7 @@ function LibraryPage() {
           </button>
         </section>
 
+        <div className="flex gap-3"><Button variant={shelf?"default":"secondary"} aria-pressed={shelf} onClick={()=>setShelf(true)}>Estantería</Button><Button variant={!shelf?"default":"secondary"} aria-pressed={!shelf} onClick={()=>setShelf(false)}>Lista</Button></div>
         <nav aria-label="Filtrar estantería" className="flex flex-wrap gap-2">
           <button className={`koa-chip ${statusFilter==="ALL"?"active":""}`} onClick={()=>setStatusFilter("ALL")}>Todos · {books.length}</button>
           {STATUS_ORDER.map(status=><button key={status} className={`koa-chip ${statusFilter===status?"active":""}`} onClick={()=>setStatusFilter(status)}>{STATUS_LABEL[status]} · {books.filter(b=>b.status===status).length}</button>)}
@@ -431,7 +435,8 @@ function LibraryPage() {
         {statusFilter==="WISH"&&<Wishlist books={books} refresh={refreshAll}/>}
         {statusFilter!=="WISH"&&books.length>0&&!filtered.some(b=>statusFilter==="ALL"||b.status===statusFilter)&&<p className="koa-empty">No hay libros con estos filtros.</p>}
         {/* Sections */}
-        {STATUS_ORDER.map((status) => {
+        {shelf && statusFilter!=="WISH" && <CozyShelf books={filtered.filter(b=>statusFilter==="ALL"||b.status===statusFilter)}/>}
+        {!shelf && STATUS_ORDER.map((status) => {
           const list = statusFilter==="WISH"||(statusFilter!=="ALL"&&statusFilter!==status)?[]:grouped[status];
           if (!list.length) return null;
           return (
