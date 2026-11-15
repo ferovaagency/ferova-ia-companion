@@ -22,6 +22,7 @@ import { Route as AuthenticatedListsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedNotebookRouteImport } from './routes/_authenticated/notebook'
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedReadRouteImport } from './routes/_authenticated/read'
+import { Route as AuthenticatedRefugeRouteImport } from './routes/_authenticated/refuge'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthCallbackRouteImport } from './routes/auth_.callback'
 import { Route as BlogMejoresRecomendadoresLibrosIaRouteImport } from './routes/blog.mejores-recomendadores-libros-ia'
@@ -91,6 +92,11 @@ const AuthenticatedReadRoute = AuthenticatedReadRouteImport.update({
   path: '/read',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRefugeRoute = AuthenticatedRefugeRouteImport.update({
+  id: '/refuge',
+  path: '/refuge',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/notebook': typeof AuthenticatedNotebookRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/read': typeof AuthenticatedReadRoute
+  '/refuge': typeof AuthenticatedRefugeRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/mejores-recomendadores-libros-ia': typeof BlogMejoresRecomendadoresLibrosIaRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/notebook': typeof AuthenticatedNotebookRoute
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/read': typeof AuthenticatedReadRoute
+  '/refuge': typeof AuthenticatedRefugeRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/mejores-recomendadores-libros-ia': typeof BlogMejoresRecomendadoresLibrosIaRoute
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/_authenticated/notebook': typeof AuthenticatedNotebookRoute
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/read': typeof AuthenticatedReadRoute
+  '/_authenticated/refuge': typeof AuthenticatedRefugeRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/auth_/callback': typeof AuthCallbackRoute
   '/blog/mejores-recomendadores-libros-ia': typeof BlogMejoresRecomendadoresLibrosIaRoute
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
     | '/notebook'
     | '/onboarding'
     | '/read'
+    | '/refuge'
     | '/settings'
     | '/auth/callback'
     | '/blog/mejores-recomendadores-libros-ia'
@@ -203,6 +213,7 @@ export interface FileRouteTypes {
     | '/notebook'
     | '/onboarding'
     | '/read'
+    | '/refuge'
     | '/settings'
     | '/auth/callback'
     | '/blog/mejores-recomendadores-libros-ia'
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notebook'
     | '/_authenticated/onboarding'
     | '/_authenticated/read'
+    | '/_authenticated/refuge'
     | '/_authenticated/settings'
     | '/auth_/callback'
     | '/blog/mejores-recomendadores-libros-ia'
@@ -331,6 +343,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReadRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/refuge': {
+      id: '/_authenticated/refuge'
+      path: '/refuge'
+      fullPath: '/refuge'
+      preLoaderRoute: typeof AuthenticatedRefugeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -371,6 +390,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNotebookRoute: typeof AuthenticatedNotebookRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedReadRoute: typeof AuthenticatedReadRoute
+  AuthenticatedRefugeRoute: typeof AuthenticatedRefugeRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedBooksBookIdRoute: typeof AuthenticatedBooksBookIdRoute
 }
@@ -384,6 +404,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNotebookRoute: AuthenticatedNotebookRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedReadRoute: AuthenticatedReadRoute,
+  AuthenticatedRefugeRoute: AuthenticatedRefugeRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedBooksBookIdRoute: AuthenticatedBooksBookIdRoute,
 }
