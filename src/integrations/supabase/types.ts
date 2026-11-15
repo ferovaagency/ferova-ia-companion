@@ -1353,6 +1353,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      reader_preview_payload: {
+        Args: { p_id: string; p_owner: string; p_viewer: string }
+        Returns: Json
+      }
       reader_set_chapter_ends: {
         Args: { p_ends: number[]; p_reading: string }
         Returns: undefined
