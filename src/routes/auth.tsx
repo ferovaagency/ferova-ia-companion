@@ -32,6 +32,10 @@ function AuthPage() {
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) navigate({ to: "/discover" });
     });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) navigate({ to: "/discover" });
+    });
+    return () => sub.subscription.unsubscribe();
   }, [navigate]);
 
   const handleEmail = async (e: React.FormEvent) => {
@@ -39,14 +43,24 @@ function AuthPage() {
     setError(null);
     setLoading(true);
     try {
-      const fn = mode === "signin" ? supabase.auth.signInWithPassword : supabase.auth.signUp;
-      const { error } = await fn.call(supabase.auth, {
-        email,
-        password,
-        options: { emailRedirectTo: window.location.origin + "/discover" },
-      } as any);
-      if (error) throw error;
-      navigate({ to: "/discover" });
+      if (mode === "signin") {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          if (/invalid login/i.test(error.message)) throw new Error("Correo o contraseña incorrectos.");
+          if (/not confirmed/i.test(error.message)) throw new Error("Confirma tu correo antes de entrar. Revisa tu bandeja de entrada.");
+          throw error;
+        }
+        navigate({ to: "/discover" });
+      } else {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: window.location.origin + "/auth/callback" },
+        });
+        if (error) throw error;
+        if (data.session) navigate({ to: "/discover" });
+        else setError("Cuenta creada. Revisa tu correo y confirma tu cuenta para entrar.");
+      }
     } catch (err: any) {
       setError(err?.message || "Algo salió mal");
     } finally {
@@ -57,7 +71,7 @@ function AuthPage() {
   const handleGoogle = async () => {
     setError(null);
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/discover" });
+    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth/callback" });
     if (result.error) {
       setError(result.error.message);
       setLoading(false);

@@ -263,6 +263,198 @@ export type Database = {
         }
         Relationships: []
       }
+      reader_ai_usage: {
+        Row: {
+          requests: number
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          requests?: number
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          requests?: number
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
+      reader_conversations: {
+        Row: {
+          answer: string
+          book_id: string
+          created_at: string
+          id: string
+          question: string
+          user_id: string
+        }
+        Insert: {
+          answer: string
+          book_id: string
+          created_at?: string
+          id?: string
+          question: string
+          user_id?: string
+        }
+        Update: {
+          answer?: string
+          book_id?: string
+          created_at?: string
+          id?: string
+          question?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_conversations_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reader_notes: {
+        Row: {
+          book_id: string
+          chapter: string
+          content: string
+          created_at: string
+          favorite: boolean
+          id: string
+          kind: string
+          page: number | null
+          reflection: string
+          tags: string[]
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          chapter?: string
+          content: string
+          created_at?: string
+          favorite?: boolean
+          id?: string
+          kind?: string
+          page?: number | null
+          reflection?: string
+          tags?: string[]
+          user_id?: string
+        }
+        Update: {
+          book_id?: string
+          chapter?: string
+          content?: string
+          created_at?: string
+          favorite?: boolean
+          id?: string
+          kind?: string
+          page?: number | null
+          reflection?: string
+          tags?: string[]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_notes_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reader_preferences: {
+        Row: {
+          moods: string[]
+          onboarding_version: number
+          pace: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          moods?: string[]
+          onboarding_version?: number
+          pace?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          moods?: string[]
+          onboarding_version?: number
+          pace?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reader_timer_receipts: {
+        Row: {
+          book_id: string
+          cycle: number
+          id: string
+          minutes: number
+          saved_at: string
+          user_id: string
+        }
+        Insert: {
+          book_id: string
+          cycle: number
+          id: string
+          minutes: number
+          saved_at?: string
+          user_id: string
+        }
+        Update: {
+          book_id?: string
+          cycle?: number
+          id?: string
+          minutes?: number
+          saved_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_timer_receipts_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reader_wishes: {
+        Row: {
+          author: string
+          cover_url: string | null
+          created_at: string
+          description: string
+          id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          author?: string
+          cover_url?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          title: string
+          user_id?: string
+        }
+        Update: {
+          author?: string
+          cover_url?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reading_sessions: {
         Row: {
           book_id: string
@@ -341,6 +533,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_koa_request: { Args: never; Returns: undefined }
+      close_reader_session: {
+        Args: {
+          p_book: string
+          p_cycle: number
+          p_day: string
+          p_finish: boolean
+          p_from: number
+          p_id: string
+          p_minutes: number
+          p_note: string
+          p_to: number
+          p_zone: string
+        }
+        Returns: undefined
+      }
       finish_active_book: {
         Args: { p_book: string; p_cycle: number; p_zone: string }
         Returns: undefined
