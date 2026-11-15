@@ -15,6 +15,7 @@ export interface Book {
   series_index: number | null;
   status: BookStatus;
   cover_url: string | null;
+  private_cover_path?: string | null;
   description: string;
   current_page: number;
   started_reading_at: string | null;

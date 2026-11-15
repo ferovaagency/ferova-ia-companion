@@ -78,6 +78,20 @@
       "when": 1794777045031,
       "tag": "0010_retain_joint_reading_contributions",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1794777450578,
+      "tag": "0011_reader_creative_privacy_rewards",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1794777732876,
+      "tag": "0012_complete_reader_preview_projection",
+      "breakpoints": true
     }
   ]
 }

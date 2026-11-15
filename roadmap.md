@@ -1,7 +1,8 @@
 # Roadmap
+- [x] Cycle 4 implementation (authenticated acceptance pending): OCR/cell oracle, private cropped covers/shelf/rewards, authorized previews, exact chapter ends/rejoin intervals, audit fixes/help and regression evidence
 - [x] Expansion: Aventuras editor, private persistence, verified completion and original templates
 - [x] Expansion: shared bingo discovery/join with individual immutable copies (database tests passed; signed-in browser pending)
-- [ ] Expansion: oracle cells, reviewed image OCR and source credit
+- [x] Expansion: oracle cells, reviewed image OCR and source credit (live acceptance pending)
 - [x] Current cycle: catalog-verified Advent, exclusions, local date gates and saved annual discoveries (database/rule tests passed; live AI/browser acceptance pending)
 - [x] Current cycle: twelve monthly chapters and replaceable suggestions (database tests passed; live AI/browser acceptance pending)
 - [x] Current cycle: custom lists, ordering, emotional ratings and server oracle signals (database tests passed; signed-in browser acceptance pending)
@@ -10,8 +11,8 @@
 - [x] Current social cycle: friends, blocks/reports with admin review, owner/member clubs and invitations (database tests passed)
 - [x] Current social cycle: joint edition percentages, spoiler discussions, individual shared bingo copies and qualifying group streaks (database tests passed)
 - [ ] Social acceptance: signed-in save/reload/upload, friend/club two-reader flows, keyboard/offline and responsive five-nav audit (requesting-user session unavailable)
-- [ ] Social refinements: named friend/club viewer preview, edition-specific chapter boundaries and disjoint rejoin participation intervals
-- [ ] Expansion: cozy shelf, cover crop/upload and idempotent earned decorations
+- [x] Social refinements: authorized text preview, explicit chapter boundaries and disjoint rejoin intervals (database tested)
+- [x] Expansion: cozy shelf, cover crop/upload and idempotent earned decorations (live acceptance pending)
 - [x] Expansion: settings/help, creator information and changelog
 - [x] Expansion: public FAQ/feedback and consistent canonical metadata
 - [ ] Acceptance: signed-in Aventuras editor save/reload and mobile/dialog checks (no requesting-user session available)
@@ -26,3 +27,5 @@
 - [x] Barcode scanning fix (native BarcodeDetector + ISBN column)
 - [x] Cover recognition with camera via AI vision
 - [x] Security package update
+
+- [ ] Cycle 4 acceptance: authenticated flows (QA account creation unavailable); full preview media and server raster decoding still pending

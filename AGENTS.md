@@ -10,3 +10,6 @@
 - Keep club memberships and invitations RPC-only with owner verification; use security-definer access helpers to avoid recursive policies.
 - Store profile media in a private bucket and download through viewer RLS, never permanent public URLs; re-encode validated uploads to strip metadata.
 - Join shared bingos by making immutable individual copies; derive joint progress and streak contributions from existing owned reading history without writing duplicate events.
+- Keep image OCR as quota-checked untrusted data that becomes a reviewed draft, and verify bingo candidates against catalog facts before offering assignment or wishes.
+- Keep cover uploads owner-only in the private media bucket; crop/re-encode before server signature/size validation so ISBN and original catalog fallback remain intact.
+- Award decorations through the owner/day unique ledger using qualifying reading evidence only; preserve inventory and track disjoint joint-reading intervals with explicit edition chapter ends.

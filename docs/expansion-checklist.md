@@ -12,12 +12,10 @@ Baseline: local HEAD `04c6e88` (Google callback fix), confirmed before edits. Pr
 - [x] Independent nonadmin database isolation tests.
 - [ ] Signed-in browser editor save/reload, mobile grids and keyboard/dialog acceptance: session mint found multiple users; `--self` found no account for the requesting user. No other account was selected without authorization. Sign in in the preview to continue this acceptance.
 
-## Not yet implemented (next cycles)
-- Image OCR review/source credit; oracle per-cell options. Shared discovery/copy implemented in cycle 3; live signed-in acceptance remains pending.
-- Named friend/club viewer preview (anonymous public preview implemented); edition-specific chapter boundaries and disjoint rejoin participation intervals.
-- Cozy shelf/list, crop/preview covers, original decor and idempotent reward ledger.
-- Public oracle demo with durable abuse protection; existing private AI endpoints must not be opened. Anti-abuse implementation remains pending, not a fake demo.
-- Whole-app mobile/desktop keyboard, offline, dialogs and integration regression audit.
+## Remaining implementation / acceptance
+- Public oracle demo with durable abuse protection remains unimplemented.
+- Whole-app signed-in mobile/desktop keyboard, offline, dialogs and integration audit.
+- Cycle 4 details and limitations below supersede earlier pending statuses.
 
 ## External acceptance / limits
 - GitHub sync is managed by Lovable; the agent cannot inspect connection/status or push main. Verify synchronized branch in Project settings → Git. No manual git changes were made.
@@ -86,10 +84,25 @@ Starting branch supplied by user: main `61a2c26`; no checkout, manual commit, pu
 - Chromium: 1280×1800 desktop and 390×844 mobile unavailable-profile/public preview safe state, no horizontal overflow; signed-out refuge/club/adventures redirected to auth; FAQ remained available. No page runtime errors. Screenshots inspected. Public community empty state checked separately.
 - Requesting-user session: `lovable auth-session --json --self` returned no matching requesting-user account. No unrelated user's session minted or used. Therefore live signed-in persistence, uploads, friend/member workflows, five-nav layout and dialogs are **not** claimed end-to-end verified; isolated database tests are not a substitute.
 
-### Remaining / known limits
-- [ ] Named friend/club viewer impersonation preview; only true anonymous preview currently offered.
-- [ ] Edition-specific chapter page boundaries: current spoiler gate uses proportional percentage/chapter count, not exact chapter ends. Do not describe this as exact chapter recognition.
-- [ ] Disjoint participation intervals after leave/rejoin: current single joined/left interval retains history but rejoining clears the end. Fine-grained gap exclusion still needs interval history before claiming full rejoin semantics.
-- [ ] Signed-in responsive/keyboard/focus/offline/reload acceptance and live admin report moderation.
-- [ ] OCR/source credit, per-cell oracle, cozy shelf/crop/decor ledger and durable-abuse-protected public oracle demo remain unimplemented. Whole approved expansion is **not** complete.
-- No production publishing; no Google/camera/microphone end-to-end claim.
+## Cycle 4 — creative adventures, private shelf and rewards
+### Implemented
+- [x] Device image OCR through authenticated quota-checked server function: MIME, magic bytes, 5 MB checks; rejects URLs/SVG; image text treated as untrusted data. Native 3/4/5 editable draft with source credit and mandatory review checkbox. Saving never completes cells.
+- [x] Per-cell Oracle loads owner board/context/preferences, filters catalog-verified owned/external candidates by exact conditions, requests 3 distinct supplied identities, rejects insufficient results. Owned choices use existing assignment/completion RPC; external choices reverify then save only to wishes.
+- [x] Shelf/list switch, original vector fern/lamp/books/moon decorations and supplied Koa retained. Crop preview with horizontal/vertical/zoom, re-encoded WebP upload, server owner/MIME/signature/size checks, separate private cover path preserving ISBN/import/catalog fallback. Private viewer-authorized bucket downloads, no public URLs.
+- [x] Owner/day unique reward ledger from advancing sessions or direct-finish streak evidence only; repeat calls/multiple finishes deduplicate; retained inventory and equip/deactivate persist. No notes/timer-only/bingo/calendar awards.
+- [x] Authorized public/accepted-friend/actual-member text privacy preview without impersonation, using safe title/author/star/list/bingo projections. No private review/emotions/notebook/auth fields.
+- [x] Explicit edition chapter-end arrays validated and fail-closed discussion access until pages reach the chosen end; disjoint participation intervals exclude gap events and repeated joins preserve counts.
+- [x] Monthly direction forwarded, Google try/catch/finally clears rejected loading while callback/bearer/hydration preserved; npm lock synchronized and npm ci dry-run succeeded. Help/changelog updated.
+- [x] Additive migrations 0011/0012 applied once; live queries confirmed reward/interval tables, cover/credit fields and preview/reward/chapter functions.
+
+### Evidence / remaining limits
+- Prior 102 checks rerun and passed: social 27, bingo 19, discovery DB 30, reader DB 13, timer 8, discovery rules 5.
+- Creative DB suite: 38 passed (27 repeated social baseline + 11 new). Covers reward retry/owner/direct-write denial/equipment, no note rewards, chapter fail-closed and invalid limits, rejoin gap exclusion, foreign chapter denial, private cover paths and anon media denial, arbitrary preview targets, actual friend/member preview and exact stars without private review.
+- Creative rules: 6 passed for spoofed MIME, >5 MB, URLs/SVG, exact 9/16/25 labels, source credit and unknown/250/251-page eligibility. Unique coverage total 119 (102 + 17); baseline repetition not double counted.
+- Latest automatic build/typecheck observed build OK. Chromium public auth/FAQ render and protected adventures/library/refuge redirect correctly signed-out; 1280x1800/390x844 auth screenshots inspected, no overflow or page errors. npm ci dry-run successful.
+- [ ] Live authenticated OCR/catalog/upload/reward/preview/discussion checks blocked: platform refused synthetic QA account creation as unavailable. No synthetic account created, unrelated account used, credentials exposed or bypass added. No requesting-user session available; real AI result not claimed verified.
+- [ ] Full authenticated keyboard/mobile/dialog/offline audit pending session access.
+- [ ] Preview media/full bingo-cell rendering still pending; text/list/star projections are implemented, private media omitted rather than delivered with owner privileges.
+- [ ] Full server raster decoding/metadata stripping remains pending; server currently validates signature/MIME/size and browser performs decode/re-encode/dimension checks.
+- [ ] Abuse-protected public Oracle demo remains unimplemented. Whole expansion is not complete.
+- No production publication; GitHub sync independently unverified; Google/camera/microphone end-to-end not claimed tested.

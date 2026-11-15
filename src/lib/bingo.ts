@@ -18,6 +18,7 @@ export const bingoCellSchema = z.object({
 export const bingoDraftSchema = z.object({
   title: z.string().trim().min(1).max(160),
   purpose: z.string().max(1200),
+  source_credit: z.string().max(1200).default(""),
   size: z.union([z.literal(3), z.literal(4), z.literal(5)]),
   cells: z.array(bingoCellSchema),
   starts_on: z.string().nullable(),
@@ -31,7 +32,7 @@ export type BingoCell = z.infer<typeof bingoCellSchema>;
 export type BingoDraft = z.infer<typeof bingoDraftSchema>;
 export function blankCell(): BingoCell { return { kind: "book", label: "Una lectura a mi elección", condition: "any", value: "" }; }
 export function newDraft(): BingoDraft {
-  return { title: "Mi aventura lectora", purpose: "", size: 3, cells: Array.from({ length: 9 }, blankCell), starts_on: null, ends_on: null, allow_reuse: false };
+  return { title: "Mi aventura lectora", purpose: "", source_credit: "", size: 3, cells: Array.from({ length: 9 }, blankCell), starts_on: null, ends_on: null, allow_reuse: false };
 }
 export function matchesCell(book: Pick<Book, "genre" | "author" | "pages">, cell: BingoCell) {
   if (cell.kind !== "book") return false;

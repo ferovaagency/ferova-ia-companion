@@ -6,15 +6,16 @@ import { saveBingo } from "@/lib/bingo-data";
 import { userError } from "@/lib/koa-data";
 import { Save } from "lucide-react";
 
-export function BingoEditor({ initial, id, onClose, onSaved }: { initial: BingoDraft; id?: string; onClose: () => void; onSaved: () => Promise<void> }) {
+export function BingoEditor({ initial, id, review = false, onClose, onSaved }: { initial: BingoDraft; id?: string; review?: boolean; onClose: () => void; onSaved: () => Promise<void> }) {
   const [draft, setDraft] = useState(initial);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [reviewed, setReviewed] = useState(!review);
   const changeCell = (index: number, patch: Partial<BingoCell>) => setDraft((old) => ({ ...old, cells: old.cells.map((cell, i) => i === index ? { ...cell, ...patch } : cell) }));
   return <Modal title={id ? "Editar borrador" : "Crear aventura"} onClose={() => { if (!busy) onClose(); }}>
     <form className="space-y-5" onSubmit={async (event) => {
       event.preventDefault(); setBusy(true); setError("");
-      try { await saveBingo(draft, id); await onSaved(); onClose(); } catch (e) { setError(userError(e)); } finally { setBusy(false); }
+      try { if (!reviewed) throw new Error("Revisa todas las casillas y confirma el borrador."); await saveBingo(draft, id); await onSaved(); onClose(); } catch (e) { setError(userError(e)); } finally { setBusy(false); }
     }}>
       <label className="block">Título<input className="koa-field" required maxLength={160} value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} /></label>
       <label className="block">Propósito<textarea className="koa-field" maxLength={1200} value={draft.purpose} onChange={(e) => setDraft({ ...draft, purpose: e.target.value })} /></label>
@@ -33,6 +34,8 @@ export function BingoEditor({ initial, id, onClose, onSaved }: { initial: BingoD
         }}><option value="any">Un libro a mi elección</option><option value="genre">Género exacto</option><option value="author">Autor exacto</option><option value="max_pages">Máximo de páginas</option></select></label>
         {cell.condition !== "any" && <label className="block">{cell.condition === "max_pages" ? "Número máximo de páginas" : "Valor exacto en tu biblioteca"}<input className="koa-field" required maxLength={160} inputMode={cell.condition === "max_pages" ? "numeric" : "text"} value={cell.value} onChange={(e) => changeCell(i, { value: e.target.value })} /></label>}</>}
       </fieldset>)}</div>
+      <label className="block">Crédito / fuente<input className="koa-field" maxLength={1200} value={draft.source_credit} onChange={e=>setDraft({...draft,source_credit:e.target.value})}/></label>
+      {review && <label className="flex gap-3"><input type="checkbox" checked={reviewed} onChange={e=>setReviewed(e.target.checked)}/>He revisado los textos, tipos y condiciones de todas las casillas y el crédito.</label>}
       {error && <ErrorNotice>{error}</ErrorNotice>}
       <div className="flex flex-wrap gap-3"><Button type="button" variant="secondary" disabled={busy} onClick={onClose}>Cancelar</Button><Button type="submit" disabled={busy}><Save />{busy ? "Guardando…" : "Guardar borrador"}</Button></div>
     </form>
