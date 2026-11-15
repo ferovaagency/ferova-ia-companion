@@ -59,7 +59,7 @@ export const revealWindow = createServerFn({ method: "POST" }).middleware([requi
     result = await context.supabase.rpc("reveal_reader_window", { p_calendar: data.calendar, p_slot: data.slot, p_zone: data.zone });
   }
   if (result.error) throw new Error("No pudimos abrir la ventana. Tu calendario sigue guardado.");
-  return catalogBookSchema.passthrough().parse(result.data);
+  return catalogBookSchema.parse(result.data);
 });
 export const saveDiscovery = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((value: unknown) => z.object({ calendar: z.string().uuid(), slot: z.number().int().min(1).max(24) }).parse(value)).handler(async ({ data, context }) => {
   const result = await context.supabase.rpc("save_reader_discovery", { p_calendar: data.calendar, p_slot: data.slot });
