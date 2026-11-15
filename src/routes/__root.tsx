@@ -7,7 +7,8 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { clearPrivateView, PRIVACY_EVENT } from "@/lib/privacy-cache";
 
 import { supabase } from "@/integrations/supabase/client";
 import appCss from "../styles.css?url";
@@ -121,19 +122,36 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  const [identity, setIdentity] = useState("initial");
+  const [switching, setSwitching] = useState(false);
   useEffect(() => {
-    const { data } = supabase.auth.onAuthStateChange((event) => {
-      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
-      router.invalidate();
-      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+    let current: string | undefined;
+    let revision = 0;
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      const next = session?.user.id ?? "anonymous";
+      if (next === current && event !== "USER_UPDATED") return;
+      current = next;
+      const version = ++revision;
+      setSwitching(true);
+      // Synchronous eviction precedes loading for the new identity, including cross-tab events.
+      clearPrivateView(queryClient);
+      setIdentity(next);
+      void Promise.resolve().then(async () => {
+        await router.invalidate();
+        if (version === revision) setSwitching(false);
+      });
     });
-    return () => data.subscription.unsubscribe();
+    const storage = (e: StorageEvent) => { if (e.key === "koa-permissions-changed") { clearPrivateView(queryClient); void router.invalidate(); } };
+    const privacy = () => { void router.invalidate(); };
+    window.addEventListener("storage", storage);
+    window.addEventListener(PRIVACY_EVENT, privacy);
+    return () => { revision++; data.subscription.unsubscribe(); window.removeEventListener("storage", storage); window.removeEventListener(PRIVACY_EVENT, privacy); };
   }, [router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      {switching ? <div role="status" className="py-20 text-center">Preparando tu sesión…</div> : <div key={identity}><Outlet /></div>}
     </QueryClientProvider>
   );
 }

@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { clearPrivateView } from "@/lib/privacy-cache";
 import { BookOpen, Library, NotebookPen, Sparkles, LogOut, Settings, Loader2, Compass, List, House } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +42,8 @@ const tabs = [
 ] as const;
 export function AppShell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
   return (
     <div className="koa-app">
       <a className="skip-link" href="#main-content">
@@ -65,8 +69,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             className="koa-icon"
             aria-label="Cerrar sesión"
             onClick={async () => {
+              await queryClient.cancelQueries();
+              clearPrivateView(queryClient);
               await supabase.auth.signOut();
-              window.location.assign("/auth");
+              await navigate({ to: "/auth", replace: true });
             }}
           >
             <LogOut size={18} />
