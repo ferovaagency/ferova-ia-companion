@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { BookOpen, Library, NotebookPen, Sparkles, LogOut, Settings, Loader2 } from "lucide-react";
+import { BookOpen, Library, NotebookPen, Sparkles, LogOut, Settings, Loader2, Compass } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 export function Koa({
@@ -34,6 +34,7 @@ const tabs = [
   { to: "/discover", label: "Descubrir", icon: Sparkles },
   { to: "/library", label: "Biblioteca", icon: Library },
   { to: "/read", label: "Leer", icon: BookOpen },
+  { to: "/adventures", label: "Aventuras", icon: Compass },
   { to: "/notebook", label: "Cuaderno", icon: NotebookPen },
 ] as const;
 export function AppShell({ children }: { children: ReactNode }) {
@@ -54,7 +55,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         <div className="flex gap-2">
-          <Link to="/onboarding" className="koa-icon" aria-label="Preferencias y primeros pasos">
+          <Link to="/settings" className="koa-icon" aria-label="Ajustes y ayuda">
             <Settings size={18} />
           </Link>
           <button

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 
-const BASE_URL = "https://ferova-ia-companion.lovable.app";
+const BASE_URL = "https://librero-ia.ferova.com.co";
 
 interface SitemapEntry {
   path: string;
@@ -15,6 +15,7 @@ export const Route = createFileRoute("/sitemap.xml")({
       GET: async () => {
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "weekly", priority: "1.0" },
+          { path: "/faq", changefreq: "monthly", priority: "0.7" },
           { path: "/blog/mejores-recomendadores-libros-ia", changefreq: "monthly", priority: "0.8" },
           { path: "/auth", changefreq: "monthly", priority: "0.5" },
         ];

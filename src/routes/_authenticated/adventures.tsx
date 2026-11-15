@@ -8,7 +8,7 @@ import { PageTitle, ErrorNotice, Empty, Modal, Koa } from "@/components/koa/UI";
 import { BingoEditor } from "@/components/koa/BingoEditor";
 import { bingoTemplates, newDraft, matchesCell, type BingoDraft } from "@/lib/bingo";
 import { bingoQueryOptions, bingoProgressQueryOptions } from "@/lib/bingo-data";
-import { getBooks, userError } from "@/lib/koa-data";
+import { getBooks, userError, koaDb } from "@/lib/koa-data";
 
 const booksOptions = { queryKey: ["koa-books"], queryFn: getBooks };
 export const Route = createFileRoute("/_authenticated/adventures")({
@@ -37,7 +37,7 @@ function Adventures() {
   async function saveCell(complete: boolean) {
     if (!selected) return;
     await action(async () => {
-      const { error } = await supabase.rpc("set_bingo_cell", { p_board: selected.board.id, p_index: selected.index, p_book: bookId || undefined, p_complete: complete });
+      const { error } = await koaDb.rpc("set_bingo_cell", { p_board: selected.board.id, p_index: selected.index, p_book: bookId || null, p_complete: complete });
       if (error) throw error;
       setSelected(undefined);
     });
@@ -68,7 +68,7 @@ function Adventures() {
     {selected && <Modal title={selected.board.cells[selected.index]?.label ?? "Casilla"} onClose={() => { if (!busy) setSelected(undefined); }}>
       {selected.board.cells[selected.index]?.kind === "book" ? <label className="block my-5">Libro de mi biblioteca<select className="koa-field" value={bookId} onChange={(e) => setBookId(e.target.value)}><option value="">Sin asignar</option>{books.filter((b) => matchesCell(b, selected.board.cells[selected.index])).map((b) => <option key={b.id} value={b.id}>{b.title} · {b.author}</option>)}</select></label> : <p className="koa-muted my-5">Completar esta experiencia no registra lectura ni aumenta tu racha.</p>}
       {error && <ErrorNotice>{error}</ErrorNotice>}
-      <div className="flex flex-wrap gap-3">{selected.board.cells[selected.index]?.kind === "book" && <Button variant="secondary" disabled={busy} onClick={() => saveCell(false)}>Guardar asignación</Button>}<Button disabled={busy} onClick={() => saveCell(true)}><Check />Completar</Button><Button variant="secondary" disabled={busy} onClick={() => { setBookId(""); void action(async () => { const { error } = await supabase.rpc("set_bingo_cell", { p_board: selected.board.id, p_index: selected.index, p_complete: false }); if (error) throw error; setSelected(undefined); }); }}>Limpiar casilla</Button></div>
+      <div className="flex flex-wrap gap-3">{selected.board.cells[selected.index]?.kind === "book" && <Button variant="secondary" disabled={busy} onClick={() => saveCell(false)}>Guardar asignación</Button>}<Button disabled={busy} onClick={() => saveCell(true)}><Check />Completar</Button><Button variant="secondary" disabled={busy} onClick={() => { setBookId(""); void action(async () => { const { error } = await koaDb.rpc("set_bingo_cell", { p_board: selected.board.id, p_index: selected.index, p_book: null, p_complete: false }); if (error) throw error; setSelected(undefined); }); }}>Limpiar casilla</Button></div>
     </Modal>}
   </>;
 }

@@ -101,4 +101,4 @@ Disallow: /admin
 Disallow: /library
 Disallow: /auth
 
-Sitemap: https://ferova-ia-companion.lovable.app/sitemap.xml
+Sitemap: https://librero-ia.ferova.com.co/sitemap.xml
