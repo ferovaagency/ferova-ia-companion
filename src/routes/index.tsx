@@ -11,9 +11,13 @@ export const Route = createFileRoute("/")({
           "Cuéntale a Koa cómo estás y descubre tres libros para tu momento. Organiza tu biblioteca, guarda tus citas y vuelve a disfrutar de leer.",
       },
       { property: "og:title", content: "Lee con Koa — Tu próxima lectura empieza contigo" },
-      { property: "og:image", content: "https://ferova-ia-companion.lovable.app/koa/welcome.webp" },
+      { property: "og:description", content: "Tres lecturas para tu momento, una biblioteca privada y tu progreso real." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:image", content: "https://librero-ia.ferova.com.co/koa/read.webp" },
+      { name: "twitter:image", content: "https://librero-ia.ferova.com.co/koa/read.webp" },
     ],
-    links: [{ rel: "canonical", href: "https://ferova-ia-companion.lovable.app/" }],
+    links: [{ rel: "canonical", href: "https://librero-ia.ferova.com.co/" }],
   }),
   component: Home,
 });
@@ -26,6 +30,7 @@ function Home() {
           <span>Lee con Koa</span>
         </Link>
         <nav className="flex items-center gap-4">
+          <Link to="/faq" className="koa-muted">Ayuda</Link>
           <a className="koa-muted hidden sm:block" href="#como-funciona">
             Cómo funciona
           </a>
@@ -145,6 +150,7 @@ function Home() {
       <footer className="koa-footer">
         <span>Lee con Koa · Un producto de Ferova</span>
         <Link to="/blog/mejores-recomendadores-libros-ia">Lecturas y recomendaciones</Link>
+        <Link to="/faq">Preguntas y contacto</Link>
       </footer>
     </div>
   );

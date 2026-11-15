@@ -64,7 +64,9 @@ export type KoaDatabase = Omit<Database, "public"> & {
         "id" | "user_id" | "book_id" | "cycle" | "minutes"
       >;
     };
-    Functions: Database["public"]["Functions"] & {
+    Functions: Omit<Database["public"]["Functions"], "set_bingo_cell"> & {
+      // PostgreSQL accepts NULL to clear a cell; generated RPC arguments omit nullability.
+      set_bingo_cell: { Args: { p_board: string; p_index: number; p_book: string | null; p_complete: boolean }; Returns: undefined };
       claim_koa_request: { Args: Record<string, never>; Returns: undefined };
       close_reader_session: {
         Args: {

@@ -4,7 +4,7 @@ import { koaDb, userError } from "@/lib/koa-data";
 import { currentUser } from "@/hooks/use-reader";
 import { supabase } from "@/integrations/supabase/client";
 import { Koa, ErrorNotice } from "@/components/koa/UI";
-export const Route = createFileRoute("/_authenticated/onboarding")({ component: Onboarding });
+export const Route = createFileRoute("/_authenticated/onboarding")({ head: () => ({ meta: [{ title: "Preferencias lectoras — Lee con Koa" }, { name: "description", content: "Elige tu ritmo y tus intereses de lectura." }, { property: "og:title", content: "Preferencias — Lee con Koa" }, { property: "og:description", content: "Tu próxima lectura empieza con tus gustos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }), component: Onboarding });
 function Onboarding() {
   const navigate = useNavigate();
   const [pace, setPace] = useState<"gentle" | "weekend" | "flexible">("flexible");

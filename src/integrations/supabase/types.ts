@@ -281,6 +281,100 @@ export type Database = {
         }
         Relationships: []
       }
+      reader_bingo_progress: {
+        Row: {
+          board_id: string
+          book_id: string | null
+          cell_index: number
+          completed_at: string | null
+          completed_cycle: number | null
+          user_id: string
+        }
+        Insert: {
+          board_id: string
+          book_id?: string | null
+          cell_index: number
+          completed_at?: string | null
+          completed_cycle?: number | null
+          user_id: string
+        }
+        Update: {
+          board_id?: string
+          book_id?: string | null
+          cell_index?: number
+          completed_at?: string | null
+          completed_cycle?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_bingo_progress_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "reader_bingos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reader_bingo_progress_book_id_completed_cycle_fkey"
+            columns: ["book_id", "completed_cycle"]
+            isOneToOne: false
+            referencedRelation: "completed_readings"
+            referencedColumns: ["book_id", "cycle"]
+          },
+          {
+            foreignKeyName: "reader_bingo_progress_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reader_bingos: {
+        Row: {
+          activated_at: string | null
+          allow_reuse: boolean
+          cells: Json
+          created_at: string
+          ends_on: string | null
+          id: string
+          purpose: string
+          size: number
+          starts_on: string | null
+          state: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          allow_reuse?: boolean
+          cells: Json
+          created_at?: string
+          ends_on?: string | null
+          id?: string
+          purpose?: string
+          size?: number
+          starts_on?: string | null
+          state?: string
+          title: string
+          user_id?: string
+        }
+        Update: {
+          activated_at?: string | null
+          allow_reuse?: boolean
+          cells?: Json
+          created_at?: string
+          ends_on?: string | null
+          id?: string
+          purpose?: string
+          size?: number
+          starts_on?: string | null
+          state?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reader_conversations: {
         Row: {
           answer: string
@@ -582,6 +676,15 @@ export type Database = {
           p_note: string
           p_remove: boolean
           p_zone: string
+        }
+        Returns: undefined
+      }
+      set_bingo_cell: {
+        Args: {
+          p_board: string
+          p_book: string
+          p_complete: boolean
+          p_index: number
         }
         Returns: undefined
       }

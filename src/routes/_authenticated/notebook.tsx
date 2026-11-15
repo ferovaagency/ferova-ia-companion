@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_authenticated/notebook")({
     book: typeof s.book === "string" ? s.book : undefined,
   }),
   head: () => ({
-    meta: [{ title: "Mi cuaderno — Lee con Koa" }, { name: "robots", content: "noindex" }],
+    meta: [{ title: "Mi cuaderno — Lee con Koa" }, { name: "description", content: "Tus citas y notas lectoras privadas." }, { property: "og:title", content: "Mi cuaderno — Lee con Koa" }, { property: "og:description", content: "Conserva las palabras de tus lecturas." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }],
   }),
   component: NotebookPage,
 });

@@ -2,8 +2,9 @@
 
 > Estantería digital con IA: organiza tu TBR, sigue tu velocidad de lectura, respeta el orden de tus sagas y recibe recomendaciones según tu estado de ánimo.
 
-Lee con Koa es un santuario lector privado con un asistente de IA llamado el Oráculo, que recomienda libros y sagas respetando tu progreso y tus gustos. Suscripción de $7 USD al mes vía PayPal.
+Lee con Koa es un espacio lector privado con un asistente de IA llamado el Oráculo, que recomienda libros y sagas según el progreso y los gustos expresados. No distribuye ebooks ni ofrece tratamientos médicos. Los planes de esta ampliación no están definidos.
 
 ## Pages
 
-- [Inicio](/): presentación, demo del Oráculo, precios y FAQ.
+- [Inicio](https://librero-ia.ferova.com.co/): presentación de Lee con Koa.
+- [Preguntas y contacto](https://librero-ia.ferova.com.co/faq): preguntas frecuentes y sugerencias.

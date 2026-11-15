@@ -88,8 +88,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Lee con Koa — Descubre tu próxima lectura" },
       { name: "twitter:description", content: "Estantería digital con IA: organiza tu TBR, sigue tu velocidad de lectura, respeta el orden de tus sagas y recibe recomendaciones según tu estado de ánimo." },
-      { property: "og:image", content: "https://ferova-ia-companion.lovable.app/koa/welcome.webp" },
-      { name: "twitter:image", content: "https://ferova-ia-companion.lovable.app/koa/welcome.webp" },
     ],
     links: [
       {rel:"icon",href:"/koa/favicon.png",type:"image/png"},

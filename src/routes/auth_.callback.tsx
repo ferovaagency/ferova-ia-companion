@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/auth_/callback")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Entrando… · Librero IA" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Entrando… — Lee con Koa" }, { name: "description", content: "Completando tu acceso a Lee con Koa." }, { property: "og:title", content: "Acceso — Lee con Koa" }, { property: "og:description", content: "Retorno seguro a tu espacio lector." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }),
   component: AuthCallback,
 });
 

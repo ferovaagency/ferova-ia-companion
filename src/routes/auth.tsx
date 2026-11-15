@@ -11,10 +11,11 @@ export const Route = createFileRoute("/auth")({
       { name: "description", content: "Inicia sesión o crea tu cuenta en Lee con Koa para acceder a tu estantería personal con IA." },
       { property: "og:title", content: "Entrar a Lee con Koa" },
       { property: "og:description", content: "Accede a tu santuario lector: organiza tu TBR y consulta al Oráculo." },
-      { property: "og:url", content: "https://ferova-ia-companion.lovable.app/auth" },
+      { property: "og:url", content: "https://librero-ia.ferova.com.co/auth" },
+      { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
     ],
     links: [
-      { rel: "canonical", href: "https://ferova-ia-companion.lovable.app/auth" },
+      { rel: "canonical", href: "https://librero-ia.ferova.com.co/auth" },
     ],
   }),
   component: AuthPage,

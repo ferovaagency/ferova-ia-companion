@@ -8,11 +8,12 @@ export const Route = createFileRoute("/blog/mejores-recomendadores-libros-ia")({
       { name: "description", content: "Comparamos los mejores recomendadores de libros con IA: El Oráculo de Lee con Koa vs ChatGPT, Goodreads y otras herramientas automatizadas para lectores." },
       { property: "og:title", content: "Mejores Recomendadores de Libros con IA (Guía 2026)" },
       { property: "og:description", content: "Comparamos los mejores recomendadores de libros con IA: El Oráculo de Lee con Koa vs ChatGPT, Goodreads y otras herramientas automatizadas para lectores." },
-      { property: "og:url", content: "https://ferova-ia-companion.lovable.app/blog/mejores-recomendadores-libros-ia" },
+      { property: "og:url", content: "https://librero-ia.ferova.com.co/blog/mejores-recomendadores-libros-ia" },
+      { name: "twitter:card", content: "summary" },
       { property: "og:type", content: "article" },
     ],
     links: [
-      { rel: "canonical", href: "https://ferova-ia-companion.lovable.app/blog/mejores-recomendadores-libros-ia" },
+      { rel: "canonical", href: "https://librero-ia.ferova.com.co/blog/mejores-recomendadores-libros-ia" },
     ],
     scripts: [
       {
@@ -22,7 +23,6 @@ export const Route = createFileRoute("/blog/mejores-recomendadores-libros-ia")({
           "@type": "BlogPosting",
           "headline": "Mejores Recomendadores de Libros con IA: ¿Cuál es el mejor en 2026?",
           "description": "Comparamos detalladamente el Oráculo de Lee con Koa frente a ChatGPT y los algoritmos tradicionales como Goodreads para ver cuál ofrece las mejores sugerencias automáticas de lectura.",
-          "image": "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b64cbbe9-ab77-47e1-afa0-ac7b6eec9008/id-preview-e402db19--1cab2c8c-222e-4717-8c65-0dfa0737db89.lovable.app-1781111749985.png",
           "author": {
             "@type": "Organization",
             "name": "Lee con Koa"
@@ -32,7 +32,7 @@ export const Route = createFileRoute("/blog/mejores-recomendadores-libros-ia")({
             "name": "Lee con Koa",
             "logo": {
               "@type": "ImageObject",
-              "url": "https://ferova-ia-companion.lovable.app/favicon.ico"
+              "url": "https://librero-ia.ferova.com.co/koa/logo.webp"
             }
           },
           "datePublished": "2026-06-12T12:00:00Z"

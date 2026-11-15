@@ -13,6 +13,10 @@ export const Route = createFileRoute("/_authenticated/discover")({
   head: () => ({
     meta: [
       { title: "Descubre tu próxima lectura — Lee con Koa" },
+      { name: "description", content: "Tres recomendaciones para tus gustos y tu contexto lector actual." },
+      { property: "og:title", content: "Descubrir — Lee con Koa" },
+      { property: "og:description", content: "Elige tu próxima lectura entre tres opciones." },
+      { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
