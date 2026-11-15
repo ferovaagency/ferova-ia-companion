@@ -1,5 +1,5 @@
 # Roadmap
-- [ ] Expansion: Aventuras editor, private persistence, verified completion and original templates (current cycle)
+- [x] Expansion: Aventuras editor, private persistence, verified completion and original templates
 - [ ] Expansion: shared bingo join/copy, oracle cells, reviewed image OCR and source credit
 - [ ] Expansion: catalog-verified Advent, exclusions, local date gates and saved annual discoveries
 - [ ] Expansion: twelve monthly chapters and replaceable suggestions
@@ -8,8 +8,9 @@
 - [ ] Expansion: friends, blocks/reports, clubs, invitations and spoiler discussions
 - [ ] Expansion: joint progress and qualifying group streaks
 - [ ] Expansion: cozy shelf, cover crop/upload and idempotent earned decorations
-- [ ] Expansion: settings/help, creator information and changelog (current cycle)
-- [ ] Expansion: public FAQ/feedback and consistent canonical metadata (current cycle)
+- [x] Expansion: settings/help, creator information and changelog
+- [x] Expansion: public FAQ/feedback and consistent canonical metadata
+- [ ] Acceptance: signed-in Aventuras editor save/reload and mobile/dialog checks (no requesting-user session available)
 - [ ] Expansion: abuse-protected public oracle demo
 - [ ] Expansion: remaining-route accessibility/offline audit and complete integration acceptance
 - [ ] External verification: GitHub main synchronization (agent cannot inspect sync status)
