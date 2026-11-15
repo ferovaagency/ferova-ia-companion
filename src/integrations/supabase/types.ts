@@ -863,6 +863,10 @@ export type Database = {
         Returns: boolean
       }
       import_goodreads: { Args: { p_rows: Json }; Returns: number }
+      install_reader_candidates: {
+        Args: { p_calendar: string; p_entries: Json; p_user: string }
+        Returns: undefined
+      }
       reader_identity: {
         Args: { p_author: string; p_title: string }
         Returns: string
