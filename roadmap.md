@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Cycle 4: OCR/cell oracle, private cropped covers/shelf/rewards, authorized previews, exact chapter ends/rejoin intervals, audit fixes/help and regression evidence
 - [x] Expansion: Aventuras editor, private persistence, verified completion and original templates
 - [x] Expansion: shared bingo discovery/join with individual immutable copies (database tests passed; signed-in browser pending)
 - [ ] Expansion: oracle cells, reviewed image OCR and source credit

@@ -72,14 +72,16 @@ function AuthPage() {
   const handleGoogle = async () => {
     setError(null);
     setLoading(true);
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth/callback" });
-    if (result.error) {
-      setError(result.error.message);
+    try {
+      const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth/callback" });
+      if (result.error) throw new Error(result.error.message);
+      if (result.redirected) return;
+      navigate({ to: "/discover" });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "No pudimos conectar con Google. Inténtalo otra vez.");
+    } finally {
       setLoading(false);
-      return;
     }
-    if (result.redirected) return;
-    navigate({ to: "/discover" });
   };
 
   return (
