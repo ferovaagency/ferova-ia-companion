@@ -13,9 +13,8 @@ Baseline: local HEAD `04c6e88` (Google callback fix), confirmed before edits. Pr
 - [ ] Signed-in browser editor save/reload, mobile grids and keyboard/dialog acceptance: session mint found multiple users; `--self` found no account for the requesting user. No other account was selected without authorization. Sign in in the preview to continue this acceptance.
 
 ## Not yet implemented (next cycles)
-- Shared board discovery, join/copy, club participants; image OCR review/source credit; oracle per-cell options.
-- Unique handles, validated avatar/cover uploads, private-default content-scoped visibility, viewer preview, friends, blocks/reports and clubs.
-- Joint edition-independent percent, spoiler-gated discussion, contribution-based group streak with no duplicate events.
+- Image OCR review/source credit; oracle per-cell options. Shared discovery/copy implemented in cycle 3; live signed-in acceptance remains pending.
+- Named friend/club viewer preview (anonymous public preview implemented); edition-specific chapter boundaries and disjoint rejoin participation intervals.
 - Cozy shelf/list, crop/preview covers, original decor and idempotent reward ledger.
 - Public oracle demo with durable abuse protection; existing private AI endpoints must not be opened. Anti-abuse implementation remains pending, not a fake demo.
 - Whole-app mobile/desktop keyboard, offline, dialogs and integration regression audit.
@@ -62,4 +61,35 @@ Baseline: local HEAD `04c6e88` (Google callback fix), confirmed before edits. Pr
 ## Next cycle priorities
 1. Finish signed-in Aventuras acceptance, then add copy/shared participation, per-cell three-option oracle and reviewed OCR with credit.
 2. Complete signed-in calendar preparation/reveal/save, monthly replacement, list CRUD/reload and rating acceptance with the requesting user's authorized session.
-3. Continue profiles/clubs, shelf/rewards and full acceptance; keep the remaining shared bingo/OCR and protected public-demo work explicit.
+3. Complete social signed-in acceptance and refinements, then shelf/rewards; keep OCR and protected public-demo work explicit.
+
+## Cycle 3 — social privacy, clubs and individual shared adventures
+Starting branch supplied by user: main `61a2c26`; no checkout, manual commit, push or production publish performed. GitHub synchronization remains platform-managed and independently unverified.
+
+### Implemented
+- [x] Separate social profile with unique lowercase @handle, name and editable bio; private by default. Existing account profiles and private books/notebook policies unchanged.
+- [x] Private avatar/cover bucket, 5 MB cap, MIME/extension/path checks in storage policies; browser decodes and re-encodes JPG/PNG/WebP, strips metadata and bounds image dimensions. Private media downloads use viewer RLS and revocable object URLs, not public or long-lived signed URLs.
+- [x] Independent private/friends/specific-club/public visibility for profile and each explicitly shared book, stars, list or active bingo. Explicit consent UI identifies the projection; lists disclose their current and future title membership. No notes, emotion journal, full book metadata, emails or auth fields in projections.
+- [x] Public URL `/u/$handle`, anonymous viewer preview and `/community` for explicitly public profiles/adventures. Public profile metadata remains generic/noindex rather than exposing private profile details.
+- [x] Friend request/accept/reject/cancel/remove, block/unblock and report. Reports are persisted and available to verified admins for review/status actions.
+- [x] Private club create, owner-only invitations/removal, recipient-only invitation acceptance/decline, member leave; role writes RPC-only. Security-definer membership helpers avoid recursive policies.
+- [x] Shared bingo discovery for public/friend/club audience; joining makes one immutable individual active copy with separate owned progress. Existing real-completion RPC and private active board rules reused unchanged.
+- [x] Joint reading created from owner's actual book, optional goal and chapter count; participants select a matching owned edition. Edition-independent percentage derives from actual stored page progress. Comments read/write gated on a proportional chapter threshold and membership; own comment delete available.
+- [x] Group streak and contributions derive only from qualifying reading sessions/direct-finish streak evidence, with deduplicated reader/day aggregation; no reading event or reward created by social actions. Leaving closes participation and retains past qualifying days so others' streak is not erased.
+- [x] Five-nav Discover/Library/Read/Adventures/My refuge; notebook, lists and settings stay reachable. Settings privacy copy updated, mobile header allowed to wrap instead of overflow.
+- [x] Applied additive migrations 0006–0010 once, generated types refreshed by each migration. Live query confirmed all 11 social tables; bucket verified private with 5 MB limit. Corrected joint-author and storage-policy name binding regressions.
+
+### Exact verification
+- `tests/social-database.mjs`: **26 passing assertions**, using isolated authenticated owner/member/friend/outsider plus anonymous roles; fixture setup privileged, behavior assertions not superuser. Covers private default, handle uniqueness, forged ownership, no implicit shelf/notebook publishing, sender acceptance misuse, friend visibility, direct role-write denial, owner/member club roles, wrong-recipient invite misuse, club visibility, exact star projection, privacy revocation, forged sharing, immutable individual copy/retry, foreign/incomplete book rejection, experience without reading, correct joint identity, edition percent, spoiler access, qualifying streak/day dedup, block access, leave revocation/retained streak, media path/MIME/size/revocation and ordinary report visibility/status denial.
+- Existing tests rerun: bingo **19**, discoveries DB **30**, reader DB **13**, timer **8**, discovery rules **5**; previous **75** retained. Total **101** checks.
+- Automatic build/typecheck: **build OK** observed 2026-11-15 21:11:36 UTC (later final result recorded in tool logs).
+- Chromium: 1280×1800 desktop and 390×844 mobile unavailable-profile/public preview safe state, no horizontal overflow; signed-out refuge/club/adventures redirected to auth; FAQ remained available. No page runtime errors. Screenshots inspected. Public community empty state checked separately.
+- Requesting-user session: `lovable auth-session --json --self` returned no matching requesting-user account. No unrelated user's session minted or used. Therefore live signed-in persistence, uploads, friend/member workflows, five-nav layout and dialogs are **not** claimed end-to-end verified; isolated database tests are not a substitute.
+
+### Remaining / known limits
+- [ ] Named friend/club viewer impersonation preview; only true anonymous preview currently offered.
+- [ ] Edition-specific chapter page boundaries: current spoiler gate uses proportional percentage/chapter count, not exact chapter ends. Do not describe this as exact chapter recognition.
+- [ ] Disjoint participation intervals after leave/rejoin: current single joined/left interval retains history but rejoining clears the end. Fine-grained gap exclusion still needs interval history before claiming full rejoin semantics.
+- [ ] Signed-in responsive/keyboard/focus/offline/reload acceptance and live admin report moderation.
+- [ ] OCR/source credit, per-cell oracle, cozy shelf/crop/decor ledger and durable-abuse-protected public oracle demo remain unimplemented. Whole approved expansion is **not** complete.
+- No production publishing; no Google/camera/microphone end-to-end claim.
