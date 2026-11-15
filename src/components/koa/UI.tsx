@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { BookOpen, Library, NotebookPen, Sparkles, LogOut, Settings, Loader2, Compass, List } from "lucide-react";
+import { BookOpen, Library, NotebookPen, Sparkles, LogOut, Settings, Loader2, Compass, List, House } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 export function Koa({
@@ -35,7 +36,7 @@ const tabs = [
   { to: "/library", label: "Biblioteca", icon: Library },
   { to: "/read", label: "Leer", icon: BookOpen },
   { to: "/adventures", label: "Aventuras", icon: Compass },
-  { to: "/notebook", label: "Cuaderno", icon: NotebookPen },
+  { to: "/refuge", label: "Mi refugio", icon: House },
 ] as const;
 export function AppShell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
@@ -55,11 +56,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         <div className="flex gap-2">
+          <Link to="/notebook" search={{ book: undefined }} className="koa-icon" aria-label="Cuaderno" title="Cuaderno"><NotebookPen size={18} /></Link>
           <Link to="/lists" className="koa-icon" aria-label="Mis listas" title="Mis listas"><List size={18} /></Link>
           <Link to="/settings" className="koa-icon" aria-label="Ajustes y ayuda">
             <Settings size={18} />
           </Link>
-          <button
+          <Button variant="ghost" size="icon"
             className="koa-icon"
             aria-label="Cerrar sesión"
             onClick={async () => {
@@ -68,7 +70,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             }}
           >
             <LogOut size={18} />
-          </button>
+          </Button>
         </div>
       </header>
       <div id="main-content" className="koa-container">

@@ -26,7 +26,9 @@ import { Route as AuthenticatedRefugeRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthCallbackRouteImport } from './routes/auth_.callback'
 import { Route as BlogMejoresRecomendadoresLibrosIaRouteImport } from './routes/blog.mejores-recomendadores-libros-ia'
+import { Route as UHandleRouteImport } from './routes/u.$handle'
 import { Route as AuthenticatedBooksBookIdRouteImport } from './routes/_authenticated/books.$bookId'
+import { Route as AuthenticatedClubsClubIdRouteImport } from './routes/_authenticated/clubs.$clubId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -113,10 +115,21 @@ const BlogMejoresRecomendadoresLibrosIaRoute =
     path: '/blog/mejores-recomendadores-libros-ia',
     getParentRoute: () => rootRouteImport,
   } as any)
+const UHandleRoute = UHandleRouteImport.update({
+  id: '/u/$handle',
+  path: '/u/$handle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedBooksBookIdRoute =
   AuthenticatedBooksBookIdRouteImport.update({
     id: '/books/$bookId',
     path: '/books/$bookId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedClubsClubIdRoute =
+  AuthenticatedClubsClubIdRouteImport.update({
+    id: '/clubs/$clubId',
+    path: '/clubs/$clubId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 
@@ -137,7 +150,9 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/mejores-recomendadores-libros-ia': typeof BlogMejoresRecomendadoresLibrosIaRoute
+  '/u/$handle': typeof UHandleRoute
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
+  '/clubs/$clubId': typeof AuthenticatedClubsClubIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -156,7 +171,9 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/blog/mejores-recomendadores-libros-ia': typeof BlogMejoresRecomendadoresLibrosIaRoute
+  '/u/$handle': typeof UHandleRoute
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
+  '/clubs/$clubId': typeof AuthenticatedClubsClubIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -177,7 +194,9 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/auth_/callback': typeof AuthCallbackRoute
   '/blog/mejores-recomendadores-libros-ia': typeof BlogMejoresRecomendadoresLibrosIaRoute
+  '/u/$handle': typeof UHandleRoute
   '/_authenticated/books/$bookId': typeof AuthenticatedBooksBookIdRoute
+  '/_authenticated/clubs/$clubId': typeof AuthenticatedClubsClubIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -198,7 +217,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/auth/callback'
     | '/blog/mejores-recomendadores-libros-ia'
+    | '/u/$handle'
     | '/books/$bookId'
+    | '/clubs/$clubId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -217,7 +238,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/auth/callback'
     | '/blog/mejores-recomendadores-libros-ia'
+    | '/u/$handle'
     | '/books/$bookId'
+    | '/clubs/$clubId'
   id:
     | '__root__'
     | '/'
@@ -237,7 +260,9 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/auth_/callback'
     | '/blog/mejores-recomendadores-libros-ia'
+    | '/u/$handle'
     | '/_authenticated/books/$bookId'
+    | '/_authenticated/clubs/$clubId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -248,6 +273,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   BlogMejoresRecomendadoresLibrosIaRoute: typeof BlogMejoresRecomendadoresLibrosIaRoute
+  UHandleRoute: typeof UHandleRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -371,11 +397,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BlogMejoresRecomendadoresLibrosIaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/u/$handle': {
+      id: '/u/$handle'
+      path: '/u/$handle'
+      fullPath: '/u/$handle'
+      preLoaderRoute: typeof UHandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/books/$bookId': {
       id: '/_authenticated/books/$bookId'
       path: '/books/$bookId'
       fullPath: '/books/$bookId'
       preLoaderRoute: typeof AuthenticatedBooksBookIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/clubs/$clubId': {
+      id: '/_authenticated/clubs/$clubId'
+      path: '/clubs/$clubId'
+      fullPath: '/clubs/$clubId'
+      preLoaderRoute: typeof AuthenticatedClubsClubIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -393,6 +433,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRefugeRoute: typeof AuthenticatedRefugeRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedBooksBookIdRoute: typeof AuthenticatedBooksBookIdRoute
+  AuthenticatedClubsClubIdRoute: typeof AuthenticatedClubsClubIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -407,6 +448,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRefugeRoute: AuthenticatedRefugeRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedBooksBookIdRoute: AuthenticatedBooksBookIdRoute,
+  AuthenticatedClubsClubIdRoute: AuthenticatedClubsClubIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -421,6 +463,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
   BlogMejoresRecomendadoresLibrosIaRoute:
     BlogMejoresRecomendadoresLibrosIaRoute,
+  UHandleRoute: UHandleRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
