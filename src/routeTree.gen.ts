@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAdventuresRouteImport } from './routes/_authenticated/adventures'
 import { Route as AuthenticatedDiscoverRouteImport } from './routes/_authenticated/discover'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
 import { Route as AuthenticatedNotebookRouteImport } from './routes/_authenticated/notebook'
@@ -45,6 +46,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdventuresRoute = AuthenticatedAdventuresRouteImport.update({
+  id: '/adventures',
+  path: '/adventures',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDiscoverRoute = AuthenticatedDiscoverRouteImport.update({
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/adventures': typeof AuthenticatedAdventuresRoute
   '/discover': typeof AuthenticatedDiscoverRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/notebook': typeof AuthenticatedNotebookRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
+  '/adventures': typeof AuthenticatedAdventuresRoute
   '/discover': typeof AuthenticatedDiscoverRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/notebook': typeof AuthenticatedNotebookRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
+  '/_authenticated/adventures': typeof AuthenticatedAdventuresRoute
   '/_authenticated/discover': typeof AuthenticatedDiscoverRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/notebook': typeof AuthenticatedNotebookRoute
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/admin'
+    | '/adventures'
     | '/discover'
     | '/library'
     | '/notebook'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/admin'
+    | '/adventures'
     | '/discover'
     | '/library'
     | '/notebook'
@@ -170,6 +181,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/sitemap.xml'
     | '/_authenticated/admin'
+    | '/_authenticated/adventures'
     | '/_authenticated/discover'
     | '/_authenticated/library'
     | '/_authenticated/notebook'
@@ -224,6 +236,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/adventures': {
+      id: '/_authenticated/adventures'
+      path: '/adventures'
+      fullPath: '/adventures'
+      preLoaderRoute: typeof AuthenticatedAdventuresRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/discover': {
@@ -287,6 +306,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAdventuresRoute: typeof AuthenticatedAdventuresRoute
   AuthenticatedDiscoverRoute: typeof AuthenticatedDiscoverRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedNotebookRoute: typeof AuthenticatedNotebookRoute
@@ -297,6 +317,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAdventuresRoute: AuthenticatedAdventuresRoute,
   AuthenticatedDiscoverRoute: AuthenticatedDiscoverRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedNotebookRoute: AuthenticatedNotebookRoute,
