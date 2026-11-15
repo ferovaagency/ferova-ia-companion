@@ -15,7 +15,7 @@ export async function publicOracle(request: Request) {
   const key=process.env.LOVABLE_API_KEY;if(!key)return Response.json({error:"Demo no disponible ahora."},{status:503});
   const sign=(value:string)=>createHmac("sha256",key).update(`koa-demo:${value}`).digest("hex");
   const cookie=request.headers.get("cookie")?.split(";").map(c=>c.trim()).find(c=>c.startsWith("koa-demo="))?.slice(9)??"";
-  const [id,signature]=cookie.split(".");let visitor=randomUUID();
+  const [id,signature]=cookie.split(".");let visitor:string=randomUUID();
   if(id&&signature&&/^[0-9a-f-]{36}$/.test(id)&&/^[0-9a-f]{64}$/.test(signature)&&timingSafeEqual(Buffer.from(signature),Buffer.from(sign(id))))visitor=id;
   const headers=new Headers({"cache-control":"no-store","set-cookie":`koa-demo=${visitor}.${sign(visitor)}; HttpOnly; SameSite=Strict; Path=/api/public/oracle-demo; Max-Age=86400${new URL(request.url).protocol==="https:"?"; Secure":""}`});
   const {supabaseAdmin}=await import("@/integrations/supabase/client.server");
