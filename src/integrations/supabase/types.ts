@@ -691,18 +691,21 @@ export type Database = {
         Row: {
           book_id: string
           joined_at: string
+          left_at: string | null
           reading_id: string
           user_id: string
         }
         Insert: {
           book_id: string
           joined_at?: string
+          left_at?: string | null
           reading_id: string
           user_id: string
         }
         Update: {
           book_id?: string
           joined_at?: string
+          left_at?: string | null
           reading_id?: string
           user_id?: string
         }
