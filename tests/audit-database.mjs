@@ -69,4 +69,6 @@ await check('unknown pages direct valid finish gets 100 not manipulated status',
 await check('direct media upload now denied to unvalidated callers',async()=>{await assert.rejects(db.query(`insert into storage.objects(bucket_id,name,metadata) values('reader-profile-media',$1,'{"mimetype":"image/webp","size":100}')`,[`${owner}/avatar/unvalidated.webp`]),/row-level/);});
 await check('public demo counters are inaccessible to visitors',async()=>{await assert.rejects(db.exec(`select claim_public_oracle(repeat('a',64))`),/permission/);await assert.rejects(db.exec('select * from reader_demo_budget'),/permission/);});
 await check('demo visitor quota durable three calls and global cap forty atomic',async()=>{await db.exec('reset role');await db.exec('set role service_role');for(let i=0;i<3;i++)await db.exec(`select claim_public_oracle(repeat('a',64))`);await assert.rejects(db.exec(`select claim_public_oracle(repeat('a',64))`),/tres/);for(let i=0;i<37;i++)await db.query('select claim_public_oracle($1)',[(i+1).toString(16).padStart(64,'0')]);await assert.rejects(db.exec(`select claim_public_oracle(repeat('b',64))`),/ocupado/);await db.exec('reset role');assert.equal((await q('select calls from reader_demo_budget'))[0].calls,40);await as(owner);});
-console.log(`${passes} audit database assertions passed`);await db.close();
+export { db, as, q, check, owner, member, outsider, book, edition, foreign };
+console.log(`${passes} audit database assertions passed`);
+if (process.argv[1] && new URL(import.meta.url).pathname === process.argv[1]) await db.close();

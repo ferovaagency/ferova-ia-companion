@@ -137,8 +137,14 @@ function RootComponent() {
       clearPrivateView(queryClient);
       setIdentity(next);
       void Promise.resolve().then(async () => {
-        await router.invalidate();
-        if (version === revision) setSwitching(false);
+        try {
+          await router.invalidate();
+        } catch {
+          // Route error boundaries show load failures; never trap the user in
+          // the identity transition spinner when offline or a loader rejects.
+        } finally {
+          if (version === revision) setSwitching(false);
+        }
       });
     });
     const storage = (e: StorageEvent) => { if (e.key === "koa-permissions-changed") { clearPrivateView(queryClient); void router.invalidate(); } };

@@ -8,6 +8,10 @@ export function clearPrivateView(client: QueryClient) {
 export function revokeViews(client: QueryClient) {
   clearPrivateView(client);
   if (typeof window !== "undefined") {
-    localStorage.setItem("koa-permissions-changed", String(Date.now()));
+    try {
+      localStorage.setItem("koa-permissions-changed", String(Date.now()));
+    } catch {
+      // Storage can be disabled. Same-tab eviction above must still succeed.
+    }
   }
 }

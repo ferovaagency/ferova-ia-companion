@@ -106,3 +106,15 @@ Starting branch supplied by user: main `61a2c26`; no checkout, manual commit, pu
 - [ ] Full server raster decoding/metadata stripping remains pending; server currently validates signature/MIME/size and browser performs decode/re-encode/dimension checks.
 - [ ] Abuse-protected public Oracle demo remains unimplemented. Whole expansion is not complete.
 - No production publication; GitHub sync independently unverified; Google/camera/microphone end-to-end not claimed tested.
+
+## Direct repository follow-up — 2026-11-15 (Bogotá)
+
+- Reviewed main `b686fd5` directly. That commit already contains server raster decoding, public demo quotas, relationship-probe restrictions and identity-cache cleanup; the unchecked cycle-4 entries above describe its earlier state.
+- Added migration `0015_immutable_reward_evidence`: reward eligibility is anchored to each session/completion identity, not recalculated from mutable dates. Correcting or deleting a session retains earned inventory without generating new prizes. Genuine new reading remains eligible; retries and same-day sessions deduplicate.
+- Added private-cover loading/error fallback to the catalog cover and then a labelled placeholder, including rejected downloads and broken public image URLs.
+- Identity transitions release their loading state even when route loading fails. Permission revocation still clears the current tab when browser storage is disabled.
+- Added repository-owned test dependencies, Vitest configuration and `npm test` / `npm run typecheck` commands. Database tests use isolated PGlite with authenticated/anonymous roles, never the production database.
+- Direct Supabase inspection was denied by the connected account. Migration 0015 is **not applied to the hosted database** by this follow-up. Its existing predecessor migrations must already be applied before running it; do not reapply historical migrations.
+- Local Chromium cannot start: its socket operation is denied by the execution environment. No new visual or signed-in browser acceptance is claimed. Google OAuth, physical camera/microphone, real catalog AI flows and complete signed-in mobile/keyboard/offline acceptance remain external checks.
+- No production publish requested or performed.
+- Direct verification: **134 unique checks passed** (16 rule tests; 8 timer checks; 13 reading DB; 19 bingo DB; 30 discovery DB; 44 cumulative audit DB; 4 reward regressions). TypeScript and production build passed. Build reports the existing large-chunk advisory; it is not a build failure.

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { PrivateImage } from "@/components/koa/PrivateImage";
 import { BookOpen } from "lucide-react";
 import type { Book } from "@/types";
@@ -9,11 +10,13 @@ interface BookCoverProps {
 
 
 export function BookCover({ book, className = "w-16 h-24 text-xs" }: BookCoverProps) {
-  if (book.private_cover_path) return <PrivateImage path={book.private_cover_path} alt={`Portada de ${book.title}`} className={`${className} object-cover rounded-md border border-border shrink-0`}/>;
-  if (book.cover_url) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null);
+  if (book.private_cover_path) return <PrivateImage path={book.private_cover_path} alt={`Portada de ${book.title}`} className={`${className} object-cover rounded-md border border-border shrink-0`} fallback={<BookCover book={{ ...book, private_cover_path: null }} className={className} />}/>;
+  if (book.cover_url && book.cover_url !== failedUrl) {
     return (
       <img
         src={book.cover_url}
+        onError={() => setFailedUrl(book.cover_url)}
         alt={`Portada de ${book.title}`}
         className={`${className} object-cover rounded shadow-md border border-border shrink-0`}
         referrerPolicy="no-referrer"
