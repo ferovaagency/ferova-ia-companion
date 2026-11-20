@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Crown, ExternalLink, Loader2 } from "lucide-react";
 import { usePlan } from "@/hooks/use-plan";
 import { FREE_LIMITS, PRICES } from "@/lib/plans";
+import { canShowPurchase } from "@/lib/platform";
 
 function Meter({ label, used, limit }: { label: string; used: number; limit: number }) {
   const pct = Math.min(100, (100 * used) / limit);
@@ -46,7 +47,7 @@ export function PlanCard({ justPaid = false }: { justPaid?: boolean }) {
           )}
           {plan.pro && plan.source !== "whop" && <p className="koa-muted text-sm mt-1">Acceso {plan.source === "courtesy" ? "de cortesía" : plan.source === "admin" ? "de administración" : "otorgado"}.</p>}
         </div>
-        {isFree ? (
+        {!canShowPurchase() ? null : isFree ? (
           <Link to="/pro" className="koa-button"><Crown size={16} />Pasar a Pro</Link>
         ) : plan.manageUrl ? (
           <a href={plan.manageUrl} target="_blank" rel="noreferrer" className="koa-secondary">Administrar o cancelar <ExternalLink size={14} /></a>
@@ -62,6 +63,7 @@ export function PlanCard({ justPaid = false }: { justPaid?: boolean }) {
           <Meter label="Bingos" used={plan.bingos} limit={FREE_LIMITS.bingos} />
         </div>
       )}
+      {isFree && !canShowPurchase() && <p className="koa-muted text-xs">Tu plan se administra desde la web de Lee con Koa.</p>}
       {isFree && <p className="koa-muted text-xs">Las consultas se renuevan el día 1 de cada mes. Registrar lecturas y tus rachas es gratis siempre.</p>}
     </div>
   );

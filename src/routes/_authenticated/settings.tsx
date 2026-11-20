@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageTitle } from "@/components/koa/UI";
 import { FeedbackForm } from "@/components/koa/FeedbackForm";
 import { PlanCard } from "@/components/koa/PlanCard";
+import { DeleteAccount } from "@/components/koa/DeleteAccount";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [
@@ -29,5 +30,6 @@ function Settings() {
     <section className="border-t border-border py-6"><h2>Sobre la creadora</h2><p className="koa-muted mt-3">María Fernanda Calderón / Ferova. Lee con Koa busca ayudarte a elegir una lectura para tu contexto, acompañarte mientras lees y conservar tu progreso real.</p></section>
     <section className="border-t border-border py-6"><h2>Novedades · versión 2026.11.15.4</h2><ul className="list-disc pl-5 koa-muted mt-3"><li>Importación de bingos desde imagen con revisión y crédito; Oráculo por casilla.</li><li>Estantería acogedora, portadas privadas recortadas y objetos por días reales de lectura.</li><li>Listas, sensaciones, calendarios, perfiles, amistades y clubes privados por elección.</li><li>Vista previa de privacidad y conversaciones por páginas finales explícitas de cada capítulo.</li><li>Ajustes, ayuda y contacto disponibles desde la navegación.</li><li>Se conserva la corrección del retorno de Google y las funciones lectoras existentes.</li></ul></section>
     <section className="border-t border-border py-6 max-w-2xl"><h2 className="mb-5">Sugerencias y ayuda</h2><FeedbackForm /></section>
+    <section className="border-t border-border py-6"><h2>Tu cuenta</h2><p className="koa-muted my-4">Puedes eliminar tu cuenta y todos tus datos cuando quieras.</p><DeleteAccount /></section>
   </>;
 }

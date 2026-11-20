@@ -6,6 +6,7 @@ import { BookCover } from "@/components/BookCover";
 import { EditBookModal } from "@/components/EditBookModal";
 import { SessionForm } from "@/components/ReadingJournal";
 import { PageTitle, Loading, ErrorNotice, Empty, Modal } from "@/components/koa/UI";
+import { ShareButton } from "@/components/koa/ShareButton";
 import { userError } from "@/lib/koa-data";
 import type { Book } from "@/types";
 import { BookFeelings } from "@/components/koa/BookFeelings";
@@ -126,6 +127,7 @@ function BookPage() {
             <button className="koa-secondary" onClick={() => setEdit(true)}>
               Editar datos del libro
             </button>
+            {b.status !== "READ" && <ShareButton label="Compartir mi elección" input={{ kind: "chosen", title: b.title, author: b.author }} />}
           </div>
         </div>
       </div>

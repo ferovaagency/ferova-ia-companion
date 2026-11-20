@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Lee con Koa</string>
+    <string name="title_activity_main">Lee con Koa</string>
+    <string name="package_name">co.com.ferova.leeconkoa</string>
+    <string name="custom_url_scheme">co.com.ferova.leeconkoa</string>
+</resources>

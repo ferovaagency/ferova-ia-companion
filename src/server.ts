@@ -37,18 +37,45 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   });
 }
 
+// Cabeceras de seguridad en todas las respuestas. frame-ancestors deja que solo
+// el editor de Lovable incruste la app (vista previa); ningún otro sitio puede
+// meterla en un iframe para engañar clics. La cámara se permite al propio sitio
+// (escáner de ISBN); micrófono y ubicación no se usan.
+const SECURITY_HEADERS: Record<string, string> = {
+  "content-security-policy": "frame-ancestors 'self' https://lovable.dev https://*.lovable.dev https://*.lovable.app; base-uri 'self'; object-src 'none'",
+  "x-content-type-options": "nosniff",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "permissions-policy": "camera=(self), microphone=(), geolocation=(), payment=(), usb=()",
+  "strict-transport-security": "max-age=31536000; includeSubDomains",
+};
+
+function withSecurityHeaders(response: Response): Response {
+  const apply = (r: Response) => {
+    for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+      if (!r.headers.has(name)) r.headers.set(name, value);
+    }
+    return r;
+  };
+  try {
+    return apply(response);
+  } catch {
+    // Cabeceras inmutables (respuestas reenviadas): se copia la respuesta.
+    return apply(new Response(response.body, response));
+  }
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      return withSecurityHeaders(await normalizeCatastrophicSsrResponse(response));
     } catch (error) {
       console.error(error);
-      return new Response(renderErrorPage(), {
+      return withSecurityHeaders(new Response(renderErrorPage(), {
         status: 500,
         headers: { "content-type": "text/html; charset=utf-8" },
-      });
+      }));
     }
   },
 };

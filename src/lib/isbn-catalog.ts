@@ -56,7 +56,7 @@ async function national(isbn: string): Promise<Edition | null> {
 async function openLibrary(isbn: string): Promise<Edition | null> {
   const key = "ISBN:" + isbn;
   const raw = await json("https://openlibrary.org/api/books?format=json&jscmd=data&bibkeys=" + key);
-  const parsed = z.record(z.unknown()).parse(raw);
+  const parsed = z.record(z.string(), z.unknown()).parse(raw);
   if (!(key in parsed)) return null;
   return openEntry.parse(parsed[key]);
 }

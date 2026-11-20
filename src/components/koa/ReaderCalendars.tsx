@@ -7,6 +7,7 @@ import { calendarState, completeAdventChallenge, prepareCalendar, revealWindow, 
 import { ADVENT_BOOK_SLOTS, ADVENT_CHALLENGES, challengeFor, challengeHint } from "@/lib/advent-challenges";
 import { Button } from "@/components/ui/button";
 import { ErrorNotice, Modal } from "./UI";
+import { ShareButton } from "./ShareButton";
 import { BookCover } from "@/components/BookCover";
 import { userError } from "@/lib/koa-data";
 import { monthlyTasks } from "@/lib/reader-discoveries";
@@ -253,7 +254,7 @@ export function ReaderCalendars() {
             {notice && <p role="status" className="text-sm" style={{ color: "var(--adv-mint)" }}>{notice}</p>}
             <div className="flex flex-wrap gap-3">
               {isDone ? (
-                <span className="adv-chip mint"><Check size={12} /> Cumplido</span>
+                <><span className="adv-chip mint"><Check size={12} /> Cumplido</span><ShareButton input={{ kind: "advent-challenge", detail: ch.text }} /></>
               ) : (
                 <Button disabled={!!busy} onClick={() => act("save", async () => { await complete_({ data: { calendar: state.calendar?.id ?? "", slot: challengeSlot, zone } }); setNotice("¡Reto cumplido! Koa lo celebra contigo."); })}>
                   {busy === "save" ? <Loader2 className="animate-spin" /> : <Check />}{ch.kind === "self" ? "Lo hice" : "Comprobar mi reto"}
@@ -297,6 +298,7 @@ export function ReaderCalendars() {
               </Button>
             )}
             <Link className="koa-secondary" to="/lists">Ver mis listas</Link>
+            <ShareButton input={kind === "advent" ? { kind: "advent-book", title: entry.title, author: entry.author ?? undefined, detail: `ventana ${slot}` } : { kind: "monthly", title: entry.title, author: entry.author ?? undefined, detail: MONTHS[slot - 1] }} />
           </div>
         </Modal>
       )}

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { BookOpen, Mail, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { isNativeApp } from "@/lib/platform";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -69,6 +70,11 @@ function AuthPage() {
     }
   };
 
+  // Google bloquea su inicio de sesión dentro de vistas web embebidas (app de tienda):
+  // ahí solo se ofrece correo y contraseña hasta tener el inicio nativo.
+  const [native, setNative] = useState(false);
+  useEffect(() => setNative(isNativeApp()), []);
+
   const handleGoogle = async () => {
     setError(null);
     setLoading(true);
@@ -100,6 +106,7 @@ function AuthPage() {
             {mode === "signin" ? "Continúa con tu lectura." : "Tu santuario personal te espera."}
           </p>
 
+          {!native && <>
           <button
             onClick={handleGoogle}
             disabled={loading}
@@ -113,6 +120,7 @@ function AuthPage() {
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
             <div className="relative flex justify-center"><span className="bg-card px-3 font-mono-label">o</span></div>
           </div>
+          </>}
 
           <form onSubmit={handleEmail} className="space-y-3">
             <div>

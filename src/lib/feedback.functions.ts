@@ -8,11 +8,18 @@ const SubmitInput = z.object({
   email: z.string().email().optional().or(z.literal("")),
 });
 
+// Con sesión: antes cualquiera podía escribir en la tabla con la llave de servicio,
+// saltándose las reglas de la base y sin límite de envíos.
 export const submitFeedback = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => SubmitInput.parse(input))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count } = await supabaseAdmin.from("feedback").select("id", { count: "exact", head: true }).eq("user_id", context.userId).gte("created_at", since);
+    if ((count ?? 0) >= 10) throw new Error("Ya nos enviaste varios mensajes en la última hora. Inténtalo más tarde.");
     const { error } = await supabaseAdmin.from("feedback").insert({
+      user_id: context.userId,
       type: data.type,
       message: data.message.trim(),
       email: data.email ? data.email.toLowerCase().trim() : null,

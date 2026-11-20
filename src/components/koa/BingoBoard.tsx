@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { ErrorNotice, Modal } from "./UI";
 import { CellOracle } from "./CreativeBingo";
+import { ShareButton } from "./ShareButton";
 import { completedLines, describeCell, matchesCell, type BingoDraft } from "@/lib/bingo";
 import type { getBingoProgress, getBingos } from "@/lib/bingo-data";
 import { koaDb, userError } from "@/lib/koa-data";
@@ -64,6 +65,7 @@ export function BingoBoardCard({ board, progress, books, refresh, edit }: { boar
             <Button size="sm" onClick={() => setConfirm("activate")}><Play />Activar</Button>
           </div>
         )}
+        {!draft && <ShareButton input={{ kind: "bingo", detail: board.title, progress: { done: done.size, total, lines: lines.length } }} />}
       </div>
 
       {!draft && (

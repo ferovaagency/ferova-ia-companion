@@ -10,6 +10,7 @@ import { BookCover } from "@/components/BookCover";
 import { Koa, KoaMessage, Loading, ErrorNotice } from "@/components/koa/UI";
 import type { RecommendationOption, RecommendationResult } from "@/types";
 import { Button } from "@/components/ui/button";
+import { ShareButton } from "@/components/koa/ShareButton";
 export const Route = createFileRoute("/_authenticated/discover")({
   head: () => ({
     meta: [
@@ -279,6 +280,7 @@ function Discover() {
                       Guardar en deseos
                     </button>
                   )}
+                  <ShareButton className="koa-secondary mt-2" label="Compartir recomendación" input={{ kind: "oracle", title: b.title, author: b.author }} />
                 </article>
               );
             })}

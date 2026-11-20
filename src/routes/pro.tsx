@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { startCheckout } from "@/lib/plans.functions";
 import { PLAN_ROWS, PRICES, type PlanKind } from "@/lib/plans";
 import { userError } from "@/lib/koa-data";
+import { canShowPurchase } from "@/lib/platform";
 
 const URL_BASE = "https://librero-ia.ferova.com.co";
 export const Route = createFileRoute("/pro")({
@@ -47,6 +48,13 @@ function ProPage() {
       setError(userError(e));
       setBusy("");
     }
+  }
+
+  // En la app de tienda no se vende Pro (pagos externos no permitidos por Apple ni Google).
+  if (typeof window !== "undefined" && !canShowPurchase()) {
+    return (
+      <main className="koa-app"><div className="koa-container py-16 text-center space-y-4"><img src="/koa/read.webp" alt="" className="w-28 mx-auto" /><h1>Tu plan</h1><p className="koa-muted">Puedes ver tu plan y lo que tienes incluido en Ajustes.</p><Link to="/settings" className="koa-button">Ir a Ajustes</Link></div></main>
+    );
   }
 
   return (

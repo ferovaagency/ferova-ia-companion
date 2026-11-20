@@ -6,6 +6,8 @@ import { BookOpen, Library, NotebookPen, Sparkles, LogOut, Settings, Loader2, Co
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ProBanner } from "./ProBanner";
+import { AdventPromo } from "./AdventPromo";
 export function Koa({
   pose = "welcome",
   className = "",
@@ -80,7 +82,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <div id="main-content" className="koa-container">
+        <ProBanner />
         {children}
+        <AdventPromo />
       </div>
       <nav aria-label="Navegación móvil" className="koa-mobile-nav">
         {tabs.map((t) => (
