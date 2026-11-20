@@ -1,8 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { isNativeApp } from "@/lib/platform";
 import { ArrowRight, BookOpen, Sparkles, NotebookPen, ScanLine } from "lucide-react";
 import { PublicOracleDemo } from "@/components/koa/PublicOracleDemo";
 import { Koa } from "@/components/koa/UI";
 export const Route = createFileRoute("/")({
+  // En la app de tienda no hay portada de venta: se entra directo a la app.
+  beforeLoad: () => {
+    if (isNativeApp()) throw redirect({ to: "/discover" });
+  },
   head: () => ({
     meta: [
       { title: "Lee con Koa — Descubre tu próxima lectura" },

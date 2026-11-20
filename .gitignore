@@ -33,3 +33,6 @@ dist-ssr
 
 # Supabase CLI local metadata
 supabase/.temp/
+
+# App de tienda: interfaz compilada (npm run mobile:build)
+mobile/www/

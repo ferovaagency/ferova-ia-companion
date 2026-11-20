@@ -1,26 +1,26 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
-// App de tienda (Play Store / App Store) que carga Lee con Koa desde producción.
-// La app depende de funciones de servidor (Oráculo, planes, Whop), así que no se
-// empaqueta como sitio estático: cada publicación en Lovable llega a la app sin
-// pasar por revisión. mobile/www solo se muestra si no hay conexión.
+// App de tienda (Play Store / App Store).
+// La interfaz va dentro del paquete (npm run mobile:build → mobile/www): abre al instante
+// y no depende de la web para mostrarse. Los datos y las funciones de servidor (Oráculo,
+// planes, Koa) se piden a https://librero-ia.ferova.com.co (src/lib/platform.ts).
+// Un cambio de interfaz requiere volver a compilar y subir la app a las tiendas.
 const config: CapacitorConfig = {
   appId: "co.com.ferova.leeconkoa",
   appName: "Lee con Koa",
   webDir: "mobile/www",
+  backgroundColor: "#14122b",
   server: {
-    url: "https://librero-ia.ferova.com.co",
-    cleartext: false,
-    errorPath: "offline.html",
-    allowNavigation: ["librero-ia.ferova.com.co", "*.supabase.co"],
+    androidScheme: "https",
+    iosScheme: "capacitor",
   },
   android: {
     allowMixedContent: false,
     webContentsDebuggingEnabled: false,
   },
   ios: {
-    contentInset: "automatic",
-    limitsNavigationsToAppBoundDomains: false,
+    contentInset: "never",
+    backgroundColor: "#14122b",
   },
 };
 

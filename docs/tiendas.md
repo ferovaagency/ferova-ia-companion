@@ -1,13 +1,26 @@
 # Lee con Koa en Play Store y App Store
 
-La app de tienda es un contenedor nativo (Capacitor 8) que carga
-`https://librero-ia.ferova.com.co`. Lo que se publica en Lovable llega a la app sin
-pasar otra vez por revisión. Solo hay que volver a subir a las tiendas cuando cambie
-algo nativo: permisos, icono, plugins o versión.
+La app de tienda (Capacitor 8) lleva **la interfaz dentro del paquete**, como Kindle o Goodreads. Abre al instante, sin cargar la web; solo los datos (libros, Oráculo, Koa y planes) se piden a `https://librero-ia.ferova.com.co`.
 
 - Identificador: `co.com.ferova.leeconkoa` (Android `applicationId` e iOS Bundle ID).
 - Proyectos nativos: `android/` (Android Studio) e `ios/` (Xcode, solo en Mac).
-- Sin conexión se muestra `mobile/www/offline.html`.
+- `npm run mobile:build` compila la interfaz en modo de una sola página (`KOA_MOBILE=1` → `_shell.html`), la copia a `mobile/www` y la sincroniza con los dos proyectos. `mobile/www` no se versiona: es resultado del build.
+
+## Cómo habla la app con el servidor
+
+- **Funciones de servidor:** `src/start.ts` usa `nativeAwareFetch` (`src/lib/platform.ts`). Dentro de la app, `/_serverFn/...` va a producción con el token del lector en `Authorization`.
+- **CORS:** `src/lib/native-cors.ts` solo responde a los orígenes de Capacitor (`capacitor://localhost` en iOS, `https://localhost` en Android), solo en `/_serverFn` y `/api/`, y nunca con cookies.
+- **Identificadores de funciones:** `vite.config.ts` los fija con la ruta relativa y el nombre, así coinciden entre el build de Lovable y el de la app. Renombrar o mover una función de servidor rompe las versiones de la app ya instaladas: conviene agregar funciones nuevas y retirar las viejas solo cuando nadie use versiones antiguas.
+- **Orden de publicación:** primero se publica la web en Lovable (trae el CORS), después se compila y prueba la app.
+- **Cambios de interfaz:** ya no llegan solos a la app. Se compila (`npm run mobile:build`) y se sube una versión nueva a las tiendas. Los cambios solo de servidor o de base de datos sí llegan sin actualizar.
+
+## Comportamiento nativo (src/lib/native-shell.ts)
+
+- La portada de venta no aparece: la app entra directo a Descubrir (o a iniciar sesión).
+- El botón «atrás» de Android retrocede y, en la primera pantalla, cierra la app.
+- Los enlaces externos (Amazon, redes, Whop) se abren fuera de la app, y los de `librero-ia.ferova.com.co` dentro.
+- Se respetan la muesca, la isla dinámica y la barra de gestos (`viewport-fit=cover` y `env(safe-area-inset-*)`).
+- Al compartir se abre la hoja nativa del teléfono (`@capacitor/share`).
 
 ## Ya resuelto en el código
 
@@ -16,12 +29,14 @@ algo nativo: permisos, icono, plugins o versión.
 | Sin compras externas dentro de la app (Apple 3.1.1, pagos de Google Play) | `src/lib/platform.ts`: en la app nativa se ocultan los banners Pro, el botón «Pasar a Pro», los precios, la página `/pro` y el enlace a Whop. Quien pagó en la web conserva Pro. |
 | Eliminar la cuenta desde la app (Apple 5.1.1(v), Google Play) | Ajustes → «Eliminar mi cuenta». Usa `src/lib/account.functions.ts` y la migración `0019_delete_reader_account.sql`. |
 | Inicio con Google bloqueado en vistas web | En la app nativa solo aparece correo y contraseña. Por eso tampoco se exige «Iniciar sesión con Apple» (Apple 4.8). |
+| Correos de confirmación con enlace a la web, no a la app |  en . |
+| Correos de confirmación con enlace a la web, no a la app | `appUrl()` en `src/routes/auth.tsx`. |
 | Cámara para el escáner de ISBN | `NSCameraUsageDescription` en `ios/App/App/Info.plist`; permiso `CAMERA` en `AndroidManifest.xml`. |
 | Compartir nativo | `@capacitor/share`; `src/lib/share.ts` lo usa cuando existe. |
 
 ## Pendiente antes de enviar
 
-1. **Aplicar las migraciones 0018 y 0019 en producción.** Sin la 0019, eliminar la cuenta falla.
+1. **Publicar la web en Lovable antes de probar la app.** Trae el CORS que la app necesita. Las migraciones 0018 y 0019 ya están aplicadas.
 2. **Política de privacidad pública.** Las dos tiendas piden una URL, por ejemplo `/privacidad`. Debe decir:
    - qué datos se guardan: correo, biblioteca, notas, fotos y uso de IA;
    - con quién se comparten: Supabase/Lovable Cloud, el proveedor de IA y Whop;
@@ -47,7 +62,7 @@ algo nativo: permisos, icono, plugins o versión.
 Android (Windows o Mac, con Android Studio):
 
 ```powershell
-npm run mobile:sync
+npm run mobile:build
 npm run mobile:android
 ```
 
@@ -56,7 +71,7 @@ En Android Studio: Build → Generate Signed App Bundle → `.aab`. Se sube a Pl
 iOS (solo en Mac, con Xcode):
 
 ```bash
-npm run mobile:sync
+npm run mobile:build
 npm run mobile:ios
 ```
 
@@ -66,4 +81,5 @@ En Xcode: elige el equipo de firma, sube «Version» y «Build», y luego Produc
 
 - Inicio con Google nativo (Credential Manager en Android, Google Sign-In en iOS) y, con él, «Iniciar sesión con Apple».
 - Compras dentro de la app si se quiere vender Pro desde la app: StoreKit, Google Play Billing o RevenueCat, conciliado con la tabla `memberships`.
+- Biblioteca y lectura sin conexión: guardar en el teléfono la caché de React Query de cada lector y borrarla al cerrar sesión.
 - Notificaciones push (`@capacitor/push-notifications`) para la racha y las ventanas del Adviento.

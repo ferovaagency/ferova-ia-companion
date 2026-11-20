@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { clearPrivateView, PRIVACY_EVENT } from "@/lib/privacy-cache";
+import { startNativeShell } from "@/lib/native-shell";
 
 import { supabase } from "@/integrations/supabase/client";
 import appCss from "../styles.css?url";
@@ -78,7 +79,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Lee con Koa — Descubre tu próxima lectura" },
       { name: "description", content: "Estantería digital con IA: organiza tu TBR, sigue tu velocidad de lectura, respeta el orden de tus sagas y recibe recomendaciones según tu estado de ánimo." },
       { name: "author", content: "Lee con Koa" },
@@ -124,6 +125,7 @@ function RootComponent() {
   const router = useRouter();
   const [identity, setIdentity] = useState("initial");
   const [switching, setSwitching] = useState(false);
+  useEffect(() => startNativeShell((path) => router.history.push(path)), [router]);
   useEffect(() => {
     let current: string | undefined;
     let revision = 0;

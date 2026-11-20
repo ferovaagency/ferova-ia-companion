@@ -16,7 +16,8 @@
     "typecheck": "tsc --noEmit",
     "mobile:sync": "cap sync",
     "mobile:android": "cap open android",
-    "mobile:ios": "cap open ios"
+    "mobile:ios": "cap open ios",
+    "mobile:build": "node scripts/build-mobile.mjs"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.48",

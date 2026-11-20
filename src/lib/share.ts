@@ -71,11 +71,17 @@ const capShare = () =>
 /** Hoja nativa: plugin de Capacitor en la app de tienda, Web Share en el navegador. */
 export function nativeShareAvailable() {
   if (typeof window === "undefined") return false;
-  return Boolean(capShare() || typeof navigator.share === "function");
+  const native = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.();
+  return Boolean(native || capShare() || typeof navigator.share === "function");
 }
 
 export async function nativeShare(text: string, url: string) {
   const cap = capShare();
   if (cap) return cap.share({ title: "Lee con Koa", text, url, dialogTitle: "Compartir" });
+  const native = (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform?.();
+  if (native) {
+    const { Share } = await import("@capacitor/share");
+    return Share.share({ title: "Lee con Koa", text, url, dialogTitle: "Compartir" });
+  }
   return navigator.share({ title: "Lee con Koa", text, url });
 }

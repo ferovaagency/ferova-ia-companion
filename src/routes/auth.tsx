@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { BookOpen, Mail, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
-import { isNativeApp } from "@/lib/platform";
+import { appUrl, isNativeApp } from "@/lib/platform";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -57,7 +57,7 @@ function AuthPage() {
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin + "/auth/callback" },
+          options: { emailRedirectTo: appUrl("/auth/callback") },
         });
         if (error) throw error;
         if (data.session) navigate({ to: "/discover" });
