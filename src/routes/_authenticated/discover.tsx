@@ -47,15 +47,6 @@ function Discover() {
   useEffect(() => {
     void currentUser()
       .then(async (u) => {
-        const { data } = await supabase
-          .from("profiles")
-          .select("onboarding_finished_at")
-          .eq("id", u.id)
-          .maybeSingle();
-        if (data && !data.onboarding_finished_at) {
-          void navigate({ to: "/onboarding" });
-          return;
-        }
         const p = await koaDb
           .from("reader_preferences")
           .select("*")

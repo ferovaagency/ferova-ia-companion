@@ -24,6 +24,7 @@ import { enrichBook, recommendBook } from "@/lib/books.functions";
 import { ensureMembership } from "@/lib/membership.functions";
 import { submitFeedback } from "@/lib/feedback.functions";
 import { amazonWishlistUrl } from "@/lib/amazon";
+import { getSessionUser } from "@/lib/session-user";
 
 export const Route = createFileRoute("/_authenticated/library")({
   head: () => ({
@@ -96,19 +97,25 @@ function LibraryPage() {
   // Load user, profile, books
   useEffect(() => {
     (async () => {
-      const { data: u } = await supabase.auth.getUser();
+      const { data: u } = await getSessionUser();
       setUserEmail(u.user?.email ?? null);
       if (!u.user) return;
-      const membership = await ensureMembershipFn().catch(()=>({isAdmin:false}));
-      setIsAdmin(Boolean(membership.isAdmin));
+      // La membresía (cortesías, rol admin) se sincroniza una vez por sesión y sin frenar la carga.
+      const key = `koa-membership-${u.user.id}`;
+      let cached: string | null = null;
+      try { cached = sessionStorage.getItem(key); } catch { /* almacenamiento bloqueado */ }
+      if (cached) setIsAdmin(cached === "admin");
+      else void ensureMembershipFn().then((m) => { setIsAdmin(Boolean(m.isAdmin)); try { sessionStorage.setItem(key, m.isAdmin ? "admin" : "reader"); } catch { /* sin almacenamiento */ } }).catch(() => {});
 
-      const { data: prof } = await supabase.from("profiles").select("reading_goal,onboarding_finished_at").eq("id", u.user.id).maybeSingle();
+      const [{ data: prof }] = await Promise.all([
+        supabase.from("profiles").select("reading_goal,onboarding_finished_at").eq("id", u.user.id).maybeSingle(),
+        refreshAll(),
+      ]);
       if (prof) {
         setGuide(!prof.onboarding_finished_at);
         setReadingGoal(prof.reading_goal);
         setGoalDraft(prof.reading_goal);
       }
-      await refreshAll();
       setLoading(false);
     })().catch(e=>{setActionError(userError(e));setLoading(false);});
 
@@ -153,7 +160,7 @@ function LibraryPage() {
   }
 
   async function finishGuide(){
-    const {data}=await supabase.auth.getUser();
+    const {data}=await getSessionUser();
     if(!data.user)return;
     const {error}=await supabase.from("profiles").update({onboarding_finished_at:new Date().toISOString()}).eq("id",data.user.id).select("id").single();
     if(error){setGuideError("No se pudo guardar la guía. Vuelve a intentarlo.");return;}
@@ -205,7 +212,7 @@ function LibraryPage() {
     setActionError(null);
     try {
       const enriched = await enrich({ data: { title, author: author || undefined } });
-      const { data: u } = await supabase.auth.getUser();
+      const { data: u } = await getSessionUser();
       if (!u.user) return;
       const { error } = await supabase.from("books").insert({
         user_id: u.user.id,
@@ -275,7 +282,7 @@ function LibraryPage() {
   };
 
   const saveGoal = async () => {
-    const { data: u } = await supabase.auth.getUser();
+    const { data: u } = await getSessionUser();
     if (!u.user) return;
     await supabase.from("profiles").update({ reading_goal: goalDraft }).eq("id", u.user.id);
     setReadingGoal(goalDraft);
@@ -330,7 +337,7 @@ function LibraryPage() {
           if (error) throw error;
         }
       } else if (rec.external) {
-        const { data: u } = await supabase.auth.getUser();
+        const { data: u } = await getSessionUser();
         if (!u.user) throw Error();
         const { error } = await supabase.from("books").insert({
           user_id: u.user.id, title: rec.external.title, author: rec.external.author || "Autor desconocido",
@@ -351,7 +358,7 @@ function LibraryPage() {
     if (!rec.external || savingRec) return;
     setSavingRec(true);setRecError("");
     try {
-    const { data: u } = await supabase.auth.getUser();
+    const { data: u } = await getSessionUser();
     if (!u.user) return;
       const { error } = await supabase.from("books").insert({
       user_id: u.user.id,

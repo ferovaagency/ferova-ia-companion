@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { koaDb, userError } from "@/lib/koa-data";
 import { currentUser } from "@/hooks/use-reader";
+import { markOnboarded } from "@/lib/session-user";
 import { supabase } from "@/integrations/supabase/client";
 import { Koa, ErrorNotice } from "@/components/koa/UI";
 export const Route = createFileRoute("/_authenticated/onboarding")({ head: () => ({ meta: [{ title: "Preferencias lectoras — Lee con Koa" }, { name: "description", content: "Elige tu ritmo y tus intereses de lectura." }, { property: "og:title", content: "Preferencias — Lee con Koa" }, { property: "og:description", content: "Tu próxima lectura empieza con tus gustos." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }] }), component: Onboarding });
@@ -46,6 +47,7 @@ function Onboarding() {
         .update({ onboarding_finished_at: new Date().toISOString() })
         .eq("id", u.id);
       if (error) throw error;
+      markOnboarded(u.id);
       await navigate({ to: destination });
     } catch (e) {
       setError(userError(e));

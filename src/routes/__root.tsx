@@ -129,6 +129,13 @@ function RootComponent() {
     let revision = 0;
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       const next = session?.user.id ?? "anonymous";
+      // El primer aviso (INITIAL_SESSION) solo fija la identidad de partida: los datos
+      // ya cargados son de esa misma sesión. Antes se trataba como un cambio de cuenta
+      // y cada carga se repetía entera (vaciar caché, re-montar y volver a consultar).
+      if (current === undefined && event === "INITIAL_SESSION") {
+        current = next;
+        return;
+      }
       if (next === current && event !== "USER_UPDATED") return;
       current = next;
       const version = ++revision;

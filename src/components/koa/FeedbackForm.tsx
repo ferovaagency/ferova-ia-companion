@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ErrorNotice } from "./UI";
+import { getSessionUser } from "@/lib/session-user";
 
 export function FeedbackForm() {
   const [type, setType] = useState("suggestion");
@@ -12,7 +13,7 @@ export function FeedbackForm() {
   return <form className="space-y-4" onSubmit={async (event) => {
     event.preventDefault(); setBusy(true); setError(""); setSent(false);
     try {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await getSessionUser();
       const { error } = await supabase.from("feedback").insert({ type, message: message.trim(), user_id: auth.user?.id ?? null });
       if (error) throw error;
       setSent(true); setMessage("");

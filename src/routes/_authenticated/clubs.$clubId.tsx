@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { PageTitle, ErrorNotice } from "@/components/koa/UI";
 import { getBooks, userError } from "@/lib/koa-data";
 import { summarySchema } from "@/lib/social-data";
+import { getSessionUser } from "@/lib/session-user";
 const clubOptions = (id: string) => ({ queryKey: ["koa-club", id], queryFn: async () => {
   z.string().uuid().parse(id);
-  const [club, members, readings, editions, books, user] = await Promise.all([supabase.from("reader_clubs").select("*").eq("id", id).single(), supabase.from("reader_club_members").select("user_id,role").eq("club_id", id), supabase.from("reader_joint_readings").select("*").eq("club_id", id), supabase.from("reader_joint_participants").select("reading_id,book_id,chapter_ends").is("left_at",null), getBooks(), supabase.auth.getUser()]);
+  const [club, members, readings, editions, books, user] = await Promise.all([supabase.from("reader_clubs").select("*").eq("id", id).single(), supabase.from("reader_club_members").select("user_id,role").eq("club_id", id), supabase.from("reader_joint_readings").select("*").eq("club_id", id), supabase.from("reader_joint_participants").select("reading_id,book_id,chapter_ends").is("left_at",null), getBooks(), getSessionUser()]);
   for (const r of [club,members,readings,editions]) if (r.error) throw r.error;
   if (!club.data) throw new Error("Club no disponible.");
   const summaries = await Promise.all((readings.data ?? []).map(async r => { const summary = await supabase.rpc("reader_joint_summary", { p_reading: r.id }); if (summary.error) throw summary.error; return { id: r.id, ...summarySchema.parse(summary.data) }; }));

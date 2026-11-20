@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionUser } from "@/lib/session-user";
 
 export const profileSchema = z.object({ handle: z.string().regex(/^[a-z0-9_]{3,30}$/), name: z.string().max(100), bio: z.string().max(1200), visibility: z.enum(["private", "friends", "club", "public"]), club_id: z.string().uuid().nullable(), avatar_path: z.string().nullable(), cover_path: z.string().nullable() });
 export type ProfileInput = z.infer<typeof profileSchema>;
@@ -7,7 +8,7 @@ export const connectionSchema = z.array(z.object({ handle: z.string(), state: z.
 export const summarySchema = z.object({ streak: z.number(), my_percent: z.number(), participants: z.array(z.object({ handle: z.string(), percent: z.number().nullable(), days: z.number() })) });
 export const payloadSchema = z.object({ title: z.string(), author: z.string().optional(), stars: z.number().nullable().optional(), description: z.string().optional(), purpose: z.string().optional(), items: z.array(z.object({ title: z.string().nullable(), author: z.string().nullable() })).optional() }).passthrough();
 export async function socialData() {
-  const user = await supabase.auth.getUser();
+  const user = await getSessionUser();
   if (!user.data.user) throw new Error("Inicia sesión.");
   const id = user.data.user.id;
   const [profile, clubs, invites, shares, connections, books, lists, bingos, blocks] = await Promise.all([

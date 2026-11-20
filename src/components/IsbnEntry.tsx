@@ -27,6 +27,7 @@ function toDataUrl(img: HTMLImageElement) {
   return c.toDataURL("image/jpeg", 0.85);
 }
 import type { Edition } from "@/lib/isbn-catalog";
+import { getSessionUser } from "@/lib/session-user";
 const field = "border border-border bg-background px-3 py-2 rounded-sm w-full";
 export function IsbnEntry({
   books,
@@ -59,7 +60,7 @@ export function IsbnEntry({
       if (!found) { setMessage("No reconocí la portada. Prueba con una foto más nítida y de frente."); return; }
       const info = await enrich({ data: { title: found.title, author: found.author || undefined } });
       if (books.some((b) => b.title.toLowerCase() === info.title.toLowerCase())) { setMessage("Ya tienes este libro: " + info.title); return; }
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = (await getSessionUser()).data.user;
       if (!user) throw Error();
       const { error } = await supabase.from("books").insert({ user_id: user.id, ...info });
       if (error) throw error;
@@ -200,7 +201,7 @@ export function IsbnEntry({
     setBusy(true);
     setMessage("");
     try {
-      const user = (await supabase.auth.getUser()).data.user;
+      const user = (await getSessionUser()).data.user;
       if (!user) throw Error("Inicia sesión otra vez.");
       const result = target
         ? await supabase
