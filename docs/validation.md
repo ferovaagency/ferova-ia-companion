@@ -58,3 +58,12 @@ Acceptance: buy with a Whop test/sandbox flow, confirm `memberships.is_paid` and
 `payment_source='whop'`, see «Tu plan» in Ajustes switch to Pro, cancel from the
 manage link and confirm access stays until `current_period_end` and then drops.
 Courtesy, manual and admin access are never downgraded by a Whop cancellation.
+
+## Retos del Adviento (migración 0017)
+
+Apply `drizzle/migrations/0017_advent_challenges.sql` after 0016. Windows
+2,4,7,9,11,14,16,18,21,23 are challenges; the other 14 keep a catalog book.
+Reading challenges are verified against today's real `reading_sessions`
+(pages or minutes) and note challenges against a note saved today; completing
+one never writes reading history or streak days. Calendars prepared before
+this change may hold books in challenge slots: they are ignored, not deleted.

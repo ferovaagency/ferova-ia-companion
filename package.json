@@ -12,7 +12,7 @@
     "format": "prettier --write .",
     "test": "npm run test:rules && npm run test:db",
     "test:rules": "vitest run --config vitest.config.ts",
-    "test:db": "node tests/reader-timer.mjs && node tests/reader-database.mjs && node tests/bingo-database.mjs && node tests/discoveries-database.mjs && node tests/reward-regressions.mjs && node tests/plans-database.mjs",
+    "test:db": "node tests/reader-timer.mjs && node tests/reader-database.mjs && node tests/bingo-database.mjs && node tests/discoveries-database.mjs && node tests/reward-regressions.mjs && node tests/plans-database.mjs && node tests/advent-database.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

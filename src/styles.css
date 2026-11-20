@@ -790,3 +790,8 @@
   .adv-cell, .adv-window, .adv-month, .adv-meter > span { transition: none; }
   .adv-cell:not(:disabled):hover, .adv-window:not(:disabled):hover, .adv-month:not(:disabled):hover { transform: none; }
 }
+.adv-window.challenge { border-style: dashed; border-color: oklch(0.83 0.14 75 / 0.45); background: radial-gradient(circle at 80% 0%, oklch(0.83 0.14 75 / 0.12), transparent 60%), oklch(0.2 0.058 280 / 0.9); }
+.adv-window.challenge .num { color: var(--adv-ember); }
+.adv-window.challenge.locked .num { color: var(--muted-foreground); }
+.adv-window.challenge.done { border-style: solid; border-color: oklch(0.8 0.13 180 / 0.55); background: linear-gradient(150deg, oklch(0.8 0.13 180 / 0.18), oklch(0.22 0.06 280 / 0.9)); }
+.adv-window.challenge.done .num, .adv-window.challenge.done .state { color: var(--adv-mint); }

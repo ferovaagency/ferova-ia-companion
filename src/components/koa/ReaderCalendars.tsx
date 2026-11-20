@@ -2,8 +2,9 @@ import { useId, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Bookmark, Check, Gift, Loader2, Lock, RefreshCw, Sparkles } from "lucide-react";
-import { calendarState, prepareCalendar, revealWindow, saveDiscovery } from "@/lib/calendars.functions";
+import { BookOpen, Bookmark, Check, Footprints, Gift, Loader2, Lock, NotebookPen, RefreshCw, Sparkles } from "lucide-react";
+import { calendarState, completeAdventChallenge, prepareCalendar, revealWindow, saveDiscovery } from "@/lib/calendars.functions";
+import { ADVENT_BOOK_SLOTS, ADVENT_CHALLENGES, challengeFor, challengeHint } from "@/lib/advent-challenges";
 import { Button } from "@/components/ui/button";
 import { ErrorNotice, Modal } from "./UI";
 import { BookCover } from "@/components/BookCover";
@@ -35,14 +36,17 @@ export function ReaderCalendars() {
   const prepare = useServerFn(prepareCalendar);
   const reveal = useServerFn(revealWindow);
   const save = useServerFn(saveDiscovery);
+  const complete_ = useServerFn(completeAdventChallenge);
+  const [challengeSlot, setChallengeSlot] = useState<number>();
   const query = useQuery({ queryKey: ["reader-calendar", kind, year, zone], queryFn: () => read({ data: { kind, year, zone } }) });
   const state = query.data;
-  const total = kind === "advent" ? 24 : 12;
+  const total = kind === "advent" ? ADVENT_BOOK_SLOTS.length : 12;
   const ready = state?.ready ?? 0;
   const complete = ready >= total;
   const local = state?.local;
   const december = !!local && local.month === 12 && local.year === year;
   const opened = kind === "advent" ? (state?.entries.length ?? 0) : 0;
+  const done = kind === "advent" ? (state?.done ?? []) : [];
   const entry = state?.entries.find((e) => e.slot === slot);
   const { isFree } = usePlan();
   const monthlyLocked = kind === "monthly" && isFree;
@@ -71,8 +75,8 @@ export function ReaderCalendars() {
   if (kind === "advent") {
     if (!local) whisper = "Preparando tu calendario…";
     else if (december) whisper = local.day <= 24 ? `Hoy puedes abrir la ventana ${local.day}. Si se te pasó alguna, ábrela cuando quieras: aquí nadie pierde días.` : "El Adviento terminó, pero puedes abrir las ventanas que te falten hasta el 31.";
-    else if (!complete) whisper = "Cuéntame qué te apetece descubrir y preparo 24 libros que todavía no tienes. Las ventanas se abren del 1 al 24 de diciembre.";
-    else whisper = `Tus 24 ventanas están listas. Faltan ${daysUntilDecember(local)} días para abrir la primera.`;
+    else if (!complete) whisper = "Cuéntame qué te apetece descubrir y preparo 14 libros que todavía no tienes. Las otras 10 ventanas traen pequeños retos para leer un poco cada día. Se abren del 1 al 24 de diciembre.";
+    else whisper = `Tus 14 descubrimientos y 10 retos están listos. Faltan ${daysUntilDecember(local)} días para abrir la primera.`;
   } else {
     whisper = complete ? "Un libro y una pequeña propuesta para cada mes. Si una sugerencia no te encaja, pide otra." : "Prepara tus doce capítulos: un libro y una pequeña propuesta para cada mes, sin metas obligatorias.";
   }
@@ -88,12 +92,13 @@ export function ReaderCalendars() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="koa-eyebrow">{kind === "advent" ? `Diciembre ${year}` : `Año ${year}`}</p>
-            <h2 className="text-2xl font-bold">{kind === "advent" ? `24 descubrimientos para leer en ${year + 1}` : "Doce capítulos a tu ritmo"}</h2>
-            <p className="koa-muted mt-2 max-w-2xl">{kind === "advent" ? "Cada ventana guarda un libro que aún no está en tu biblioteca ni en tus deseos. No tienes que terminar un libro cada día." : "Un mes, una lectura sugerida y una pequeña propuesta. Lo que abras queda guardado."}</p>
+            <h2 className="text-2xl font-bold">{kind === "advent" ? `14 descubrimientos y 10 retos lectores` : "Doce capítulos a tu ritmo"}</h2>
+            <p className="koa-muted mt-2 max-w-2xl">{kind === "advent" ? `Las ventanas de libro guardan algo nuevo para leer en ${year + 1}; las de reto, un gesto pequeño para cuidar tu hábito. Ningún reto es obligatorio ni cambia tu racha.` : "Un mes, una lectura sugerida y una pequeña propuesta. Lo que abras queda guardado."}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <span className={`adv-chip ${complete ? "mint" : ""}`}>{complete ? <Check size={12} /> : null}{ready} / {total} preparados</span>
-            {kind === "advent" && opened > 0 && <span className="adv-chip ember">{opened} abiertas</span>}
+            {kind === "advent" && opened > 0 && <span className="adv-chip ember">{opened} libros abiertos</span>}
+            {kind === "advent" && <span className={`adv-chip ${done.length ? "mint" : ""}`}><Footprints size={12} />{done.length} / {ADVENT_CHALLENGES.length} retos</span>}
           </div>
         </div>
 
@@ -135,7 +140,7 @@ export function ReaderCalendars() {
             </fieldset>
             <Button type="submit" disabled={!!busy || query.isLoading}>
               {busy === "prepare" ? <Loader2 className="animate-spin" /> : <Gift />}
-              {busy === "prepare" ? "Koa está buscando en los catálogos…" : ready > 0 ? `Completar los ${total - ready} que faltan` : kind === "advent" ? "Preparar mis 24 ventanas" : "Preparar mis 12 capítulos"}
+              {busy === "prepare" ? "Koa está buscando en los catálogos…" : ready > 0 ? `Completar los ${total - ready} que faltan` : kind === "advent" ? "Preparar mis 14 descubrimientos" : "Preparar mis 12 capítulos"}
             </Button>
           </form>
         )}
@@ -154,6 +159,23 @@ export function ReaderCalendars() {
             const today = december && local?.day === n && !open;
             const proOnly = isFree && n > FREE_LIMITS.adventWindows;
             const canOpen = !!state?.calendar && ready > 0 && unlocked && !proOnly;
+            const challenge = challengeFor(n);
+            if (challenge) {
+              const isDone = done.includes(n);
+              const available = unlocked && !proOnly && !!state?.calendar;
+              return (
+                <button key={n} type="button" disabled={!available || !!busy} onClick={() => setChallengeSlot(n)}
+                  className={`adv-window challenge ${isDone ? "done" : december && local?.day === n ? "today" : unlocked ? "" : "locked"}`}
+                  aria-label={unlocked ? `Ventana ${n}: reto ${challenge.text}${isDone ? ", cumplido" : ""}` : `Ventana ${n}, reto que se abre el ${n} de diciembre`}>
+                  <span className="num">{n}</span>
+                  {unlocked && !proOnly && <span className="text-xs font-semibold leading-snug line-clamp-3 my-2">{challenge.text}</span>}
+                  <span className="state">
+                    {isDone ? <Check size={12} /> : unlocked ? <Footprints size={12} /> : <Lock size={12} />}
+                    {isDone ? "Cumplido" : proOnly && unlocked ? "Con Pro" : unlocked ? "Reto del día" : `Reto · ${n} dic`}
+                  </span>
+                </button>
+              );
+            }
             if (open) {
               return (
                 <button key={n} type="button" className="adv-window opened" disabled={!!busy} aria-label={`Ventana ${n}: ${open.title}`} onClick={() => setSlot(n)}>
@@ -212,6 +234,37 @@ export function ReaderCalendars() {
         </div>
       )}
 
+      {challengeSlot && state?.calendar && (() => {
+        const ch = challengeFor(challengeSlot);
+        if (!ch) return null;
+        const isDone = done.includes(challengeSlot);
+        return (
+          <Modal title={`Ventana ${challengeSlot} · Reto lector`} onClose={() => { if (!busy) { setChallengeSlot(undefined); setNotice(""); setError(""); } }}>
+            <div className="adv-whisper">
+              <img src="/koa/read.webp" alt="" />
+              <div>
+                <p className="label">{isDone ? "Reto cumplido" : "Tu reto de hoy"}</p>
+                <p className="text-base font-semibold">{ch.text}</p>
+                <p className="koa-muted text-sm mt-1">{challengeHint(ch)}</p>
+              </div>
+            </div>
+            <p className="koa-muted text-xs">Los retos son opcionales y no cambian tu racha: la racha solo cuenta tu avance real de lectura.</p>
+            {error && <ErrorNotice>{error}</ErrorNotice>}
+            {notice && <p role="status" className="text-sm" style={{ color: "var(--adv-mint)" }}>{notice}</p>}
+            <div className="flex flex-wrap gap-3">
+              {isDone ? (
+                <span className="adv-chip mint"><Check size={12} /> Cumplido</span>
+              ) : (
+                <Button disabled={!!busy} onClick={() => act("save", async () => { await complete_({ data: { calendar: state.calendar?.id ?? "", slot: challengeSlot, zone } }); setNotice("¡Reto cumplido! Koa lo celebra contigo."); })}>
+                  {busy === "save" ? <Loader2 className="animate-spin" /> : <Check />}{ch.kind === "self" ? "Lo hice" : "Comprobar mi reto"}
+                </Button>
+              )}
+              {(ch.kind === "pages" || ch.kind === "minutes") && !isDone && <Link className="koa-secondary" to="/read" search={{ book: undefined }}><BookOpen size={16} />Ir a Leer</Link>}
+              {ch.kind === "note" && !isDone && <Link className="koa-secondary" to="/notebook" search={{ book: undefined }}><NotebookPen size={16} />Abrir mi cuaderno</Link>}
+            </div>
+          </Modal>
+        );
+      })()}
       {slot && entry && state?.calendar && (
         <Modal title={entry.title} onClose={() => { if (!busy) { setSlot(undefined); setNotice(""); } }}>
           <div className="flex gap-4">
