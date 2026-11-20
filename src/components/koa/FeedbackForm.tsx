@@ -12,7 +12,8 @@ export function FeedbackForm() {
   return <form className="space-y-4" onSubmit={async (event) => {
     event.preventDefault(); setBusy(true); setError(""); setSent(false);
     try {
-      const { error } = await supabase.from("feedback").insert({ type, message: message.trim() });
+      const { data: auth } = await supabase.auth.getUser();
+      const { error } = await supabase.from("feedback").insert({ type, message: message.trim(), user_id: auth.user?.id ?? null });
       if (error) throw error;
       setSent(true); setMessage("");
     } catch { setError("No pudimos enviar tu mensaje. Conservamos el texto para que puedas reintentarlo."); } finally { setBusy(false); }
