@@ -31,6 +31,7 @@ function Home() {
           <span>Lee con Koa</span>
         </Link>
         <nav className="flex items-center gap-4">
+          <Link to="/pro" className="koa-muted">Planes</Link>
           <Link to="/faq" className="koa-muted">Ayuda</Link>
           <a className="koa-muted hidden sm:block" href="#como-funciona">
             Cómo funciona

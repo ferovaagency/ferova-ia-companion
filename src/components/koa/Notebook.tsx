@@ -7,6 +7,8 @@ import { koaDb, userError, type Note } from "@/lib/koa-data";
 import { askKoa } from "@/lib/koa-ai.functions";
 import { ErrorNotice, Empty } from "./UI";
 import { currentUser } from "@/hooks/use-reader";
+import { usePlan } from "@/hooks/use-plan";
+import { Link } from "@tanstack/react-router";
 interface Recognition {
   lang: string;
   continuous: boolean;
@@ -36,6 +38,7 @@ export function Notebook({ books, initialBook }: { books: Book[]; initialBook?: 
   const [busy, setBusy] = useState(false);
   const [search, setSearch] = useState("");
   const [favorites, setFavorites] = useState(false);
+  const { isFree } = usePlan();
   const [more, setMore] = useState(false);
   const [listening, setListening] = useState(false);
   const recognition = useRef<Recognition | null>(null);
@@ -388,10 +391,17 @@ export function Notebook({ books, initialBook }: { books: Book[]; initialBook?: 
           <Star size={16} />
           Favoritas
         </button>
-        <button className="koa-secondary" onClick={() => window.print()}>
-          <Download size={16} />
-          Imprimir / PDF
-        </button>
+        {isFree ? (
+          <Link to="/pro" className="koa-secondary" title="Exportar a PDF es parte de Lee con Koa Pro">
+            <Download size={16} />
+            PDF · Pro
+          </Link>
+        ) : (
+          <button className="koa-secondary" onClick={() => window.print()}>
+            <Download size={16} />
+            Imprimir / PDF
+          </button>
+        )}
       </div>
       <div className="space-y-4">
         {visible.map((n) => (

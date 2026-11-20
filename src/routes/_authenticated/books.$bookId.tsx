@@ -9,6 +9,7 @@ import { PageTitle, Loading, ErrorNotice, Empty, Modal } from "@/components/koa/
 import { userError } from "@/lib/koa-data";
 import type { Book } from "@/types";
 import { BookFeelings } from "@/components/koa/BookFeelings";
+import { Star } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/books/$bookId")({
   head: () => ({
     meta: [{ title: "Tu libro — Lee con Koa" }, { name: "description", content: "Detalles y progreso de tu libro privado." }, { property: "og:title", content: "Tu libro — Lee con Koa" }, { property: "og:description", content: "Tu lectura, tus reseñas y tu cuaderno." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }],
@@ -42,6 +43,19 @@ function BookPage() {
         .from("books")
         .update({ status: "READING", started_reading_at: new Date().toISOString() })
         .eq("id", b.id);
+      if (error) throw error;
+      await refresh();
+    } catch (e) {
+      setFailure(userError(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function rate(user_rating: number | null) {
+    setBusy(true);
+    setFailure("");
+    try {
+      const { error } = await supabase.from("books").update({ user_rating }).eq("id", bookId);
       if (error) throw error;
       await refresh();
     } catch (e) {
@@ -110,17 +124,37 @@ function BookPage() {
               Ver cuaderno
             </Link>
             <button className="koa-secondary" onClick={() => setEdit(true)}>
-              Editar libro y reseña
+              Editar datos del libro
             </button>
           </div>
         </div>
       </div>
-      {b.user_review && (
-        <section className="koa-card mt-5">
-          <h2>Tu reseña {b.user_rating && `· ${b.user_rating}/5`}</h2>
-          <p className="mt-3 whitespace-pre-wrap">{b.user_review}</p>
-        </section>
-      )}
+      <section className="koa-card mt-5" aria-labelledby="book-rating-title">
+        <h2 id="book-rating-title">Cuánto me gustó</h2>
+        <div className="flex flex-wrap items-center gap-1 mt-3" role="group" aria-label="Estrellas opcionales">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              type="button"
+              className="p-1 rounded-sm disabled:opacity-60"
+              disabled={busy}
+              aria-label={`${n} ${n === 1 ? "estrella" : "estrellas"}`}
+              aria-pressed={b.user_rating === n}
+              onClick={() => rate(b.user_rating === n ? null : n)}
+            >
+              <Star className={`w-6 h-6 ${b.user_rating && n <= b.user_rating ? "fill-accent text-accent" : "text-muted-foreground"}`} />
+            </button>
+          ))}
+          <span className="koa-muted ml-2 text-sm">
+            {b.user_rating ? `${b.user_rating}/5 · pulsa la misma estrella para quitarla` : "Sin estrellas todavía"}
+          </span>
+        </div>
+        {b.user_review ? (
+          <p className="mt-4 whitespace-pre-wrap">{b.user_review}</p>
+        ) : (
+          <p className="koa-muted mt-4">Escribe tu reseña en «Valorar y guardar sensaciones», más abajo.</p>
+        )}
+      </section>
       {failure && <ErrorNotice>{failure}</ErrorNotice>}
       <BookFeelings book={b} refresh={refresh} />
       {edit && (

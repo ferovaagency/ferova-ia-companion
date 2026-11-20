@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { claimFeature } from "./plans.functions";
 import { adventUnlocked, localCalendarDate, monthlyTasks, catalogBookSchema, feelingPrompt } from "./reader-discoveries";
 
 const zoneSchema = z.string().min(1).max(100).refine((zone) => { try { localCalendarDate(zone); return true; } catch { return false; } }, "Zona horaria no válida.");
@@ -19,6 +20,19 @@ export const prepareCalendar = createServerFn({ method: "POST" }).middleware([re
   const local = localCalendarDate(data.zone);
   if (data.year !== local.year) throw new Error("Prepara el calendario del año actual según tu fecha local.");
   if (data.replace && data.kind !== "monthly") throw new Error("Las ventanas abiertas no se reemplazan.");
+  if (data.kind === "monthly") await claimFeature(context.supabase, "monthly_calendar");
+  if (!data.replace) {
+    // Un calendario completo no se vuelve a preparar: no gastes una consulta del Oráculo.
+    const total = data.kind === "advent" ? 24 : 12;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const existing = await supabaseAdmin.from("reader_calendars").select("id").eq("user_id", context.userId).eq("kind", data.kind).eq("year", data.year).maybeSingle();
+    if (existing.error) throw existing.error;
+    if (existing.data) {
+      const filled = await supabaseAdmin.from("reader_calendar_entries").select("slot", { count: "exact", head: true }).eq("calendar_id", existing.data.id);
+      if (filled.error) throw filled.error;
+      if ((filled.count ?? 0) >= total) return { ok: true };
+    }
+  }
   const { error: quotaError } = await context.supabase.rpc("claim_koa_request");
   if (quotaError) throw new Error("Has alcanzado el límite temporal del Oráculo. Reintenta más tarde.");
   const { readerContext } = await import("./reader-context.server");

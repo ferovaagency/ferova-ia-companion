@@ -37,3 +37,24 @@ and club then revoke access; switch accounts and verify no stale private data;
 record progress/direct finish and verify streak/reward; leave/rejoin group reading;
 keyboard focus/dialogs and offline recovery at 320/390/desktop widths; camera ISBN
 on a physical device. Automated database tests do not substitute for these flows.
+
+## Planes Gratis / Pro con Whop (migración 0016)
+
+Apply `drizzle/migrations/0016_reader_plans_whop.sql` once, after 0015. It is
+additive: it adds Whop columns to `memberships`, monthly usage counters and the
+free-plan caps (50 books, 3 own lists, 1 bingo, Advent windows 1-3, creating clubs
+and joint readings). Readers who already exceed a cap keep everything; only new
+inserts are limited. Until it is applied, the app keeps working without limits
+(`claimFeature` skips the missing RPC).
+
+Server secrets (Lovable project settings, never in the client or the repo):
+
+- `WHOP_API_KEY` — company API key (scopes: checkout_configuration:create, member:basic:read).
+- `WHOP_WEBHOOK_SECRET` — secret of the webhook pointing to `https://librero-ia.ferova.com.co/api/whop/webhook`, subscribed to `membership.updated` (and `membership.activated`).
+- `WHOP_ACCOUNT_ID` — the `biz_…` id.
+- `WHOP_PLAN_MONTHLY`, `WHOP_PLAN_YEARLY` — the `plan_…` ids (7 USD/month, 70 USD/year).
+
+Acceptance: buy with a Whop test/sandbox flow, confirm `memberships.is_paid` and
+`payment_source='whop'`, see «Tu plan» in Ajustes switch to Pro, cancel from the
+manage link and confirm access stays until `current_period_end` and then drops.
+Courtesy, manual and admin access are never downgraded by a Whop cancellation.

@@ -116,14 +116,14 @@ function AuthPage() {
 
           <form onSubmit={handleEmail} className="space-y-3">
             <div>
-              <label className="font-mono-label block mb-1">Email</label>
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-background border border-border px-3 py-2 rounded-sm focus:outline-none focus:border-foreground text-sm" />
+              <label htmlFor="auth-email" className="font-mono-label block mb-1">Correo</label>
+              <input id="auth-email" autoComplete="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-background border border-border px-3 py-2 rounded-sm focus:outline-none focus:border-foreground text-sm" />
             </div>
             <div>
-              <label className="font-mono-label block mb-1">Contraseña</label>
-              <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-background border border-border px-3 py-2 rounded-sm focus:outline-none focus:border-foreground text-sm" />
+              <label htmlFor="auth-password" className="font-mono-label block mb-1">Contraseña</label>
+              <input id="auth-password" autoComplete={mode === "signin" ? "current-password" : "new-password"} type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-background border border-border px-3 py-2 rounded-sm focus:outline-none focus:border-foreground text-sm" />
             </div>
-            {error && <p className="text-xs text-destructive">{error}</p>}
+            {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
             <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 border border-foreground text-foreground py-3 font-mono-label rounded-sm hover:bg-foreground hover:text-background transition-all disabled:opacity-60">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
               {mode === "signin" ? "Entrar" : "Crear cuenta"}

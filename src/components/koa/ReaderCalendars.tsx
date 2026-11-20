@@ -1,36 +1,252 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
+import { Bookmark, Check, Gift, Loader2, Lock, RefreshCw, Sparkles } from "lucide-react";
 import { calendarState, prepareCalendar, revealWindow, saveDiscovery } from "@/lib/calendars.functions";
 import { Button } from "@/components/ui/button";
-import { ErrorNotice, Loading, Modal } from "./UI";
+import { ErrorNotice, Modal } from "./UI";
 import { BookCover } from "@/components/BookCover";
 import { userError } from "@/lib/koa-data";
 import { monthlyTasks } from "@/lib/reader-discoveries";
-import { Gift, RefreshCw, Bookmark } from "lucide-react";
+import { usePlan } from "@/hooks/use-plan";
+import { FREE_LIMITS } from "@/lib/plans";
+
+type Kind = "advent" | "monthly";
+const MONTHS = Array.from({ length: 12 }, (_, i) => new Intl.DateTimeFormat("es", { month: "long" }).format(new Date(2026, i, 1)));
+
+function daysUntilDecember(local: { year: number; month: number; day: number }) {
+  const today = Date.UTC(local.year, local.month - 1, local.day);
+  return Math.round((Date.UTC(local.year, 11, 1) - today) / 86_400_000);
+}
 
 export function ReaderCalendars() {
-  const [kind, setKind] = useState<"advent" | "monthly">("advent");
+  const uid = useId();
+  const [kind, setKind] = useState<Kind>("advent");
   const [direction, setDirection] = useState<"similar" | "different">("similar");
-  const [request, setRequest] = useState(""); const [busy, setBusy] = useState(false); const [error, setError] = useState(""); const [notice, setNotice] = useState(""); const [slot, setSlot] = useState<number>();
+  const [request, setRequest] = useState("");
+  const [busy, setBusy] = useState<"prepare" | "open" | "save" | "replace" | "">("");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [slot, setSlot] = useState<number>();
   const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const year = Number(new Intl.DateTimeFormat("en", { timeZone: zone, year: "numeric" }).format(new Date()));
-  const read = useServerFn(calendarState); const prepare = useServerFn(prepareCalendar); const reveal = useServerFn(revealWindow); const save = useServerFn(saveDiscovery);
+  const read = useServerFn(calendarState);
+  const prepare = useServerFn(prepareCalendar);
+  const reveal = useServerFn(revealWindow);
+  const save = useServerFn(saveDiscovery);
   const query = useQuery({ queryKey: ["reader-calendar", kind, year, zone], queryFn: () => read({ data: { kind, year, zone } }) });
-  async function act(fn: () => Promise<void>) { setBusy(true); setError(""); setNotice(""); try { await fn(); await query.refetch(); } catch (e) { setError(userError(e)); } finally { setBusy(false); } }
   const state = query.data;
+  const total = kind === "advent" ? 24 : 12;
+  const ready = state?.ready ?? 0;
+  const complete = ready >= total;
+  const local = state?.local;
+  const december = !!local && local.month === 12 && local.year === year;
+  const opened = kind === "advent" ? (state?.entries.length ?? 0) : 0;
   const entry = state?.entries.find((e) => e.slot === slot);
-  const months = Array.from({ length: 12 }, (_, i) => new Intl.DateTimeFormat("es", { month: "long" }).format(new Date(2026, i, 1)));
-  return <section className="border-t border-border py-8 mb-8"><div className="flex flex-wrap gap-3 mb-5"><Button variant={kind === "advent" ? "default" : "secondary"} aria-pressed={kind === "advent"} onClick={() => { setKind("advent"); setSlot(undefined); }}>Adviento</Button><Button variant={kind === "monthly" ? "default" : "secondary"} aria-pressed={kind === "monthly"} onClick={() => { setKind("monthly"); setSlot(undefined); }}>12 capítulos del año</Button><Link className="koa-secondary" to="/lists">Mis listas</Link></div>
-    <h2>{kind === "advent" ? `24 descubrimientos para tus lecturas de ${year + 1}` : `Mis doce capítulos de ${year}`}</h2><p className="koa-muted my-4">{kind === "advent" ? "Libros distintos que aún no están en tu biblioteca ni en tus deseos. No tienes que terminar un libro cada día." : "Una lectura y una pequeña propuesta por mes, a tu ritmo. Puedes cambiar las sugerencias."}</p>
-    {kind === "advent" && state?.local.month !== 12 && <p className="koa-message mb-4">Preparación para diciembre. Las ventanas se abrirán del 1 al 24 según tu fecha local; podrás ponerte al día hasta el 31.</p>}
-    <label className="block my-3">¿Qué te apetece descubrir?<input className="koa-field" maxLength={1500} value={request} onChange={(e) => setRequest(e.target.value)} placeholder="Mis próximos mundos, autores y sensaciones…" /></label>
-    <fieldset className="my-4"><legend className="mb-2">Mis sensaciones guardadas</legend><div className="flex flex-wrap gap-2"><Button variant={direction === "similar" ? "default" : "secondary"} aria-pressed={direction === "similar"} onClick={() => setDirection("similar")}>Una sensación parecida</Button><Button variant={direction === "different" ? "default" : "secondary"} aria-pressed={direction === "different"} onClick={() => setDirection("different")}>Algo diferente</Button></div></fieldset>
-    <Button disabled={busy} onClick={() => act(async () => { await prepare({ data: { kind, year, zone, request, direction } }); setNotice("Calendario preparado con libros verificados."); })}><Gift />{busy ? "Koa está buscando en los catálogos…" : `Preparar ${kind === "advent" ? "mis 24 ventanas" : "mis capítulos"}`}</Button>
-    {state && <p className="koa-muted mt-3">{state.ready} / {kind === "advent" ? 24 : 12} descubrimientos preparados</p>}{error && <ErrorNotice>{error}</ErrorNotice>}{query.error && <ErrorNotice>{userError(query.error)}</ErrorNotice>}{notice && <p role="status" className="my-4">{notice}</p>}{query.isLoading && <Loading />}
-    <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3 my-6">{Array.from({ length: kind === "advent" ? 24 : 12 }, (_, i) => i + 1).map((number) => { const opened = state?.entries.find((e) => e.slot === number); const unlocked = kind === "monthly" || !!state && state.local.month === 12 && state.local.year === year && state.local.day >= number; return <Button variant="secondary" key={number} className="h-auto min-h-28 flex flex-col whitespace-normal break-words px-2" disabled={busy || !state?.calendar || !unlocked || state.ready === 0} onClick={() => act(async () => { if (kind === "advent" && !opened) { await reveal({ data: { calendar: state?.calendar?.id ?? "", slot: number, zone } }); } setSlot(number); })}><span className="text-lg text-primary">{kind === "advent" ? number : months[number - 1]}</span><span className="text-xs">{opened ? opened.title : unlocked ? "Por descubrir" : "En diciembre"}</span></Button>; })}</div>
-    {kind === "monthly" && <div className="grid sm:grid-cols-2 gap-3">{monthlyTasks.map((task, i) => <p key={task} className="koa-muted">{months[i]} · {task}</p>)}</div>}
-    {slot && entry && state?.calendar && <Modal title={entry.title} onClose={() => { if (!busy) setSlot(undefined); }}><div className="flex gap-4 my-5"><BookCover book={entry} className="w-24 h-36 shrink-0" /><div><p>{entry.author}</p><p className="koa-muted mt-3">{entry.description || "Sin sinopsis disponible en el catálogo."}</p><p className="koa-muted mt-2">{entry.isbn ? `ISBN ${entry.isbn}` : entry.catalog_id}</p></div></div>{entry.task && <p className="koa-message my-4">{entry.task}</p>}{error && <ErrorNotice>{error}</ErrorNotice>}<div className="flex flex-wrap gap-3"><Button disabled={busy} onClick={() => act(async () => { await save({ data: { calendar: state.calendar?.id ?? "", slot } }); setNotice(`Guardado en deseos y Lecturas para ${kind === "advent" ? year + 1 : year}.`); })}><Bookmark />{entry.saved_wish_id ? "Guardado · guardar de nuevo" : "Guardar en deseos y lista"}</Button>{kind === "monthly" && <Button variant="secondary" disabled={busy} onClick={() => act(async () => { await prepare({ data: { kind, year, zone, request, direction, replace: slot } }); })}><RefreshCw />Otra sugerencia</Button>}</div>{notice && <p role="status" className="mt-4">{notice}</p>}</Modal>}
-  </section>;
+  const { isFree } = usePlan();
+  const monthlyLocked = kind === "monthly" && isFree;
+
+  async function act(kindOfBusy: typeof busy, fn: () => Promise<void>) {
+    setBusy(kindOfBusy);
+    setError("");
+    setNotice("");
+    try {
+      await fn();
+      await query.refetch();
+    } catch (e) {
+      setError(userError(e));
+    } finally {
+      setBusy("");
+    }
+  }
+  const switchKind = (next: Kind) => {
+    setKind(next);
+    setSlot(undefined);
+    setError("");
+    setNotice("");
+  };
+
+  let whisper: string;
+  if (kind === "advent") {
+    if (!local) whisper = "Preparando tu calendario…";
+    else if (december) whisper = local.day <= 24 ? `Hoy puedes abrir la ventana ${local.day}. Si se te pasó alguna, ábrela cuando quieras: aquí nadie pierde días.` : "El Adviento terminó, pero puedes abrir las ventanas que te falten hasta el 31.";
+    else if (!complete) whisper = "Cuéntame qué te apetece descubrir y preparo 24 libros que todavía no tienes. Las ventanas se abren del 1 al 24 de diciembre.";
+    else whisper = `Tus 24 ventanas están listas. Faltan ${daysUntilDecember(local)} días para abrir la primera.`;
+  } else {
+    whisper = complete ? "Un libro y una pequeña propuesta para cada mes. Si una sugerencia no te encaja, pide otra." : "Prepara tus doce capítulos: un libro y una pequeña propuesta para cada mes, sin metas obligatorias.";
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="adv-tabs" role="tablist" aria-label="Tipo de calendario">
+        <button type="button" role="tab" aria-selected={kind === "advent"} className="adv-tab" onClick={() => switchKind("advent")}><Gift size={16} />Adviento con Koa</button>
+        <button type="button" role="tab" aria-selected={kind === "monthly"} className="adv-tab" onClick={() => switchKind("monthly")}><Sparkles size={16} />Un año de lecturas</button>
+      </div>
+
+      <section className="adv-pebble space-y-5">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="koa-eyebrow">{kind === "advent" ? `Diciembre ${year}` : `Año ${year}`}</p>
+            <h2 className="text-2xl font-bold">{kind === "advent" ? `24 descubrimientos para leer en ${year + 1}` : "Doce capítulos a tu ritmo"}</h2>
+            <p className="koa-muted mt-2 max-w-2xl">{kind === "advent" ? "Cada ventana guarda un libro que aún no está en tu biblioteca ni en tus deseos. No tienes que terminar un libro cada día." : "Un mes, una lectura sugerida y una pequeña propuesta. Lo que abras queda guardado."}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <span className={`adv-chip ${complete ? "mint" : ""}`}>{complete ? <Check size={12} /> : null}{ready} / {total} preparados</span>
+            {kind === "advent" && opened > 0 && <span className="adv-chip ember">{opened} abiertas</span>}
+          </div>
+        </div>
+
+        <div className="adv-whisper">
+          <img src="/koa/meditate.webp" alt="" />
+          <div>
+            <p className="label">Koa te cuenta</p>
+            <p>{whisper}</p>
+          </div>
+        </div>
+
+        {monthlyLocked && (
+          <div className="flex flex-wrap items-center gap-3">
+            <p className="koa-muted text-sm">«Un año de lecturas» es parte de Lee con Koa Pro.</p>
+            <Link to="/pro" className="koa-button">Ver Lee con Koa Pro</Link>
+          </div>
+        )}
+        {!complete && !monthlyLocked && (
+          <form
+            className="space-y-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void act("prepare", async () => {
+                await prepare({ data: { kind, year, zone, request, direction } });
+                setNotice(kind === "advent" ? "Listo. Tus ventanas están preparadas con libros verificados." : "Listo. Tus capítulos están preparados.");
+              });
+            }}
+          >
+            <div>
+              <label htmlFor={`${uid}-request`} className="koa-label">¿Qué te apetece descubrir?</label>
+              <input id={`${uid}-request`} className="koa-field" maxLength={1500} value={request} onChange={(e) => setRequest(e.target.value)} placeholder="Ej. fantasía acogedora, autoras latinoamericanas, historias breves…" />
+            </div>
+            <fieldset>
+              <legend className="koa-label">Según lo que ya valoraste, prefieres…</legend>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" className={`koa-chip ${direction === "similar" ? "active" : ""}`} aria-pressed={direction === "similar"} onClick={() => setDirection("similar")}>Sentir algo parecido</button>
+                <button type="button" className={`koa-chip ${direction === "different" ? "active" : ""}`} aria-pressed={direction === "different"} onClick={() => setDirection("different")}>Buscar otra cosa</button>
+              </div>
+            </fieldset>
+            <Button type="submit" disabled={!!busy || query.isLoading}>
+              {busy === "prepare" ? <Loader2 className="animate-spin" /> : <Gift />}
+              {busy === "prepare" ? "Koa está buscando en los catálogos…" : ready > 0 ? `Completar los ${total - ready} que faltan` : kind === "advent" ? "Preparar mis 24 ventanas" : "Preparar mis 12 capítulos"}
+            </Button>
+          </form>
+        )}
+        {error && <ErrorNotice>{error}</ErrorNotice>}
+        {query.error && <ErrorNotice>{userError(query.error)}</ErrorNotice>}
+        {notice && !slot && <p role="status" className="text-sm" style={{ color: "var(--adv-mint)" }}>{notice}</p>}
+      </section>
+
+      {query.isLoading ? (
+        <p role="status" className="koa-muted flex items-center gap-2"><Loader2 className="animate-spin" size={16} /> Cargando tu calendario…</p>
+      ) : kind === "advent" ? (
+        <div className="adv-windows">
+          {Array.from({ length: 24 }, (_, i) => i + 1).map((n) => {
+            const open = state?.entries.find((e) => e.slot === n);
+            const unlocked = december && !!local && local.day >= n;
+            const today = december && local?.day === n && !open;
+            const proOnly = isFree && n > FREE_LIMITS.adventWindows;
+            const canOpen = !!state?.calendar && ready > 0 && unlocked && !proOnly;
+            if (open) {
+              return (
+                <button key={n} type="button" className="adv-window opened" disabled={!!busy} aria-label={`Ventana ${n}: ${open.title}`} onClick={() => setSlot(n)}>
+                  <BookCover book={open} className="cover-fallback" />
+                  <span className="badge adv-chip mint">{n}</span>
+                  <span className="shade">{open.title}</span>
+                </button>
+              );
+            }
+            return (
+              <button
+                key={n}
+                type="button"
+                disabled={!canOpen || !!busy}
+                className={`adv-window ${today ? "today" : unlocked ? "" : "locked"}`}
+                aria-label={unlocked ? `Abrir la ventana ${n}` : `Ventana ${n}, se abre el ${n} de diciembre`}
+                onClick={() => act("open", async () => { await reveal({ data: { calendar: state?.calendar?.id ?? "", slot: n, zone } }); setSlot(n); })}
+              >
+                <span className="num">{n}</span>
+                <span className="state">
+                  {busy === "open" && unlocked ? <Loader2 size={12} className="animate-spin" /> : unlocked ? <Gift size={12} /> : <Lock size={12} />}
+                  {!state?.calendar || ready === 0 ? "Sin preparar" : proOnly ? "Con Pro" : today ? "¡Ábrela hoy!" : unlocked ? "Lista para abrir" : `${n} dic`}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="adv-months">
+          {MONTHS.map((name, i) => {
+            const month = i + 1;
+            const e = state?.entries.find((x) => x.slot === month);
+            const current = local?.year === year && local.month === month;
+            const past = local?.year === year && local.month > month;
+            return (
+              <button key={name} type="button" className={`adv-month ${current ? "current" : ""} ${past ? "past" : ""}`} disabled={!e || !!busy} onClick={() => setSlot(month)} aria-label={`${name}: ${e ? e.title : "sin preparar"}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="name">{name}</span>
+                  {current && <span className="adv-chip ember">Este mes</span>}
+                </div>
+                <p className="koa-muted text-sm">{e?.task || monthlyTasks[i]}</p>
+                {e ? (
+                  <div className="book">
+                    <BookCover book={e} className="w-[42px] h-[62px] text-[0.5rem]" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold leading-snug line-clamp-2">{e.title}</p>
+                      <p className="koa-muted text-xs truncate">{e.author}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="koa-muted text-xs mt-auto inline-flex items-center gap-1"><Lock size={12} /> Por preparar</p>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {slot && entry && state?.calendar && (
+        <Modal title={entry.title} onClose={() => { if (!busy) { setSlot(undefined); setNotice(""); } }}>
+          <div className="flex gap-4">
+            <BookCover book={entry} className="w-24 h-36 shrink-0" />
+            <div className="min-w-0">
+              <p className="font-semibold">{entry.author}</p>
+              <p className="koa-muted text-xs mt-1">{kind === "advent" ? `Ventana ${slot}` : MONTHS[slot - 1]}{entry.isbn ? ` · ISBN ${entry.isbn}` : ""}</p>
+              <p className="koa-muted text-sm mt-3 line-clamp-[8]">{entry.description || "El catálogo no trae sinopsis para este libro."}</p>
+            </div>
+          </div>
+          {entry.task && (
+            <div className="adv-whisper mt-2">
+              <img src="/koa/read.webp" alt="" />
+              <div><p className="label">Propuesta del mes</p><p>{entry.task}</p></div>
+            </div>
+          )}
+          {error && <ErrorNotice>{error}</ErrorNotice>}
+          {notice && <p role="status" className="text-sm" style={{ color: "var(--adv-mint)" }}>{notice}</p>}
+          <div className="flex flex-wrap gap-3 mt-2">
+            {entry.saved_wish_id ? (
+              <span className="adv-chip mint"><Check size={12} /> Ya está en tus deseos</span>
+            ) : (
+              <Button disabled={!!busy} onClick={() => act("save", async () => { await save({ data: { calendar: state.calendar?.id ?? "", slot } }); setNotice(`Guardado en tus deseos y en la lista «Lecturas para ${kind === "advent" ? year + 1 : year}».`); })}>
+                {busy === "save" ? <Loader2 className="animate-spin" /> : <Bookmark />}Guardar en mis deseos
+              </Button>
+            )}
+            {kind === "monthly" && (
+              <Button variant="secondary" disabled={!!busy} onClick={() => act("replace", async () => { await prepare({ data: { kind, year, zone, request, direction, replace: slot } }); setNotice("Te traje otra sugerencia para este mes."); })}>
+                {busy === "replace" ? <Loader2 className="animate-spin" /> : <RefreshCw />}Otra sugerencia
+              </Button>
+            )}
+            <Link className="koa-secondary" to="/lists">Ver mis listas</Link>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
 }

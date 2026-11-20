@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { EnrichedBook, RecommendationResult } from "@/types";
 import { feelingPrompt } from "./reader-discoveries";
 import { generateChatCompletion } from "@lovable.dev/ai-gateway";
+import { claimFeature } from "./plans.functions";
 
 /* ---------- cover fetching helpers (no AI key needed) ---------- */
 type CatalogMetadata = Partial<EnrichedBook> & { language?: string | null };
@@ -232,6 +233,7 @@ export const recommendBook = createServerFn({ method: "POST" })
     try {
       const { error: quotaError } = await context.supabase.rpc("claim_koa_request");
       if (quotaError) return { options: [], reasoning: "Has alcanzado el límite temporal del Oráculo. Reintenta más tarde.", errorType: "QUOTA_EXHAUSTED" };
+      try { await claimFeature(context.supabase, "oracle"); } catch (limit) { return { options: [], reasoning: limit instanceof Error ? limit.message : "Límite del plan gratis alcanzado.", errorType: "QUOTA_EXHAUSTED" }; }
       const { readerContext } = await import("./reader-context.server");
       const reader = await readerContext(context.supabase, context.userId);
       // Never trust the caller's shelf, ratings or emotional signals.
@@ -315,6 +317,7 @@ export const identifyCover = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => CoverInput.parse(input))
   .handler(async ({ data, context }): Promise<{ title: string; author: string } | null> => {
     const {decodeImage}=await import("./image-decode.server");const clean=decodeImage(data.image);
+    await claimFeature(context.supabase, "cover_vision");
     const quota=await context.supabase.rpc("claim_koa_request");if(quota.error)throw new Error("Has alcanzado el límite de consultas.");
     const key = process.env.LOVABLE_API_KEY;
     if (!key) return null;

@@ -483,12 +483,12 @@ function LibraryPage() {
             <IsbnEntry books={books} saved={refreshBooks}/>
             <form onSubmit={handleQuickAdd} className="space-y-3">
               <div>
-                <label className="font-mono-label block mb-1">Título</label>
-                <input name="title" required className="w-full bg-background border border-border px-3 py-2 rounded-sm text-sm focus:outline-none focus:border-foreground" />
+                <label htmlFor="quick-title" className="font-mono-label block mb-1">Título</label>
+                <input id="quick-title" name="title" required className="w-full bg-background border border-border px-3 py-2 rounded-sm text-sm focus:outline-none focus:border-foreground" />
               </div>
               <div>
-                <label className="font-mono-label block mb-1">Autor (opcional)</label>
-                <input name="author" className="w-full bg-background border border-border px-3 py-2 rounded-sm text-sm focus:outline-none focus:border-foreground" />
+                <label htmlFor="quick-author" className="font-mono-label block mb-1">Autor (opcional)</label>
+                <input id="quick-author" name="author" className="w-full bg-background border border-border px-3 py-2 rounded-sm text-sm focus:outline-none focus:border-foreground" />
               </div>
               <div className="flex gap-3 pt-3">
                 <button type="button" onClick={() => setIsAdding(false)} disabled={enriching} className="flex-1 border border-border py-3 font-mono-label rounded-sm hover:bg-muted">Cancelar</button>
@@ -700,22 +700,22 @@ function FeedbackModal({ email, onClose }: { email: string | null; onClose: () =
       ) : (
         <form onSubmit={send} className="space-y-3">
           <div>
-            <label className="font-mono-label block mb-1">Tipo</label>
-            <div className="flex gap-2">
+            <p id="feedback-type" className="font-mono-label block mb-1">Tipo</p>
+            <div className="flex gap-2" role="group" aria-labelledby="feedback-type">
               {(["suggestion", "bug", "other"] as const).map((t) => (
-                <button key={t} type="button" onClick={() => setType(t)} className={`text-xs font-mono-label px-3 py-2 rounded-sm border ${type === t ? "bg-foreground text-background border-foreground" : "border-border hover:bg-muted"}`}>
+                <button key={t} type="button" onClick={() => setType(t)} aria-pressed={type === t} className={`text-xs font-mono-label px-3 py-2 rounded-sm border ${type === t ? "bg-foreground text-background border-foreground" : "border-border hover:bg-muted"}`}>
                   {t === "suggestion" ? "Sugerencia" : t === "bug" ? "Error" : "Otro"}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <label className="font-mono-label block mb-1">Mensaje</label>
-            <textarea required minLength={5} value={message} onChange={(e) => setMessage(e.target.value)} rows={5} className="w-full bg-background border border-border px-3 py-2 rounded-sm text-sm focus:outline-none focus:border-foreground font-serif" />
+            <label htmlFor="feedback-message" className="font-mono-label block mb-1">Mensaje</label>
+            <textarea id="feedback-message" required minLength={5} value={message} onChange={(e) => setMessage(e.target.value)} rows={5} className="w-full bg-background border border-border px-3 py-2 rounded-sm text-sm focus:outline-none focus:border-foreground font-serif" />
           </div>
           <div>
-            <label className="font-mono-label block mb-1">Email de contacto (opcional)</label>
-            <input type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className="w-full bg-background border border-border px-3 py-2 rounded-sm text-sm focus:outline-none focus:border-foreground" />
+            <label htmlFor="feedback-email" className="font-mono-label block mb-1">Correo de contacto (opcional)</label>
+            <input id="feedback-email" type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className="w-full bg-background border border-border px-3 py-2 rounded-sm text-sm focus:outline-none focus:border-foreground" />
           </div>
           {err && <p className="text-xs text-destructive">{err}</p>}
           <div className="flex gap-3 pt-2">

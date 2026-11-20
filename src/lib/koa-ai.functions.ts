@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { KoaDatabase } from "./koa-data";
+import { claimFeature } from "./plans.functions";
 const Input = z
   .object({
     bookId: z.string().uuid(),
@@ -34,6 +35,7 @@ export const askKoa = createServerFn({ method: "POST" })
       throw new Error(
         "Koa no está disponible en este momento. Puedes seguir leyendo y guardando tus notas.",
       );
+    await claimFeature(db, data.mode === "ocr" ? "koa_ocr" : "koa_chat");
     const { error: quota } = await db.rpc("claim_koa_request");
     if (quota)
       throw new Error(

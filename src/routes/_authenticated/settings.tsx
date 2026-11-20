@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageTitle } from "@/components/koa/UI";
 import { FeedbackForm } from "@/components/koa/FeedbackForm";
+import { PlanCard } from "@/components/koa/PlanCard";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [
@@ -12,6 +13,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 function Settings() {
   return <>
     <PageTitle eyebrow="A tu ritmo" title="Ajustes y ayuda" />
+    <section className="py-2 mb-6"><PlanCard justPaid={typeof window !== "undefined" && new URLSearchParams(window.location.search).get("pro") === "gracias"} /></section>
     <section className="border-t border-border py-6"><h2>Mis preferencias</h2><p className="koa-muted my-4">Tu ritmo y las atmósferas que prefieres pueden cambiar.</p><Link className="koa-secondary" to="/onboarding">Cambiar preferencias lectoras</Link></section>
     <section className="border-t border-border py-6"><h2>Privacidad actual</h2><p className="koa-muted mt-3">Tu biblioteca, cuaderno y conversaciones siguen siendo privados. En Mi refugio eliges por separado quién ve tu perfil y cada libro, lista, estrellas o bingo. Compartir un perfil no publica la estantería. Las listas compartidas muestran sus títulos actuales y futuros.</p><Link className="koa-secondary mt-4" to="/refuge">Perfil, amistades y clubes</Link></section>
     <section className="border-t border-border py-6"><h2>Ayuda para tus lecturas</h2><div className="space-y-3 mt-4">
@@ -22,7 +24,7 @@ function Settings() {
       <details><summary className="cursor-pointer font-semibold">Crear y completar un bingo</summary><p className="koa-muted mt-2">Personaliza un borrador de 3 × 3, 4 × 4 o 5 × 5, o importa una imagen y revisa obligatoriamente cada texto y condición antes de guardar. Conserva el crédito de la fuente. El Oráculo de cada casilla busca tres opciones verificadas; las externas se guardan en deseos, sin completar lectura. Actívalo cuando esté listo: sus condiciones quedan fijas. Asigna un libro compatible y registra su finalización real antes de completar la casilla. Las experiencias se completan manualmente y no conceden racha.</p><Link to="/adventures" className="text-primary">Ir a Aventuras</Link></details>
       <details><summary className="cursor-pointer font-semibold">Calendarios y listas</summary><p className="koa-muted mt-2">En Aventuras prepara 24 descubrimientos para el año siguiente; antes de diciembre solo están en preparación. Guardar añade el libro a deseos y a la lista anual. Los doce capítulos mensuales permiten cambiar sugerencias. En Mis listas crea, ordena y organiza libros en varias listas.</p></details>
       <details><summary className="cursor-pointer font-semibold">Amistades, clubes y spoilers</summary><p className="koa-muted mt-2">En Mi refugio acepta amistades, invita a tus clubes y elige cada contenido compartido. Usa la vista previa para público, amistades aceptadas o integrantes reales. En cada lectura conjunta introduce las páginas finales de todos los capítulos de tu edición: hasta entonces los comentarios permanecen cerrados. Salir y volver conserva aportaciones sin contar avances durante la ausencia.</p></details>
-      <details><summary className="cursor-pointer font-semibold">Valorar un libro</summary><p className="koa-muted mt-2">Abre el libro en tu biblioteca y elige «Editar libro y reseña» para guardar estrellas opcionales y tu opinión. Tus reseñas ayudan al Oráculo a afinar las recomendaciones.</p></details>
+      <details><summary className="cursor-pointer font-semibold">Valorar un libro</summary><p className="koa-muted mt-2">Abre el libro en tu biblioteca: pulsa las estrellas en «Cuánto me gustó» y usa «Valorar y guardar sensaciones» para tu reseña, lágrimas, inmersión y tier. Tus reseñas ayudan al Oráculo a afinar las recomendaciones.</p></details>
     </div></section>
     <section className="border-t border-border py-6"><h2>Sobre la creadora</h2><p className="koa-muted mt-3">María Fernanda Calderón / Ferova. Lee con Koa busca ayudarte a elegir una lectura para tu contexto, acompañarte mientras lees y conservar tu progreso real.</p></section>
     <section className="border-t border-border py-6"><h2>Novedades · versión 2026.11.15.4</h2><ul className="list-disc pl-5 koa-muted mt-3"><li>Importación de bingos desde imagen con revisión y crédito; Oráculo por casilla.</li><li>Estantería acogedora, portadas privadas recortadas y objetos por días reales de lectura.</li><li>Listas, sensaciones, calendarios, perfiles, amistades y clubes privados por elección.</li><li>Vista previa de privacidad y conversaciones por páginas finales explícitas de cada capítulo.</li><li>Ajustes, ayuda y contacto disponibles desde la navegación.</li><li>Se conserva la corrección del retorno de Google y las funciones lectoras existentes.</li></ul></section>

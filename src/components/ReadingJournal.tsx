@@ -3,6 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import type { Book } from "@/types";
 import { localDay, readingStreak } from "@/lib/reading";
+import { Link } from "@tanstack/react-router";
+import { usePlan } from "@/hooks/use-plan";
+import { FREE_LIMITS } from "@/lib/plans";
 
 export type Session = Tables<"reading_sessions">;
 export type Completion = Tables<"completed_readings">;
@@ -191,6 +194,14 @@ export function ReadingJournal({
       label: date.toLocaleDateString("es", { weekday: "short", day: "numeric" }),
     };
   });
+  const { isFree } = usePlan();
+  // Plan gratis: el historial muestra los últimos 6 meses; nada se borra y la racha usa todo.
+  const historyFrom = (() => {
+    const d = new Date(today + "T12:00:00");
+    d.setMonth(d.getMonth() - FREE_LIMITS.historyMonths);
+    return localDay(d);
+  })();
+  const hidden = isFree ? sessions.filter((s) => s.day < historyFrom).length : 0;
   const [open, setOpen] = useState(false);
   const [limit, setLimit] = useState(20);
   const [selectedDay, setSelectedDay] = useState("");
@@ -200,7 +211,8 @@ export function ReadingJournal({
           (r.streak_day ?? (r.finished_at && localDay(new Date(r.finished_at)))) === selectedDay,
       )
     : completed;
-  const visible = selectedDay ? sessions.filter((s) => s.day === selectedDay) : sessions;
+  const shown = isFree ? sessions.filter((s) => s.day >= historyFrom) : sessions;
+  const visible = selectedDay ? shown.filter((s) => s.day === selectedDay) : shown;
   const titles = new Map(books.map((b) => [b.id, b.title]));
   return (
     <section className="border border-border p-4 rounded-sm bg-card">
@@ -250,6 +262,11 @@ export function ReadingJournal({
         )}
         {selectedDay && visible.length === 0 && visibleCompletions.length === 0 && (
           <p>Sin sesiones ese día.</p>
+        )}
+        {hidden > 0 && (
+          <p className="text-sm my-3 koa-muted">
+            Ves los últimos {FREE_LIMITS.historyMonths} meses. Tienes {hidden} {hidden === 1 ? "sesión anterior guardada" : "sesiones anteriores guardadas"}: <Link to="/pro" className="underline">verlas con Pro</Link>.
+          </p>
         )}
         {sessions.length === 0 && completed.length === 0 && (
           <p className="text-sm my-3">Aquí aparecerá tu primera sesión cuando guardes un avance.</p>

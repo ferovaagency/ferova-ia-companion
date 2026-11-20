@@ -2,20 +2,22 @@ import { Modal, ErrorNotice } from "@/components/koa/UI";
 import { userError } from "@/lib/koa-data";
 import { IsbnEntry } from "@/components/IsbnEntry";
 import { CoverCrop } from "@/components/koa/CoverCrop";
-import { useState } from "react";
-import { motion } from "motion/react";
-import { X, Save, Edit, Star } from "lucide-react";
+import { useId, useState } from "react";
+import { Save } from "lucide-react";
 import type { Book } from "@/types";
 
 interface EditBookModalProps {
   book: Book;
   books: Book[];
-  refresh:()=>Promise<void>;
+  refresh: () => Promise<void>;
   onClose: () => void;
   onSave: (updatedFields: Partial<Book>) => Promise<void>;
 }
 
+// Estrellas y reseña viven en la ficha del libro (BookFeelings); este diálogo
+// solo edita los datos de la edición para no pisar una valoración más reciente.
 export function EditBookModal({ book, books, refresh, onClose, onSave }: EditBookModalProps) {
+  const id = useId();
   const [title, setTitle] = useState(book.title);
   const [author, setAuthor] = useState(book.author);
   const [genre, setGenre] = useState(book.genre);
@@ -25,17 +27,19 @@ export function EditBookModal({ book, books, refresh, onClose, onSave }: EditBoo
   const [seriesIndex, setSeriesIndex] = useState<number | "">(book.series_index ?? "");
   const [coverUrl, setCoverUrl] = useState(book.cover_url || "");
   const [moodsInput, setMoodsInput] = useState(book.moods?.join(", ") ?? "");
-  const [userRating, setUserRating] = useState<number | null>(book.user_rating ?? null);
-  const [userReview, setUserReview] = useState(book.user_review ?? "");
   const [isSaving, setIsSaving] = useState(false);
-  const [error,setError]=useState("");
+  const [error, setError] = useState("");
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    setIsSaving(true);setError("");
+    setIsSaving(true);
+    setError("");
     try {
-      const moods = moodsInput.split(",").map((m) => m.trim().toLowerCase()).filter(Boolean);
+      const moods = moodsInput
+        .split(",")
+        .map((m) => m.trim().toLowerCase())
+        .filter(Boolean);
       await onSave({
         title: title.trim(),
         author: author.trim() || "Autor desconocido",
@@ -46,11 +50,11 @@ export function EditBookModal({ book, books, refresh, onClose, onSave }: EditBoo
         series_index: seriesIndex !== "" ? Number(seriesIndex) : null,
         cover_url: coverUrl.trim() || null,
         moods,
-        user_rating: userRating,
-        user_review: userReview.trim() || null,
       });
       onClose();
-    } catch(e) {setError(userError(e));} finally {
+    } catch (e) {
+      setError(userError(e));
+    } finally {
       setIsSaving(false);
     }
   };
@@ -58,113 +62,173 @@ export function EditBookModal({ book, books, refresh, onClose, onSave }: EditBoo
   const inputCls =
     "w-full bg-background border border-border px-3 py-2 font-serif focus:outline-none focus:border-foreground transition-colors text-sm rounded-sm";
   const labelCls = "font-mono-label block mb-1";
+  const f = (name: string) => `${id}-${name}`;
 
   return (
-    <Modal title="Editar libro y reseña" onClose={()=>{if(!isSaving)onClose();}}>
-        <header className="mb-6">
-          <div className="flex items-center gap-2 mb-2">
-            <Edit className="w-4 h-4 text-accent" />
-            <span className="font-mono-label">Edición Manual</span>
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-serif font-black tracking-tight">Editar Metadatos</h2>
-          <p className="text-xs text-muted-foreground italic mt-1">Ajusta los detalles de "{book.title}" para tu estantería personal.</p>
-        </header>
+    <Modal
+      title="Editar datos del libro"
+      onClose={() => {
+        if (!isSaving) onClose();
+      }}
+    >
+      <p className="text-xs text-muted-foreground italic mb-4">
+        Ajusta los detalles de «{book.title}» para tu estantería. Tus estrellas y tu reseña se
+        editan en la ficha del libro.
+      </p>
 
-        {book.isbn?<p className="my-3 text-sm">ISBN {book.isbn}</p>:<IsbnEntry books={books} existingBook={book} saved={async()=>{await refresh();onClose();}}/>}
-        <CoverCrop book={book.id} saved={refresh}/>
-        <form onSubmit={submit} className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Título</label>
-              <input required value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>Autor</label>
-              <input value={author} onChange={(e) => setAuthor(e.target.value)} className={inputCls} />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className={labelCls}>Género</label>
-              <input value={genre} onChange={(e) => setGenre(e.target.value)} className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>Páginas</label>
-              <input type="number" min={0} value={pages} onChange={(e) => setPages(Math.max(0, parseInt(e.target.value) || 0))} className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>Moods (comas)</label>
-              <input value={moodsInput} onChange={(e) => setMoodsInput(e.target.value)} placeholder="mágico, oscuro" className={inputCls} />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Saga</label>
-              <input value={seriesName} onChange={(e) => setSeriesName(e.target.value)} placeholder="Ej. Harry Potter" className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>Índice en saga</label>
-              <input type="number" min={0} value={seriesIndex} onChange={(e) => setSeriesIndex(e.target.value !== "" ? Math.max(0, parseInt(e.target.value) || 0) : "")} placeholder="Ej. 1" className={inputCls} />
-            </div>
+      {book.isbn ? (
+        <p className="my-3 text-sm">ISBN {book.isbn}</p>
+      ) : (
+        <IsbnEntry
+          books={books}
+          existingBook={book}
+          saved={async () => {
+            await refresh();
+            onClose();
+          }}
+        />
+      )}
+      <CoverCrop book={book.id} saved={refresh} />
+      <form onSubmit={submit} className="space-y-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor={f("title")} className={labelCls}>
+              Título
+            </label>
+            <input
+              id={f("title")}
+              required
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className={inputCls}
+            />
           </div>
           <div>
-            <label className={labelCls}>URL de portada</label>
-            <input type="url" value={coverUrl} onChange={(e) => setCoverUrl(e.target.value)} placeholder="https://..." className={inputCls} />
+            <label htmlFor={f("author")} className={labelCls}>
+              Autor
+            </label>
+            <input
+              id={f("author")}
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
+              className={inputCls}
+            />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label htmlFor={f("genre")} className={labelCls}>
+              Género
+            </label>
+            <input
+              id={f("genre")}
+              value={genre}
+              onChange={(e) => setGenre(e.target.value)}
+              className={inputCls}
+            />
           </div>
           <div>
-            <label className={labelCls}>Sinopsis</label>
-            <textarea value={description} onChange={(e) => setDescription(e.target.value)} className={`${inputCls} italic min-h-[100px]`} placeholder="Breve descripción..." />
+            <label htmlFor={f("pages")} className={labelCls}>
+              Páginas
+            </label>
+            <input
+              id={f("pages")}
+              type="number"
+              min={0}
+              value={pages}
+              onChange={(e) => setPages(Math.max(0, parseInt(e.target.value) || 0))}
+              className={inputCls}
+            />
           </div>
-          <div className="border-t border-border pt-5 space-y-4">
-            <div className="flex items-center gap-2">
-              <Star className="w-4 h-4 text-accent" />
-              <span className="font-mono-label uppercase tracking-wider text-xs">Tu opinión (alimenta al Oráculo)</span>
-            </div>
-            <div>
-              <label className={labelCls}>Tu puntuación</label>
-              <div className="flex items-center gap-2">
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setUserRating(userRating === n ? null : n)}
-                    className="p-1 transition-transform hover:scale-110"
-                    aria-label={`${n} estrellas`}
-                  >
-                    <Star
-                      className={`w-6 h-6 ${userRating && n <= userRating ? "fill-accent text-accent" : "text-muted-foreground"}`}
-                    />
-                  </button>
-                ))}
-                {userRating && (
-                  <button type="button" onClick={() => setUserRating(null)} className="text-xs text-muted-foreground hover:text-foreground ml-2">
-                    limpiar
-                  </button>
-                )}
-              </div>
-            </div>
-            <div>
-              <label className={labelCls}>Tu reseña personal</label>
-              <textarea
-                value={userReview}
-                onChange={(e) => setUserReview(e.target.value)}
-                className={`${inputCls} italic min-h-[90px]`}
-                placeholder="¿Qué te hizo sentir? ¿Qué destacarías? El Oráculo usa esto para afinar tus próximas recomendaciones."
-                maxLength={2000}
-              />
-              <p className="text-xs text-muted-foreground mt-1">{userReview.length}/2000</p>
-            </div>
+          <div>
+            <label htmlFor={f("moods")} className={labelCls}>
+              Atmósferas (separadas por comas)
+            </label>
+            <input
+              id={f("moods")}
+              value={moodsInput}
+              onChange={(e) => setMoodsInput(e.target.value)}
+              placeholder="mágico, oscuro"
+              className={inputCls}
+            />
           </div>
-          <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} disabled={isSaving} className="flex-1 bg-background border border-border py-3 font-mono-label hover:bg-muted transition-all rounded-sm">
-              Cancelar
-            </button>
-            <button type="submit" disabled={isSaving} className="flex-1 bg-foreground text-background py-3 font-mono-label hover:opacity-90 transition-all flex items-center justify-center gap-2 rounded-sm">
-              <Save className="w-3.5 h-3.5" /> Guardar
-            </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label htmlFor={f("series")} className={labelCls}>
+              Saga
+            </label>
+            <input
+              id={f("series")}
+              value={seriesName}
+              onChange={(e) => setSeriesName(e.target.value)}
+              placeholder="Ej. Terramar"
+              className={inputCls}
+            />
           </div>
-        </form>
-      {error&&<ErrorNotice>{error}</ErrorNotice>}
+          <div>
+            <label htmlFor={f("index")} className={labelCls}>
+              Número en la saga
+            </label>
+            <input
+              id={f("index")}
+              type="number"
+              min={0}
+              value={seriesIndex}
+              onChange={(e) =>
+                setSeriesIndex(
+                  e.target.value !== "" ? Math.max(0, parseInt(e.target.value) || 0) : "",
+                )
+              }
+              placeholder="Ej. 1"
+              className={inputCls}
+            />
+          </div>
+        </div>
+        <div>
+          <label htmlFor={f("cover")} className={labelCls}>
+            URL de portada
+          </label>
+          <input
+            id={f("cover")}
+            type="url"
+            value={coverUrl}
+            onChange={(e) => setCoverUrl(e.target.value)}
+            placeholder="https://..."
+            className={inputCls}
+          />
+        </div>
+        <div>
+          <label htmlFor={f("description")} className={labelCls}>
+            Sinopsis
+          </label>
+          <textarea
+            id={f("description")}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className={`${inputCls} italic min-h-[100px]`}
+            placeholder="Breve descripción..."
+          />
+        </div>
+        {error && <ErrorNotice>{error}</ErrorNotice>}
+        <div className="flex gap-3 pt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSaving}
+            className="flex-1 bg-background border border-border py-3 font-mono-label hover:bg-muted transition-all rounded-sm"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={isSaving}
+            className="flex-1 bg-foreground text-background py-3 font-mono-label hover:opacity-90 transition-all flex items-center justify-center gap-2 rounded-sm"
+          >
+            <Save className="w-3.5 h-3.5" /> Guardar
+          </button>
+        </div>
+      </form>
     </Modal>
   );
 }

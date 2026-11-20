@@ -6,7 +6,8 @@ const questions = [
   { q: "¿Puedo usar mis propios libros?", a: "Sí. Puedes registrar tus libros físicos o digitales, añadirlos por ISBN e importar tu archivo de Goodreads. Revisa siempre la edición y sus páginas." },
   { q: "¿Cómo se cuenta una racha?", a: "Cuenta el avance real de lectura o terminar directamente un libro que estaba leyendo. Abrir la app, guardar notas o usar solamente el temporizador no cuenta." },
   { q: "¿Mis notas y libros son públicos?", a: "No. La biblioteca, las notas, las conversaciones y los bingos de la versión actual son privados para cada cuenta." },
-  { q: "¿Ofrece una prueba gratis o planes anunciados?", a: "No se ofrece una prueba gratis. Los planes y precios de esta ampliación aún no están definidos ni se anuncian aquí." },
+  { q: "¿Lee con Koa es gratis?", a: "Sí. El plan gratis incluye 3 consultas al Oráculo al mes, hasta 50 libros, registro de lecturas y rachas, tu cuaderno, 3 listas, un bingo y las primeras 3 ventanas del Adviento. Lee con Koa Pro cuesta 7 USD al mes o 70 USD al año y desbloquea todo. No hay prueba gratis de Pro: el plan gratis sirve para conocer la app." },
+  { q: "¿Cómo cancelo Pro?", a: "Desde Ajustes, en «Tu plan», con el enlace para administrar tu suscripción en Whop. Pro sigue activo hasta el final del periodo pagado y tus libros, notas e historial no se borran." },
   { q: "¿Koa sustituye atención médica?", a: "No. Koa acompaña lecturas y preferencias expresadas por la persona; no diagnostica ni ofrece tratamientos." },
 ];
 export const Route = createFileRoute("/faq")({ head: () => ({

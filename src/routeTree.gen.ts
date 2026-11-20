@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as ProRouteImport } from './routes/pro'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdventuresRouteImport } from './routes/_authenticated/adventures'
@@ -31,6 +32,7 @@ import { Route as UHandleRouteImport } from './routes/u.$handle'
 import { Route as AuthenticatedBooksBookIdRouteImport } from './routes/_authenticated/books.$bookId'
 import { Route as AuthenticatedClubsClubIdRouteImport } from './routes/_authenticated/clubs.$clubId'
 import { Route as ApiPublicOracleDemoRouteImport } from './routes/api/public/oracle-demo'
+import { Route as ApiWhopWebhookRouteImport } from './routes/api/whop/webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -54,6 +56,11 @@ const CommunityRoute = CommunityRouteImport.update({
 const FaqRoute = FaqRouteImport.update({
   id: '/faq',
   path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProRoute = ProRouteImport.update({
+  id: '/pro',
+  path: '/pro',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -144,12 +151,18 @@ const ApiPublicOracleDemoRoute = ApiPublicOracleDemoRouteImport.update({
   path: '/api/public/oracle-demo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWhopWebhookRoute = ApiWhopWebhookRouteImport.update({
+  id: '/api/whop/webhook',
+  path: '/api/whop/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/community': typeof CommunityRoute
   '/faq': typeof FaqRoute
+  '/pro': typeof ProRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/adventures': typeof AuthenticatedAdventuresRoute
@@ -167,12 +180,14 @@ export interface FileRoutesByFullPath {
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
   '/clubs/$clubId': typeof AuthenticatedClubsClubIdRoute
   '/api/public/oracle-demo': typeof ApiPublicOracleDemoRoute
+  '/api/whop/webhook': typeof ApiWhopWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/community': typeof CommunityRoute
   '/faq': typeof FaqRoute
+  '/pro': typeof ProRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/adventures': typeof AuthenticatedAdventuresRoute
@@ -190,6 +205,7 @@ export interface FileRoutesByTo {
   '/books/$bookId': typeof AuthenticatedBooksBookIdRoute
   '/clubs/$clubId': typeof AuthenticatedClubsClubIdRoute
   '/api/public/oracle-demo': typeof ApiPublicOracleDemoRoute
+  '/api/whop/webhook': typeof ApiWhopWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -198,6 +214,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/community': typeof CommunityRoute
   '/faq': typeof FaqRoute
+  '/pro': typeof ProRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/adventures': typeof AuthenticatedAdventuresRoute
@@ -215,6 +232,7 @@ export interface FileRoutesById {
   '/_authenticated/books/$bookId': typeof AuthenticatedBooksBookIdRoute
   '/_authenticated/clubs/$clubId': typeof AuthenticatedClubsClubIdRoute
   '/api/public/oracle-demo': typeof ApiPublicOracleDemoRoute
+  '/api/whop/webhook': typeof ApiWhopWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -223,6 +241,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/community'
     | '/faq'
+    | '/pro'
     | '/sitemap.xml'
     | '/admin'
     | '/adventures'
@@ -240,12 +259,14 @@ export interface FileRouteTypes {
     | '/books/$bookId'
     | '/clubs/$clubId'
     | '/api/public/oracle-demo'
+    | '/api/whop/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/community'
     | '/faq'
+    | '/pro'
     | '/sitemap.xml'
     | '/admin'
     | '/adventures'
@@ -263,6 +284,7 @@ export interface FileRouteTypes {
     | '/books/$bookId'
     | '/clubs/$clubId'
     | '/api/public/oracle-demo'
+    | '/api/whop/webhook'
   id:
     | '__root__'
     | '/'
@@ -270,6 +292,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/community'
     | '/faq'
+    | '/pro'
     | '/sitemap.xml'
     | '/_authenticated/admin'
     | '/_authenticated/adventures'
@@ -287,6 +310,7 @@ export interface FileRouteTypes {
     | '/_authenticated/books/$bookId'
     | '/_authenticated/clubs/$clubId'
     | '/api/public/oracle-demo'
+    | '/api/whop/webhook'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -295,11 +319,13 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CommunityRoute: typeof CommunityRoute
   FaqRoute: typeof FaqRoute
+  ProRoute: typeof ProRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   BlogMejoresRecomendadoresLibrosIaRoute: typeof BlogMejoresRecomendadoresLibrosIaRoute
   UHandleRoute: typeof UHandleRoute
   ApiPublicOracleDemoRoute: typeof ApiPublicOracleDemoRoute
+  ApiWhopWebhookRoute: typeof ApiWhopWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -337,6 +363,13 @@ declare module '@tanstack/react-router' {
       path: '/faq'
       fullPath: '/faq'
       preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pro': {
+      id: '/pro'
+      path: '/pro'
+      fullPath: '/pro'
+      preLoaderRoute: typeof ProRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -458,6 +491,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicOracleDemoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/whop/webhook': {
+      id: '/api/whop/webhook'
+      path: '/api/whop/webhook'
+      fullPath: '/api/whop/webhook'
+      preLoaderRoute: typeof ApiWhopWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -500,12 +540,14 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CommunityRoute: CommunityRoute,
   FaqRoute: FaqRoute,
+  ProRoute: ProRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   BlogMejoresRecomendadoresLibrosIaRoute:
     BlogMejoresRecomendadoresLibrosIaRoute,
   UHandleRoute: UHandleRoute,
   ApiPublicOracleDemoRoute: ApiPublicOracleDemoRoute,
+  ApiWhopWebhookRoute: ApiWhopWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

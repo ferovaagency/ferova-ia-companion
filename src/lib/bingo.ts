@@ -42,6 +42,25 @@ export function matchesCell(book: Pick<Book, "genre" | "author" | "pages">, cell
   if (cell.condition === "max_pages") return book.pages > 0 && book.pages <= Number(cell.value);
   return true;
 }
+/** Filas, columnas y diagonales cuyas casillas están todas completas. */
+export function completedLines(size: number, done: ReadonlySet<number>): number[][] {
+  const range = Array.from({ length: size }, (_, i) => i);
+  const lines = [
+    ...range.map((r) => range.map((c) => r * size + c)),
+    ...range.map((c) => range.map((r) => r * size + c)),
+    range.map((i) => i * size + i),
+    range.map((i) => i * size + (size - 1 - i)),
+  ];
+  return lines.filter((line) => line.every((i) => done.has(i)));
+}
+/** Texto breve de lo que pide una casilla, para el tablero y el diálogo. */
+export function describeCell(cell: BingoCell): string {
+  if (cell.kind === "experience") return "Experiencia · la marcas tú";
+  if (cell.condition === "genre") return `Lectura · género ${cell.value}`;
+  if (cell.condition === "author") return `Lectura · de ${cell.value}`;
+  if (cell.condition === "max_pages") return `Lectura · hasta ${cell.value} páginas`;
+  return "Lectura · a tu elección";
+}
 const experience = (label: string): BingoCell => ({ kind: "experience", label, condition: "any", value: "" });
 const book = (label: string): BingoCell => ({ ...blankCell(), label });
 const shortBook = (): BingoCell => ({ kind: "book", label: "Una historia de hasta 250 páginas", condition: "max_pages", value: "250" });

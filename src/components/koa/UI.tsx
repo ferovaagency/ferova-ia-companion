@@ -122,6 +122,12 @@ export function ErrorNotice({ children }: { children: ReactNode }) {
   return (
     <p role="alert" className="koa-error">
       {children}
+      {typeof children === "string" && /Lee con Koa Pro/.test(children) && (
+        <>
+          {" "}
+          <Link to="/pro" className="underline font-semibold">Ver Lee con Koa Pro</Link>
+        </>
+      )}
     </p>
   );
 }
@@ -145,10 +151,12 @@ export function Modal({
   title,
   children,
   onClose,
+  wide = false,
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
+  wide?: boolean;
 }) {
   return (
     <Dialog
@@ -157,7 +165,7 @@ export function Modal({
         if (!open) onClose();
       }}
     >
-      <DialogContent className="koa-modal" aria-describedby={undefined}>
+      <DialogContent className={wide ? "koa-modal sm:max-w-4xl" : "koa-modal"} aria-describedby={undefined}>
         <DialogTitle>{title}</DialogTitle>
         {children}
       </DialogContent>
