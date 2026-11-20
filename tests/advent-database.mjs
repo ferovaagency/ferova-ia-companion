@@ -74,5 +74,13 @@ await check('completing challenges never writes reading history; progress cannot
   await as(other);
   assert.equal((await q(`select count(*) n from reader_advent_progress`))[0].n, 0);
 });
+await check('migrations 0015-0017 can run again without errors or data loss', async () => {
+  await db.exec('reset role');
+  const before = (await q(`select count(*) n from reader_advent_progress`))[0].n;
+  for (const file of ['0015_immutable_reward_evidence.sql', '0016_reader_plans_whop.sql', '0017_advent_challenges.sql']) {
+    await db.exec(readFileSync(new URL('../drizzle/migrations/' + file, import.meta.url), 'utf8'));
+  }
+  assert.equal((await q(`select count(*) n from reader_advent_progress`))[0].n, before);
+});
 console.log('advent challenge assertions passed');
 await db.close();

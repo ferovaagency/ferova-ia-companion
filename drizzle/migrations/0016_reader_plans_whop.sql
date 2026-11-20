@@ -1,3 +1,4 @@
+-- Idempotente: ya aplicada en producción el 2026-11-20; se puede volver a correr sin efectos.
 -- Planes Gratis / Pro (Whop). Aditiva: no borra datos y no cambia las RPC existentes.
 -- Pro = memberships.is_paid (Whop, cortesía, manual o admin). Los límites se validan aquí,
 -- no solo en pantalla.
@@ -15,7 +16,7 @@ ALTER TABLE public.courtesy_accounts
   ADD COLUMN IF NOT EXISTS expires_at timestamptz,
   ADD COLUMN IF NOT EXISTS note text NOT NULL DEFAULT '' CHECK (length(note) <= 300);
 
-CREATE FUNCTION public.reader_is_pro(p_user uuid) RETURNS boolean
+CREATE OR REPLACE FUNCTION public.reader_is_pro(p_user uuid) RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$
   SELECT p_user IS NOT NULL AND (
     EXISTS(SELECT 1 FROM public.memberships m WHERE m.user_id=p_user AND m.is_paid AND (m.access_expires_at IS NULL OR m.access_expires_at > now()))
@@ -25,7 +26,7 @@ $$;
 REVOKE ALL ON FUNCTION public.reader_is_pro(uuid) FROM PUBLIC, anon, authenticated;
 
 -- Contadores mensuales (UTC) de funciones con IA.
-CREATE TABLE public.reader_feature_usage(
+CREATE TABLE IF NOT EXISTS public.reader_feature_usage(
   user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   feature text NOT NULL,
   month date NOT NULL,
@@ -35,7 +36,7 @@ CREATE TABLE public.reader_feature_usage(
 ALTER TABLE public.reader_feature_usage ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.reader_feature_usage FROM anon, authenticated;
 
-CREATE FUNCTION public.reader_feature_limit(p_feature text) RETURNS integer
+CREATE OR REPLACE FUNCTION public.reader_feature_limit(p_feature text) RETURNS integer
 LANGUAGE sql IMMUTABLE SET search_path='' AS $$
   SELECT CASE p_feature
     WHEN 'oracle' THEN 3
@@ -46,7 +47,7 @@ $$;
 
 -- Consume una unidad. Pro: sin tope mensual (el límite por hora sigue en claim_koa_request).
 -- Gratis: tope mensual; las funciones con límite 0 son solo Pro.
-CREATE FUNCTION public.claim_reader_feature(p_feature text) RETURNS integer
+CREATE OR REPLACE FUNCTION public.claim_reader_feature(p_feature text) RETURNS integer
 LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 DECLARE lim integer; n integer; m date := date_trunc('month', now() AT TIME ZONE 'UTC')::date;
 BEGIN
@@ -70,7 +71,7 @@ REVOKE ALL ON FUNCTION public.claim_reader_feature(text) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.claim_reader_feature(text) TO authenticated;
 
 -- Estado del plan para la pantalla (solo del propio usuario).
-CREATE FUNCTION public.reader_plan_status() RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.reader_plan_status() RETURNS jsonb
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$
   SELECT jsonb_build_object(
     'pro', public.reader_is_pro(auth.uid()),
@@ -89,7 +90,7 @@ REVOKE ALL ON FUNCTION public.reader_plan_status() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.reader_plan_status() TO authenticated;
 
 -- Topes de cantidad del plan gratis.
-CREATE FUNCTION public.reader_enforce_free_caps() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.reader_enforce_free_caps() RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 DECLARE who uuid; n integer;
 BEGIN
@@ -120,14 +121,19 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.reader_enforce_free_caps() FROM PUBLIC, anon, authenticated;
 
+DROP TRIGGER IF EXISTS reader_free_cap_books ON public.books;
 CREATE TRIGGER reader_free_cap_books BEFORE INSERT ON public.books FOR EACH ROW EXECUTE FUNCTION public.reader_enforce_free_caps();
+DROP TRIGGER IF EXISTS reader_free_cap_lists ON public.reader_lists;
 CREATE TRIGGER reader_free_cap_lists BEFORE INSERT ON public.reader_lists FOR EACH ROW EXECUTE FUNCTION public.reader_enforce_free_caps();
+DROP TRIGGER IF EXISTS reader_free_cap_bingos ON public.reader_bingos;
 CREATE TRIGGER reader_free_cap_bingos BEFORE INSERT ON public.reader_bingos FOR EACH ROW EXECUTE FUNCTION public.reader_enforce_free_caps();
+DROP TRIGGER IF EXISTS reader_free_cap_clubs ON public.reader_clubs;
 CREATE TRIGGER reader_free_cap_clubs BEFORE INSERT ON public.reader_clubs FOR EACH ROW EXECUTE FUNCTION public.reader_enforce_free_caps();
+DROP TRIGGER IF EXISTS reader_free_cap_joint ON public.reader_joint_readings;
 CREATE TRIGGER reader_free_cap_joint BEFORE INSERT ON public.reader_joint_readings FOR EACH ROW EXECUTE FUNCTION public.reader_enforce_free_caps();
 
 -- Adviento gratis: solo las ventanas 1 a 3 se pueden abrir.
-CREATE FUNCTION public.reader_enforce_advent_free() RETURNS trigger
+CREATE OR REPLACE FUNCTION public.reader_enforce_advent_free() RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path='' AS $$
 DECLARE c public.reader_calendars;
 BEGIN
@@ -140,10 +146,11 @@ BEGIN
   RETURN NEW;
 END $$;
 REVOKE ALL ON FUNCTION public.reader_enforce_advent_free() FROM PUBLIC, anon, authenticated;
+DROP TRIGGER IF EXISTS reader_advent_free_windows ON public.reader_calendar_entries;
 CREATE TRIGGER reader_advent_free_windows BEFORE UPDATE ON public.reader_calendar_entries FOR EACH ROW EXECUTE FUNCTION public.reader_enforce_advent_free();
 
 -- Resumen por lector para el panel de admin (solo el servidor, con la llave de servicio).
-CREATE FUNCTION public.reader_admin_overview() RETURNS TABLE(user_id uuid, books bigint, usage jsonb)
+CREATE OR REPLACE FUNCTION public.reader_admin_overview() RETURNS TABLE(user_id uuid, books bigint, usage jsonb)
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path='' AS $$
   SELECT u.id,
     (SELECT count(*) FROM public.books b WHERE b.user_id = u.id),
