@@ -140,9 +140,21 @@ export async function syncWhopMembership(membership: WhopMembership) {
 
 /** Manejador del webhook: verifica, relee la membresía en la API y sincroniza. */
 export async function handleWhopWebhook(request: Request) {
+  try {
+    return await processWhopWebhook(request);
+  } catch (error) {
+    // Nunca expone valores: solo el tipo de error, para poder diagnosticar.
+    console.error("[whop] webhook crashed", error);
+    return Response.json({ error: "webhook error", kind: error instanceof Error ? error.name : typeof error }, { status: 500 });
+  }
+}
+
+async function processWhopWebhook(request: Request) {
+  const secret = process.env.WHOP_WEBHOOK_SECRET;
+  if (!secret) return Response.json({ error: "Webhook sin configurar en el servidor (WHOP_WEBHOOK_SECRET)." }, { status: 503 });
   const raw = await request.text();
   if (raw.length > 200_000) return new Response("too large", { status: 413 });
-  if (!verifyWhopSignature(raw, request.headers, env("WHOP_WEBHOOK_SECRET"))) return new Response("invalid signature", { status: 401 });
+  if (!verifyWhopSignature(raw, request.headers, secret)) return new Response("invalid signature", { status: 401 });
   let event: { type?: string; data?: { id?: string; membership_id?: string; membership?: { id?: string } } };
   try {
     event = JSON.parse(raw);
