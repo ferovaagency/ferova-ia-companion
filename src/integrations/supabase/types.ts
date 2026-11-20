@@ -132,8 +132,10 @@ export type Database = {
           active: boolean
           created_at: string
           email: string
+          expires_at: string | null
           granted_at: string
           granted_by: string | null
+          note: string
           revoked_at: string | null
           updated_at: string
         }
@@ -141,8 +143,10 @@ export type Database = {
           active?: boolean
           created_at?: string
           email: string
+          expires_at?: string | null
           granted_at?: string
           granted_by?: string | null
+          note?: string
           revoked_at?: string | null
           updated_at?: string
         }
@@ -150,8 +154,10 @@ export type Database = {
           active?: boolean
           created_at?: string
           email?: string
+          expires_at?: string | null
           granted_at?: string
           granted_by?: string | null
+          note?: string
           revoked_at?: string | null
           updated_at?: string
         }
@@ -200,34 +206,52 @@ export type Database = {
       }
       memberships: {
         Row: {
+          access_expires_at: string | null
+          cancel_at_period_end: boolean
           created_at: string
+          current_period_end: string | null
           display_name: string | null
           email: string
           is_paid: boolean
           paid_at: string | null
           payment_source: string
+          plan: string | null
+          status: string | null
           updated_at: string
           user_id: string
+          whop_membership_id: string | null
         }
         Insert: {
+          access_expires_at?: string | null
+          cancel_at_period_end?: boolean
           created_at?: string
+          current_period_end?: string | null
           display_name?: string | null
           email: string
           is_paid?: boolean
           paid_at?: string | null
           payment_source?: string
+          plan?: string | null
+          status?: string | null
           updated_at?: string
           user_id: string
+          whop_membership_id?: string | null
         }
         Update: {
+          access_expires_at?: string | null
+          cancel_at_period_end?: boolean
           created_at?: string
+          current_period_end?: string | null
           display_name?: string | null
           email?: string
           is_paid?: boolean
           paid_at?: string | null
           payment_source?: string
+          plan?: string | null
+          status?: string | null
           updated_at?: string
           user_id?: string
+          whop_membership_id?: string | null
         }
         Relationships: [
           {
@@ -265,6 +289,35 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      reader_advent_progress: {
+        Row: {
+          calendar_id: string
+          done_at: string
+          slot: number
+          user_id: string
+        }
+        Insert: {
+          calendar_id: string
+          done_at?: string
+          slot: number
+          user_id?: string
+        }
+        Update: {
+          calendar_id?: string
+          done_at?: string
+          slot?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reader_advent_progress_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "reader_calendars"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reader_ai_usage: {
         Row: {
@@ -653,6 +706,27 @@ export type Database = {
           day?: string
           requests?: number
           visitor?: string
+        }
+        Relationships: []
+      }
+      reader_feature_usage: {
+        Row: {
+          feature: string
+          month: string
+          used: number
+          user_id: string
+        }
+        Insert: {
+          feature: string
+          month: string
+          used?: number
+          user_id: string
+        }
+        Update: {
+          feature?: string
+          month?: string
+          used?: number
+          user_id?: string
         }
         Relationships: []
       }
@@ -1055,6 +1129,27 @@ export type Database = {
         }
         Relationships: []
       }
+      reader_reward_evidence: {
+        Row: {
+          day: string
+          source: string
+          source_key: string
+          user_id: string
+        }
+        Insert: {
+          day: string
+          source: string
+          source_key: string
+          user_id: string
+        }
+        Update: {
+          day?: string
+          source?: string
+          source_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reader_shares: {
         Row: {
           club_id: string | null
@@ -1283,6 +1378,7 @@ export type Database = {
       }
       claim_koa_request: { Args: never; Returns: undefined }
       claim_public_oracle: { Args: { p_visitor: string }; Returns: undefined }
+      claim_reader_feature: { Args: { p_feature: string }; Returns: number }
       close_reader_session: {
         Args: {
           p_book: string
@@ -1297,6 +1393,10 @@ export type Database = {
           p_zone: string
         }
         Returns: undefined
+      }
+      complete_advent_challenge: {
+        Args: { p_calendar: string; p_slot: number; p_zone: string }
+        Returns: Json
       }
       finish_active_book: {
         Args: { p_book: string; p_cycle: number; p_zone: string }
@@ -1313,6 +1413,21 @@ export type Database = {
       install_reader_candidates: {
         Args: { p_calendar: string; p_entries: Json; p_user: string }
         Returns: undefined
+      }
+      reader_admin_overview: {
+        Args: never
+        Returns: {
+          books: number
+          usage: Json
+          user_id: string
+        }[]
+      }
+      reader_advent_challenge: {
+        Args: { p_slot: number }
+        Returns: {
+          kind: string
+          target: number
+        }[]
       }
       reader_blocked: { Args: { a: string; b: string }; Returns: boolean }
       reader_can_view: {
@@ -1342,6 +1457,7 @@ export type Database = {
         Args: { p_day: string; p_equipped: boolean; p_slot: number }
         Returns: undefined
       }
+      reader_feature_limit: { Args: { p_feature: string }; Returns: number }
       reader_friend_action: {
         Args: { p_action: string; p_handle: string }
         Returns: undefined
@@ -1350,6 +1466,7 @@ export type Database = {
         Args: { p_author: string; p_title: string }
         Returns: string
       }
+      reader_is_pro: { Args: { p_user: string }; Returns: boolean }
       reader_isbn: { Args: { p_isbn: string }; Returns: string }
       reader_joint_action: {
         Args: {
@@ -1374,6 +1491,7 @@ export type Database = {
         Returns: number
       }
       reader_joint_summary: { Args: { p_reading: string }; Returns: Json }
+      reader_plan_status: { Args: never; Returns: Json }
       reader_preview: {
         Args: { p_club?: string; p_handle?: string; p_mode: string }
         Returns: Json
