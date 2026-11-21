@@ -1398,6 +1398,7 @@ export type Database = {
         Args: { p_calendar: string; p_slot: number; p_zone: string }
         Returns: Json
       }
+      delete_reader_data: { Args: { p_user: string }; Returns: number }
       finish_active_book: {
         Args: { p_book: string; p_cycle: number; p_zone: string }
         Returns: undefined
