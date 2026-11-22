@@ -33,10 +33,13 @@ export function IsbnEntry({
   books,
   saved,
   existingBook,
+  onAdded,
 }: {
   books: Book[];
   existingBook?: Book;
   saved: () => Promise<void>;
+  /** Se llama con el libro recién añadido o vinculado (la biblioteca cierra la ventana y lo muestra). */
+  onAdded?: (bookId: string) => void;
 }) {
   const [code, setCode] = useState("");
   const [edition, setEdition] = useState<Edition | null>(null);
@@ -62,10 +65,11 @@ export function IsbnEntry({
       if (books.some((b) => b.title.toLowerCase() === info.title.toLowerCase())) { setMessage("Ya tienes este libro: " + info.title); return; }
       const user = (await getSessionUser()).data.user;
       if (!user) throw Error();
-      const { error } = await supabase.from("books").insert({ user_id: user.id, ...info });
+      const { data: added, error } = await supabase.from("books").insert({ user_id: user.id, ...info }).select("id").single();
       if (error) throw error;
       await saved();
       setMessage(`Añadido: ${info.title} · ${info.author}`);
+      onAdded?.(added.id);
     } catch {
       setMessage("No se pudo reconocer la portada. Inténtalo otra vez o escribe el título.");
     } finally { URL.revokeObjectURL(url); setBusy(false); }
@@ -218,7 +222,7 @@ export function IsbnEntry({
             author: edition.authors?.map((a) => a.name).join(", ") || "Autor desconocido",
             pages: edition.number_of_pages || 0,
             cover_url: edition.cover?.medium ?? null,
-          });
+          }).select("id").single();
       if (result.error)
         throw Error(
           result.error.code === "23505"
@@ -230,6 +234,7 @@ export function IsbnEntry({
       setEdition(null);
       setCode("");
       setMessage("ISBN guardado. Puedes escanear otro libro.");
+      onAdded?.(result.data.id);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : "No se pudo guardar.");
     } finally {

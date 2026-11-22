@@ -10,7 +10,8 @@ import { ShareButton } from "@/components/koa/ShareButton";
 import { userError } from "@/lib/koa-data";
 import type { Book } from "@/types";
 import { BookFeelings } from "@/components/koa/BookFeelings";
-import { Star } from "lucide-react";
+import { StarRating, formatStars } from "@/components/koa/StarRating";
+import { ReadDate } from "@/components/koa/ReadDate";
 export const Route = createFileRoute("/_authenticated/books/$bookId")({
   head: () => ({
     meta: [{ title: "Tu libro — Lee con Koa" }, { name: "description", content: "Detalles y progreso de tu libro privado." }, { property: "og:title", content: "Tu libro — Lee con Koa" }, { property: "og:description", content: "Tu lectura, tus reseñas y tu cuaderno." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }, { name: "robots", content: "noindex" }],
@@ -131,24 +132,13 @@ function BookPage() {
           </div>
         </div>
       </div>
+      {b.status === "READ" && <ReadDate book={b} onSaved={refresh} />}
       <section className="koa-card mt-5" aria-labelledby="book-rating-title">
         <h2 id="book-rating-title">Cuánto me gustó</h2>
-        <div className="flex flex-wrap items-center gap-1 mt-3" role="group" aria-label="Estrellas opcionales">
-          {[1, 2, 3, 4, 5].map((n) => (
-            <button
-              key={n}
-              type="button"
-              className="p-1 rounded-sm disabled:opacity-60"
-              disabled={busy}
-              aria-label={`${n} ${n === 1 ? "estrella" : "estrellas"}`}
-              aria-pressed={b.user_rating === n}
-              onClick={() => rate(b.user_rating === n ? null : n)}
-            >
-              <Star className={`w-6 h-6 ${b.user_rating && n <= b.user_rating ? "fill-accent text-accent" : "text-muted-foreground"}`} />
-            </button>
-          ))}
-          <span className="koa-muted ml-2 text-sm">
-            {b.user_rating ? `${b.user_rating}/5 · pulsa la misma estrella para quitarla` : "Sin estrellas todavía"}
+        <div className="flex flex-wrap items-center gap-2 mt-3">
+          <StarRating value={b.user_rating} disabled={busy} onChange={rate} />
+          <span className="koa-muted text-sm">
+            {b.user_rating ? `${formatStars(b.user_rating)}/5 · toca la mitad de una estrella para media` : "Sin estrellas todavía · toca la mitad de una estrella para media"}
           </span>
         </div>
         {b.user_review ? (

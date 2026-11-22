@@ -29,7 +29,6 @@ La app de tienda (Capacitor 8) lleva **la interfaz dentro del paquete**, como Ki
 | Sin compras externas dentro de la app (Apple 3.1.1, pagos de Google Play) | `src/lib/platform.ts`: en la app nativa se ocultan los banners Pro, el botón «Pasar a Pro», los precios, la página `/pro` y el enlace a Whop. Quien pagó en la web conserva Pro. |
 | Eliminar la cuenta desde la app (Apple 5.1.1(v), Google Play) | Ajustes → «Eliminar mi cuenta». Usa `src/lib/account.functions.ts` y la migración `0019_delete_reader_account.sql`. |
 | Inicio con Google bloqueado en vistas web | En la app nativa solo aparece correo y contraseña. Por eso tampoco se exige «Iniciar sesión con Apple» (Apple 4.8). |
-| Correos de confirmación con enlace a la web, no a la app |  en . |
 | Correos de confirmación con enlace a la web, no a la app | `appUrl()` en `src/routes/auth.tsx`. |
 | Cámara para el escáner de ISBN | `NSCameraUsageDescription` en `ios/App/App/Info.plist`; permiso `CAMERA` en `AndroidManifest.xml`. |
 | Compartir nativo | `@capacitor/share`; `src/lib/share.ts` lo usa cuando existe. |
@@ -37,10 +36,7 @@ La app de tienda (Capacitor 8) lleva **la interfaz dentro del paquete**, como Ki
 ## Pendiente antes de enviar
 
 1. **Publicar la web en Lovable antes de probar la app.** Trae el CORS que la app necesita. Las migraciones 0018 y 0019 ya están aplicadas.
-2. **Política de privacidad pública.** Las dos tiendas piden una URL, por ejemplo `/privacidad`. Debe decir:
-   - qué datos se guardan: correo, biblioteca, notas, fotos y uso de IA;
-   - con quién se comparten: Supabase/Lovable Cloud, el proveedor de IA y Whop;
-   - cómo se borran los datos.
+2. **Política de privacidad pública.** Ya existe en `/privacidad` (`src/routes/privacidad.tsx`, datos del responsable en `src/lib/legal.ts`). Falta completar el correo de contacto y el NIT en `LEGAL` antes de enviarla a las tiendas.
 3. **Página pública para pedir el borrado.** Google Play exige un enlace para quien ya no tiene la app. Puede ser una sección de la política con el correo de contacto, además de la opción en Ajustes.
 4. **Cuentas de desarrollador.**
    - Google Play Console: 25 USD, pago único.

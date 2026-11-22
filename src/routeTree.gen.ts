@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CommunityRouteImport } from './routes/community'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as PrivacidadRouteImport } from './routes/privacidad'
 import { Route as ProRouteImport } from './routes/pro'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
@@ -56,6 +57,11 @@ const CommunityRoute = CommunityRouteImport.update({
 const FaqRoute = FaqRouteImport.update({
   id: '/faq',
   path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacidadRoute = PrivacidadRouteImport.update({
+  id: '/privacidad',
+  path: '/privacidad',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProRoute = ProRouteImport.update({
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/community': typeof CommunityRoute
   '/faq': typeof FaqRoute
+  '/privacidad': typeof PrivacidadRoute
   '/pro': typeof ProRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -187,6 +194,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/community': typeof CommunityRoute
   '/faq': typeof FaqRoute
+  '/privacidad': typeof PrivacidadRoute
   '/pro': typeof ProRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -214,6 +222,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/community': typeof CommunityRoute
   '/faq': typeof FaqRoute
+  '/privacidad': typeof PrivacidadRoute
   '/pro': typeof ProRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
@@ -241,6 +250,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/community'
     | '/faq'
+    | '/privacidad'
     | '/pro'
     | '/sitemap.xml'
     | '/admin'
@@ -266,6 +276,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/community'
     | '/faq'
+    | '/privacidad'
     | '/pro'
     | '/sitemap.xml'
     | '/admin'
@@ -292,6 +303,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/community'
     | '/faq'
+    | '/privacidad'
     | '/pro'
     | '/sitemap.xml'
     | '/_authenticated/admin'
@@ -319,6 +331,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CommunityRoute: typeof CommunityRoute
   FaqRoute: typeof FaqRoute
+  PrivacidadRoute: typeof PrivacidadRoute
   ProRoute: typeof ProRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -363,6 +376,13 @@ declare module '@tanstack/react-router' {
       path: '/faq'
       fullPath: '/faq'
       preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacidad': {
+      id: '/privacidad'
+      path: '/privacidad'
+      fullPath: '/privacidad'
+      preLoaderRoute: typeof PrivacidadRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pro': {
@@ -540,6 +560,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CommunityRoute: CommunityRoute,
   FaqRoute: FaqRoute,
+  PrivacidadRoute: PrivacidadRoute,
   ProRoute: ProRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   AuthCallbackRoute: AuthCallbackRoute,

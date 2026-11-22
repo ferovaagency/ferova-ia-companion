@@ -267,24 +267,36 @@ export type Database = {
         Row: {
           created_at: string
           display_name: string | null
+          contact_consent: boolean
+          contact_consent_at: string | null
           id: string
           onboarding_finished_at: string | null
+          privacy_accepted_at: string | null
+          privacy_version: string | null
           reading_goal: number
           updated_at: string
         }
         Insert: {
           created_at?: string
           display_name?: string | null
+          contact_consent?: boolean
+          contact_consent_at?: string | null
           id: string
           onboarding_finished_at?: string | null
+          privacy_accepted_at?: string | null
+          privacy_version?: string | null
           reading_goal?: number
           updated_at?: string
         }
         Update: {
+          contact_consent?: boolean
+          contact_consent_at?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
           onboarding_finished_at?: string | null
+          privacy_accepted_at?: string | null
+          privacy_version?: string | null
           reading_goal?: number
           updated_at?: string
         }
@@ -1397,6 +1409,10 @@ export type Database = {
       complete_advent_challenge: {
         Args: { p_calendar: string; p_slot: number; p_zone: string }
         Returns: Json
+      }
+      set_finished_date: {
+        Args: { p_book: string; p_cycle: number; p_day: string; p_zone: string }
+        Returns: undefined
       }
       finish_active_book: {
         Args: { p_book: string; p_cycle: number; p_zone: string }

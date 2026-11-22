@@ -159,6 +159,7 @@ function Home() {
         <span>Lee con Koa · Un producto de Ferova</span>
         <Link to="/blog/mejores-recomendadores-libros-ia">Lecturas y recomendaciones</Link>
         <Link to="/faq">Preguntas y contacto</Link>
+        <Link to="/privacidad">Tratamiento de datos</Link>
       </footer>
     </div>
   );

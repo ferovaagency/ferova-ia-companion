@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ProBanner } from "./ProBanner";
 import { AdventPromo } from "./AdventPromo";
+import { ConsentGate } from "./ConsentGate";
 export function Koa({
   pose = "welcome",
   className = "",
@@ -85,6 +86,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <ProBanner />
         {children}
         <AdventPromo />
+        <ConsentGate />
       </div>
       <nav aria-label="Navegación móvil" className="koa-mobile-nav">
         {tabs.map((t) => (
@@ -96,6 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
       <footer className="koa-footer">
         Lee con Koa <span>Un libro para tu momento. A tu ritmo.</span>
+        <Link to="/privacidad">Tratamiento de datos</Link>
       </footer>
     </div>
   );

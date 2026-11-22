@@ -25,6 +25,8 @@ import { ensureMembership } from "@/lib/membership.functions";
 import { submitFeedback } from "@/lib/feedback.functions";
 import { amazonWishlistUrl } from "@/lib/amazon";
 import { getSessionUser } from "@/lib/session-user";
+import { localDay } from "@/lib/reading";
+import { DateField, readingZone, saveFinishedDate } from "@/components/koa/ReadDate";
 
 export const Route = createFileRoute("/_authenticated/library")({
   head: () => ({
@@ -77,6 +79,9 @@ function LibraryPage() {
   const [enriching, setEnriching] = useState(false);
 
   const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [finishing, setFinishing] = useState<Book | null>(null);
+  const [addStatus, setAddStatus] = useState<"TBR" | "READING" | "READ">("TBR");
+  const [addDay, setAddDay] = useState(localDay());
   const [updatingProgressId, setUpdatingProgressId] = useState<string | null>(null);
 
   // Recommendation
@@ -214,7 +219,7 @@ function LibraryPage() {
       const enriched = await enrich({ data: { title, author: author || undefined } });
       const { data: u } = await getSessionUser();
       if (!u.user) return;
-      const { error } = await supabase.from("books").insert({
+      const { data: added, error } = await supabase.from("books").insert({
         user_id: u.user.id,
         title: enriched.title,
         author: enriched.author,
@@ -225,10 +230,14 @@ function LibraryPage() {
         series_index: enriched.series_index ?? null,
         description: enriched.description,
         cover_url: enriched.cover_url ?? null,
-        status: "TBR",
-      });
+        status: addStatus === "READING" ? "READING" : "TBR",
+        started_reading_at: addStatus === "READING" ? new Date().toISOString() : null,
+      }).select("*").single();
       if (error) throw error;
+      // Leído: se marca después del alta para que quede en el historial con su fecha.
+      if (addStatus === "READ") await markRead(added, addDay);
       form.reset();
+      setAddStatus("TBR"); setAddDay(localDay());
       setIsAdding(false);
       await refreshBooks();
     } catch (err: any) {
@@ -238,24 +247,34 @@ function LibraryPage() {
     }
   };
 
-  const updateStatus = async (book: Book, status: BookStatus) => {
-    if (book.status === "READING" && status === "READ") {
+  /** Marca como leído y, si la fecha no es hoy, guarda el día en que se terminó. */
+  const markRead = async (book: Book, day: string) => {
+    // Terminar hoy un libro en curso cuenta como día de lectura; una fecha pasada no.
+    if (book.status === "READING" && day === localDay()) {
       const { error } = await supabase.rpc("finish_active_book", {
-        p_book: book.id,
-        p_cycle: book.reading_cycle,
-        p_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        p_book: book.id, p_cycle: book.reading_cycle, p_zone: readingZone(),
       });
-      if (error) { setJournalError("No se pudo registrar la finalización. Vuelve a intentarlo."); return; }
-      await refreshAll();
-      return;
+      if (error) throw Error("No se pudo registrar la finalización. Vuelve a intentarlo.");
+    } else {
+      const { error } = await supabase.from("books")
+        .update({ status: "READ", finished_reading_at: new Date().toISOString(), current_page: book.pages || 0 })
+        .eq("id", book.id).eq("status", book.status);
+      if (error) throw Error("No se pudo cambiar el estado.");
     }
+    if (day !== localDay()) {
+      const { data: fresh, error } = await supabase.from("books").select("id,reading_cycle").eq("id", book.id).single();
+      if (error) throw error;
+      await saveFinishedDate(fresh, day);
+    }
+    await refreshAll();
+  };
+
+  const updateStatus = async (book: Book, status: BookStatus) => {
+    if (status === "READ") { setFinishing(book); return; }
     const patch: Partial<Book> = { status };
     const now = new Date().toISOString();
     if (status === "READING") {
       patch.started_reading_at = book.started_reading_at ?? now;
-    } else if (status === "READ") {
-      patch.finished_reading_at = now;
-      patch.current_page = book.pages || 0;
     } else if(status==="TBR") {
       patch.started_reading_at = null;
       patch.finished_reading_at = null;
@@ -487,7 +506,7 @@ function LibraryPage() {
           <Modal onClose={() => !enriching && setIsAdding(false)}>
             <h2 className="font-serif text-2xl font-black tracking-tight mb-1">Añadir un libro</h2>
             <p className="text-xs text-muted-foreground italic mb-5">El Oráculo enriquecerá automáticamente con género, sinopsis y portada.</p>
-            <IsbnEntry books={books} saved={refreshBooks}/>
+            <IsbnEntry books={books} saved={refreshBooks} onAdded={(id)=>{setIsAdding(false);void navigate({to:"/books/$bookId",params:{bookId:id}});}}/>
             <form onSubmit={handleQuickAdd} className="space-y-3">
               <div>
                 <label htmlFor="quick-title" className="font-mono-label block mb-1">Título</label>
@@ -497,6 +516,20 @@ function LibraryPage() {
                 <label htmlFor="quick-author" className="font-mono-label block mb-1">Autor (opcional)</label>
                 <input id="quick-author" name="author" className="w-full bg-background border border-border px-3 py-2 rounded-sm text-sm focus:outline-none focus:border-foreground" />
               </div>
+              <div>
+                <label htmlFor="quick-status" className="font-mono-label block mb-1">Estado</label>
+                <select id="quick-status" value={addStatus} onChange={(e)=>setAddStatus(e.target.value as typeof addStatus)} className="koa-field">
+                  <option value="TBR">Por leer</option>
+                  <option value="READING">Leyendo</option>
+                  <option value="READ">Ya lo leí</option>
+                </select>
+              </div>
+              {addStatus === "READ" && (
+                <div>
+                  <label htmlFor="quick-read-day" className="font-mono-label block mb-1">¿Cuándo lo terminaste?</label>
+                  <DateField id="quick-read-day" value={addDay} onChange={setAddDay} />
+                </div>
+              )}
               <div className="flex gap-3 pt-3">
                 <button type="button" onClick={() => setIsAdding(false)} disabled={enriching} className="flex-1 border border-border py-3 font-mono-label rounded-sm hover:bg-muted">Cancelar</button>
                 <button type="submit" disabled={enriching} className="flex-1 bg-foreground text-background py-3 font-mono-label rounded-sm hover:opacity-90 flex items-center justify-center gap-2">
@@ -536,6 +569,7 @@ function LibraryPage() {
       </AnimatePresence>
 
       {books.filter(b=>b.id===updatingProgressId).map(b=><Modal key={b.id} onClose={()=>setUpdatingProgressId(null)}><SessionForm book={b} entry={editingSession} onSaved={refreshAll} onClose={()=>setUpdatingProgressId(null)}/></Modal>)}
+      {finishing && <FinishModal book={finishing} onClose={()=>setFinishing(null)} onConfirm={async(day)=>{await markRead(finishing,day);setFinishing(null);}}/>}
       {/* Edit modal */}
       {editingBook && <EditBookModal books={books} refresh={refreshBooks} book={editingBook} onClose={() => setEditingBook(null)} onSave={saveEdit} />}
 
@@ -562,6 +596,32 @@ function StatCard({ icon: Icon, label, value, extra }: { icon: LucideIcon; label
 }
 
 function Modal({children,onClose}:{children:React.ReactNode;onClose:()=>void}){return <KoaModal title="Tu biblioteca" onClose={onClose}>{children}</KoaModal>;}
+
+function FinishModal({ book, onClose, onConfirm }: { book: Book; onClose: () => void; onConfirm: (day: string) => Promise<void> }) {
+  const [day, setDay] = useState(localDay());
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  return (
+    <KoaModal title="Marcar como leído" onClose={() => { if (!busy) onClose(); }}>
+      <form className="space-y-4" onSubmit={async (e) => {
+        e.preventDefault(); setBusy(true); setError("");
+        try { await onConfirm(day); } catch (err) { setError(userError(err)); setBusy(false); }
+      }}>
+        <p><strong>{book.title}</strong> · {book.author}</p>
+        <div>
+          <label htmlFor="finish-day" className="font-mono-label block mb-1">¿Cuándo lo terminaste?</label>
+          <DateField id="finish-day" value={day} onChange={setDay} />
+          {day !== localDay() && <p className="koa-muted text-sm mt-2">Una fecha pasada queda en tu historial, pero no suma a la racha de hoy.</p>}
+        </div>
+        {error && <p role="alert" className="koa-error">{error}</p>}
+        <div className="flex gap-3">
+          <button type="button" className="koa-secondary flex-1" disabled={busy} onClick={onClose}>Cancelar</button>
+          <button className="koa-button flex-1" disabled={busy || !day}>{busy ? "Guardando…" : "Guardar como leído"}</button>
+        </div>
+      </form>
+    </KoaModal>
+  );
+}
 
 function BookRow({
   book, onStartProgress, onStatus, onEdit, onDelete,

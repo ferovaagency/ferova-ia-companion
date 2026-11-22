@@ -4,6 +4,8 @@ import { BookOpen, Mail, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { appUrl, isNativeApp } from "@/lib/platform";
+import { PRIVACY_VERSION } from "@/lib/legal";
+import { ConsentFields } from "@/components/koa/ConsentGate";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -29,6 +31,8 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [privacy, setPrivacy] = useState(false);
+  const [contact, setContact] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -54,10 +58,15 @@ function AuthPage() {
         }
         navigate({ to: "/discover" });
       } else {
+        if (!privacy) throw new Error("Para crear tu cuenta acepta la Política de tratamiento de datos.");
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: appUrl("/auth/callback") },
+          options: {
+            emailRedirectTo: appUrl("/auth/callback"),
+            // El alta guarda la aceptación con la hora del servidor (migración 0020).
+            data: { privacy_version: PRIVACY_VERSION, contact_consent: contact },
+          },
         });
         if (error) throw error;
         if (data.session) navigate({ to: "/discover" });
@@ -115,6 +124,7 @@ function AuthPage() {
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <GoogleIcon />}
             Continuar con Google
           </button>
+          <p className="text-xs text-muted-foreground text-center -mt-2 mb-2">Si es tu primera vez, al entrar te pediremos aceptar la <Link to="/privacidad" className="underline">política de datos</Link>.</p>
 
           <div className="relative my-5">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
@@ -131,6 +141,7 @@ function AuthPage() {
               <label htmlFor="auth-password" className="font-mono-label block mb-1">Contraseña</label>
               <input id="auth-password" autoComplete={mode === "signin" ? "current-password" : "new-password"} type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-background border border-border px-3 py-2 rounded-sm focus:outline-none focus:border-foreground text-sm" />
             </div>
+            {mode === "signup" && <ConsentFields privacy={privacy} contact={contact} onPrivacy={setPrivacy} onContact={setContact} />}
             {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
             <button type="submit" disabled={loading} className="w-full flex items-center justify-center gap-2 border border-foreground text-foreground py-3 font-mono-label rounded-sm hover:bg-foreground hover:text-background transition-all disabled:opacity-60">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}

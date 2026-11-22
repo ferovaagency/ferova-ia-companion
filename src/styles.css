@@ -295,6 +295,9 @@
   border: 1px solid var(--border);
   flex-shrink: 0;
 }
+.koa-legal ul { list-style: disc; padding-left: 1.25rem; display: grid; gap: .4rem; }
+.koa-legal h2 { margin-bottom: .5rem; }
+.koa-legal a { text-decoration: underline; }
 .koa-field {
   width: 100%;
   padding: 0.8rem 1rem;

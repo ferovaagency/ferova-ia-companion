@@ -8,6 +8,7 @@ import { feelingSchema } from "@/lib/reader-discoveries";
 import { userError } from "@/lib/koa-data";
 import type { Book } from "@/types";
 import { Star } from "lucide-react";
+import { StarRating } from "./StarRating";
 export function BookFeelings({ book, refresh }: { book: Book; refresh: () => Promise<void> }) {
   const [open, setOpen] = useState(false); const [busy, setBusy] = useState(false); const [error, setError] = useState("");
   const [stars, setStars] = useState(book.user_rating); const [review, setReview] = useState(book.user_review ?? "");
@@ -24,7 +25,7 @@ export function BookFeelings({ book, refresh }: { book: Book; refresh: () => Pro
       const rating = await supabase.from("books").update({ user_rating: stars, user_review: review.trim() || null }).eq("id", book.id); if (rating.error) throw rating.error;
       await Promise.all([query.refetch(), refresh()]); setOpen(false);
     } catch (e) { setError(userError(e)); } finally { setBusy(false); } }}>
-      <fieldset><legend>Estrellas opcionales</legend><div className="flex gap-1">{[1,2,3,4,5].map((n) => <Button type="button" key={n} variant="ghost" size="icon" aria-label={`${n} estrellas`} aria-pressed={stars === n} onClick={() => setStars(stars === n ? null : n)}><Star className={stars && n <= stars ? "fill-accent text-accent" : "text-muted-foreground"} /></Button>)}</div></fieldset>
+      <fieldset><legend>Estrellas opcionales</legend><StarRating value={stars} onChange={setStars} disabled={busy} /></fieldset>
       <label className="block">Mi reseña<textarea className="koa-field" maxLength={2000} value={review} onChange={(e) => setReview(e.target.value)} /></label>
       {([['Lágrimas · intensidad', tears, setTears], ['Inmersión / desconexión · intensidad', immersion, setImmersion]] as const).map(([label,value,set]) => <label className="block" key={label}>{label}<select className="koa-field" value={value} onChange={(e) => set(e.target.value)}><option value="">Sin valorar</option>{[0,1,2,3,4,5].map((n) => <option key={n} value={n}>{n} / 5</option>)}</select></label>)}
       <label className="block">Sensaciones (separadas por comas)<input className="koa-field" maxLength={480} value={tags} onChange={(e) => setTags(e.target.value)} placeholder="asombro, nostalgia, esperanza" /></label><div className="grid grid-cols-2 gap-3"><label>Tier opcional<select className="koa-field" value={tier} onChange={(e) => setTier(e.target.value)}><option value="">Sin tier</option>{['S','A','B','C','D'].map((t) => <option key={t}>{t}</option>)}</select></label><label>Posición en tier<input className="koa-field" type="number" min={1} max={10000} value={rank} onChange={(e) => setRank(e.target.value)} /></label></div>{error && <ErrorNotice>{error}</ErrorNotice>}<Button disabled={busy}>Guardar valoración</Button>
