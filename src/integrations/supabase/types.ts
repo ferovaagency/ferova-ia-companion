@@ -1410,6 +1410,7 @@ export type Database = {
         Args: { p_calendar: string; p_slot: number; p_zone: string }
         Returns: Json
       }
+      delete_reader_data: { Args: { p_user: string }; Returns: number }
       set_finished_date: {
         Args: { p_book: string; p_cycle: number; p_day: string; p_zone: string }
         Returns: undefined

@@ -34,7 +34,8 @@ export const startCheckout = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => z.object({ plan: z.enum(["monthly", "yearly"]), origin: z.string().url() }).parse(input))
   .handler(async ({ data, context }) => {
     const origin = new URL(data.origin).origin;
-    if (!/^https:\/\/|^http:\/\/localhost(:\d+)?$/.test(origin)) throw new Error("Origen no válido.");
+    const allowed = ["https://librero-ia.ferova.com.co", "https://ferova-ia-companion.lovable.app"];
+    if (!allowed.includes(origin) && !/^https:\/\/(id-preview--)?1cab2c8c-222e-4717-8c65-0dfa0737db89\.lovable\.app$/.test(origin) && !/^http:\/\/localhost(:\d+)?$/.test(origin)) throw new Error("Origen no válido.");
     const { createWhopCheckout } = await import("./whop.server");
     return { url: await createWhopCheckout(data.plan, context.userId, `${origin}/settings?pro=gracias`) };
   });
