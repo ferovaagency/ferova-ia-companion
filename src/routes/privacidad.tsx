@@ -85,15 +85,26 @@ function Privacy() {
           </ul>
         </section>
 
-        <section><h2>6. Seguridad y conservación</h2>
+        <section id="borrar-cuenta"><h2>6. Cómo eliminar tu cuenta y tus datos</h2>
+          <p>Puedes eliminar tu cuenta de {LEGAL.product} de dos formas:</p>
+          <ul>
+            <li><strong>Desde la app o la web:</strong> entra a Ajustes → Tu cuenta → Eliminar mi cuenta y confirma. El borrado es inmediato.</li>
+            <li><strong>Sin la app instalada:</strong> {LEGAL.email
+              ? <>escribe a <a href={`mailto:${LEGAL.email}?subject=Eliminar%20mi%20cuenta%20de%20Lee%20con%20Koa`}>{LEGAL.email}</a> desde el correo de tu cuenta, con el asunto «Eliminar mi cuenta»</>
+              : <>usa el formulario de <Link to="/faq">Preguntas y contacto</Link> con el correo de tu cuenta</>}. La borramos en máximo 15 días hábiles y te confirmamos por correo.</li>
+          </ul>
+          <p>Se borran tu cuenta, biblioteca, progreso, reseñas, notas, fotos, audios, listas, conversaciones con Koa y perfil social. No guardamos copias. Si tenías plan Pro, Whop conserva el registro del pago según sus propias obligaciones legales; cancélalo también en Whop para que no se renueve.</p>
+        </section>
+
+        <section><h2>7. Seguridad y conservación</h2>
           <p>Tu biblioteca y tu cuaderno son privados por defecto: cada consulta se valida con tu sesión y solo se comparte lo que tú eliges. Guardamos tus datos mientras tengas la cuenta; al eliminarla se borran, salvo lo que la ley obligue a conservar.</p>
         </section>
 
-        <section><h2>7. Menores de edad</h2>
+        <section><h2>8. Menores de edad</h2>
           <p>Si eres menor de edad, usa {LEGAL.product} con autorización de tu madre, padre o representante legal. Respetamos tu interés superior y tus derechos.</p>
         </section>
 
-        <section><h2>8. Cambios</h2>
+        <section><h2>9. Cambios</h2>
           <p>Si cambiamos esta política te lo avisaremos en la app y te pediremos aceptarla de nuevo cuando el cambio sea importante. Vigente desde el {PRIVACY_VERSION}.</p>
         </section>
       </main>

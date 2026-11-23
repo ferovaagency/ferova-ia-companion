@@ -9,7 +9,7 @@ export const LEGAL = {
   site: "https://librero-ia.ferova.com.co",
   country: "Colombia",
   /** Correo para ejercer derechos. Vacío: se usa el formulario de ayuda de la app. */
-  email: "",
+  email: "gerencia@seoparaecommerce.co",
   /** NIT o cédula del responsable. Vacío: no se muestra. */
-  taxId: "",
+  taxId: "NIT 1000502437-0",
 };

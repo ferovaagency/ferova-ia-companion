@@ -36,8 +36,8 @@ La app de tienda (Capacitor 8) lleva **la interfaz dentro del paquete**, como Ki
 ## Pendiente antes de enviar
 
 1. **Publicar la web en Lovable antes de probar la app.** Trae el CORS que la app necesita. Las migraciones 0018 y 0019 ya están aplicadas.
-2. **Política de privacidad pública.** Ya existe en `/privacidad` (`src/routes/privacidad.tsx`, datos del responsable en `src/lib/legal.ts`). Falta completar el correo de contacto y el NIT en `LEGAL` antes de enviarla a las tiendas.
-3. **Página pública para pedir el borrado.** Google Play exige un enlace para quien ya no tiene la app. Puede ser una sección de la política con el correo de contacto, además de la opción en Ajustes.
+2. ~~**Política de privacidad pública.**~~ Hecho: `https://librero-ia.ferova.com.co/privacidad` (`src/routes/privacidad.tsx`, datos del responsable en `src/lib/legal.ts`).
+3. ~~**Página pública para pedir el borrado.**~~ Hecho: `https://librero-ia.ferova.com.co/privacidad#borrar-cuenta`. Es el enlace que pide Play Console en «Seguridad de los datos».
 4. **Cuentas de desarrollador.**
    - Google Play Console: 25 USD, pago único.
    - Apple Developer Program: 99 USD al año. Como organización necesita número D-U-N-S.
