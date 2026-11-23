@@ -41,9 +41,9 @@ La app de tienda (Capacitor 8) lleva **la interfaz dentro del paquete**, como Ki
 4. **Cuentas de desarrollador.**
    - Google Play Console: 25 USD, pago único.
    - Apple Developer Program: 99 USD al año. Como organización necesita número D-U-N-S.
-5. **Iconos y pantalla de inicio.** Se generan con `npx @capacitor/assets generate` a partir de dos archivos en `assets/`:
-   - `icon.png` de 1024×1024;
-   - `splash.png` de 2732×2732.
+5. ~~**Iconos y pantalla de inicio.**~~ Hecho. Las fuentes están en `assets/` (ícono de 1024×1024 sin transparencia y pantalla de inicio de 2732×2732, sacados de `public/koa/icon.webp`). Para regenerarlos:
+   `npx @capacitor/assets generate --iconBackgroundColor '#0c0d21' --splashBackgroundColor '#14122b'`
+   y borrar la carpeta `icons/` y `public/manifest.webmanifest` que crea para la web.
 6. **Ficha de cada tienda.**
    - Nombre, subtítulo y descripción corta y larga.
    - Capturas: teléfono 6,7" y 6,5" para iOS; teléfono para Android.
@@ -62,7 +62,14 @@ npm run mobile:build
 npm run mobile:android
 ```
 
-En Android Studio: Build → Generate Signed App Bundle → `.aab`. Se sube a Play Console, primero a «Prueba interna». Guarda la llave de firma fuera del repositorio.
+Sin Android Studio, desde la terminal (JDK 21 y SDK en la carpeta del usuario):
+
+```powershell
+cd android
+.\gradlew.bat bundleRelease
+```
+
+El `.aab` queda en `android/app/build/outputs/bundle/release/`. Gradle firma con la llave de subida descrita en `~/.leeconkoa/keystore.properties` (o en la ruta de `KOA_KEYSTORE_PROPERTIES`): `storeFile`, `storePassword`, `keyAlias`, `keyPassword`. Esa llave y su contraseña nunca van al repositorio. Antes de cada envío sube `versionCode` en `android/app/build.gradle`. Se sube a Play Console, primero a «Prueba interna».
 
 iOS (solo en Mac, con Xcode):
 
